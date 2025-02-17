@@ -5,6 +5,8 @@ import loginsignup.login.loggedin.billing.BillingScreen;
 import loginsignup.login.LOGIN;
 import loginsignup.LOGIN_SIGNUP;
 import loginsignup.login.loggedin.billing.newBill.NewBill;
+import loginsignup.login.loggedin.ordermanagement.OrderScreen;
+import loginsignup.login.loggedin.ordermanagement.generateorder.OrderGenerateForm;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -21,6 +23,9 @@ public class MyClass {
         mainScreen =new MainScreen();
         login_signup.setVisible(true);
         newBill = new NewBill();
+        orderScreen=new OrderScreen();
+        orderGenerateForm=new OrderGenerateForm();
+
     }
     public static Connection getConnection(String host, String database, String user, String password) {
         Connection conn = null;
@@ -53,4 +58,6 @@ public class MyClass {
     public static BillingScreen billingScreen;
     public static MainScreen mainScreen;
     public static LOGIN_SIGNUP login_signup;
+    public static OrderScreen orderScreen;
+    public static OrderGenerateForm orderGenerateForm;
 }

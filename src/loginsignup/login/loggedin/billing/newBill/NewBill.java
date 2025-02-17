@@ -3,6 +3,8 @@ package loginsignup.login.loggedin.billing.newBill;
 import mainpack.MyClass;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -11,11 +13,19 @@ public class NewBill extends JFrame {
     private JPanel panel;
     private JLabel idLabel;
     private JTable table1;
+    private JButton backButton;
 
     public NewBill(){
         setContentPane(panel);
         pack();
 
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setVisible(false);
+                MyClass.billingScreen.setVisible(true);
+            }
+        });
     }
 
     public void initSystemlogin(){

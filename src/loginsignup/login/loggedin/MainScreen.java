@@ -27,8 +27,19 @@ public class MainScreen extends JFrame{
                 MyClass.login.setVisible(true);
             }
         });
+        orderManagementButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                MyClass.orderScreen.setVisible(true);
+                setVisible(false);
+            }
+        });
     }
     private JButton billingButton;
     private JPanel panel;
     private JButton backButton;
+    private JButton orderManagementButton;
+    private JButton button1;
+    private JButton button2;
+    private JButton button3;
 }
