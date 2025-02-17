@@ -1,6 +1,7 @@
 package loginsignup;
 
-import mainpack.Myclass;
+import loginsignup.login.LOGIN;
+import mainpack.MyClass;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -16,7 +17,7 @@ public class LOGIN_SIGNUP extends JFrame{
     public LOGIN_SIGNUP() {
        setContentPane(panel);
 
-        LOGIN login=Myclass.login;
+        LOGIN login= MyClass.login;
 
         QUITButton.addActionListener(new ActionListener() {
             @Override

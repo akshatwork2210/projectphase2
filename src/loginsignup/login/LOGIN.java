@@ -1,6 +1,6 @@
-package loginsignup;
+package loginsignup.login;
 
-import mainpack.Myclass;
+import mainpack.MyClass;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -31,7 +31,7 @@ public class LOGIN extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
-                Myclass.login_signup.setVisible(true);
+                MyClass.login_signup.setVisible(true);
 
             }
         });
@@ -41,12 +41,16 @@ public class LOGIN extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 Statement s;
                 try {
-                    Connection c= Myclass.getConnection("localhost","sample",user.getText(),pass.getText());
+                    Connection c= MyClass.getConnection("localhost","sample",user.getText(),pass.getText());
 
                      s=c.createStatement();
                 } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(Myclass.login,"error");
+                    JOptionPane.showMessageDialog(MyClass.login,"error");
+                return;
                 }
+                MyClass.mainScreen.setVisible(true);
+                setVisible(false);
+
             }
         });
     }
