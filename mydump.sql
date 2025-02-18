@@ -120,6 +120,7 @@ CREATE TABLE `inventory` (
   `DesignID` varchar(20) NOT NULL,
   `TotalQuantity` int NOT NULL,
   `SupplierName` varchar(50) NOT NULL,
+  `itemname` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`DesignID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -130,7 +131,7 @@ CREATE TABLE `inventory` (
 
 LOCK TABLES `inventory` WRITE;
 /*!40000 ALTER TABLE `inventory` DISABLE KEYS */;
-INSERT INTO `inventory` VALUES ('D001',100,'Supplier A'),('D002',150,'Supplier B'),('D003',200,'Supplier C'),('D004',50,'Supplier D'),('D005',120,'Supplier E'),('D006',300,'Supplier F'),('D007',75,'Supplier G'),('D008',180,'Supplier H'),('D009',60,'Supplier I'),('D010',250,'Supplier J'),('hello',121,'okkkk'),('mi remote',121,'okkkk'),('thi',45,'ok');
+INSERT INTO `inventory` VALUES ('D001',100,'Supplier A',NULL),('D002',150,'Supplier B',NULL),('D003',200,'Supplier C',NULL),('D004',50,'Supplier D',NULL),('D005',120,'Supplier E',NULL),('D006',300,'Supplier F',NULL),('D007',75,'Supplier G',NULL),('D008',180,'Supplier H',NULL),('D009',60,'Supplier I',NULL),('D010',250,'Supplier J',NULL),('hello',121,'okkkk',NULL),('mi remote',121,'okkkk',NULL),('thi',45,'ok',NULL);
 /*!40000 ALTER TABLE `inventory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -197,4 +198,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-02-18 19:34:41
+-- Dump completed on 2025-02-18 20:30:25

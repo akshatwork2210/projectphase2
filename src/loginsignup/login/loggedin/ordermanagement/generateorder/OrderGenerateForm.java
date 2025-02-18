@@ -21,6 +21,7 @@ public class OrderGenerateForm extends JFrame {
     private JComboBox customerNameComboBox;
     private JComboBox panaTypeComboBox;
     private JTable orderSlip;
+    private JButton submitButton;
 
     public OrderGenerateForm() {
         setContentPane(panel);
@@ -42,11 +43,11 @@ public class OrderGenerateForm extends JFrame {
     }
     public void init(){
         // this method will be initializing functinality of this window
-        String[] columnNames = {"Item Name", "Quantity", "Plating", "Raw Material Cost", "Other Details"};//jtable content
+        String[] columnNames = {"design id","Item Name", "Quantity", "Plating", "Raw Material Cost", "Other Details"};//jtable content
         orderSlip.getTableHeader().setReorderingAllowed(false);
         // Create a DefaultTableModel with columns and no rows initially
         DefaultTableModel model = new DefaultTableModel(columnNames, 0);
-        model.addRow(new String[]{"","","","",""});
+        model.addRow(new String[]{"","","","","",""});
         model.addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
