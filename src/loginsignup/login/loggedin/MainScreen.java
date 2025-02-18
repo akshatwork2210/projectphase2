@@ -34,6 +34,15 @@ public class MainScreen extends JFrame{
                 setVisible(false);
             }
         });
+        inventoryManagementButton.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setVisible(false);
+                MyClass.inventoryScreen.setVisible(true);
+                MyClass.inventoryScreen.init();
+            }
+        });
     }
     private JButton billingButton;
     private JPanel panel;
@@ -42,4 +51,5 @@ public class MainScreen extends JFrame{
     private JButton button1;
     private JButton button2;
     private JButton button3;
+    private JButton inventoryManagementButton;
 }
