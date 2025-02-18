@@ -16,13 +16,13 @@
           <text value="Back"/>
         </properties>
       </component>
-      <component id="8c986" class="javax.swing.JComboBox" binding="customerName">
+      <component id="8c986" class="javax.swing.JComboBox" binding="customerNameComboBox">
         <constraints>
           <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties/>
       </component>
-      <component id="769e6" class="javax.swing.JComboBox" binding="panaType">
+      <component id="769e6" class="javax.swing.JComboBox" binding="panaTypeComboBox">
         <constraints>
           <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>

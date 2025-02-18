@@ -42,8 +42,8 @@ public class LOGIN extends JFrame {
                 Statement s;
                 try {
                     Connection c= MyClass.getConnection("localhost","sample",user.getText(),pass.getText());
-
-                     s=c.createStatement();
+                    MyClass.C=c;
+                  s=c.createStatement();
                 } catch (SQLException ex) {
                     JOptionPane.showMessageDialog(MyClass.login,"error");
                 return;

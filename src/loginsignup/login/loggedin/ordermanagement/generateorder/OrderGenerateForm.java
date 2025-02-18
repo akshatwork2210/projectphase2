@@ -10,12 +10,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 
 public class OrderGenerateForm extends JFrame {
     private JPanel panel;
     private JButton backButton;
-    private JComboBox customerName;
-    private JComboBox panaType;
+    private JComboBox customerNameComboBox;
+    private JComboBox panaTypeComboBox;
     private JTable orderSlip;
 
     public OrderGenerateForm() {
@@ -37,7 +41,8 @@ public class OrderGenerateForm extends JFrame {
         });
     }
     public void init(){
-        String[] columnNames = {"Item Name", "Quantity", "Plating", "Raw Material Cost", "Other Details"};
+        // this method will be initializing functinality of this window
+        String[] columnNames = {"Item Name", "Quantity", "Plating", "Raw Material Cost", "Other Details"};//jtable content
         orderSlip.getTableHeader().setReorderingAllowed(false);
         // Create a DefaultTableModel with columns and no rows initially
         DefaultTableModel model = new DefaultTableModel(columnNames, 0);
@@ -65,6 +70,41 @@ public class OrderGenerateForm extends JFrame {
                 }
             }
         });
+
+
+        ArrayList<String> customerNames = new ArrayList<>();
+        try  {
+
+            Statement stmt = MyClass.C.createStatement();
+
+            ResultSet rs = stmt.executeQuery("SELECT customer_name FROM customers");
+            // Clear previous entries in combo boxes before populating
+            customerNameComboBox.removeAllItems();
+customerNames.add("Select Customer");
+            // Fetching the data and adding to lists
+            while (rs.next()) {
+                String customerName = rs.getString("customer_name");
+
+                customerNames.add(customerName);
+            }
+
+            // Adding data to combo boxes
+
+
+            for (String customerName : customerNames) {
+                customerNameComboBox.addItem(customerName);
+            }
+
+
+        }
+        catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error fetching customer data: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        String[] panaTypes = {"Kachhe Ka Baaki", "Kachhe Ka Jama", "Repairing Pana"};
+        DefaultComboBoxModel<String> panaTypeModel = new DefaultComboBoxModel<>(panaTypes);
+        panaTypeComboBox.setModel(panaTypeModel);
         orderSlip.setModel(model);
+
     }
 }

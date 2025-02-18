@@ -5,6 +5,8 @@ import loginsignup.login.loggedin.billing.BillingScreen;
 import loginsignup.login.LOGIN;
 import loginsignup.LOGIN_SIGNUP;
 import loginsignup.login.loggedin.billing.newBill.NewBill;
+import loginsignup.login.loggedin.inventorymanagement.InventoryScreen;
+import loginsignup.login.loggedin.inventorymanagement.addinventory.AddInventory;
 import loginsignup.login.loggedin.ordermanagement.OrderScreen;
 import loginsignup.login.loggedin.ordermanagement.generateorder.OrderGenerateForm;
 
@@ -25,6 +27,8 @@ public class MyClass {
         newBill = new NewBill();
         orderScreen=new OrderScreen();
         orderGenerateForm=new OrderGenerateForm();
+        inventoryScreen = new InventoryScreen();
+        addInventory=new AddInventory();
 
     }
     public static Connection getConnection(String host, String database, String user, String password) {
@@ -60,4 +64,8 @@ public class MyClass {
     public static LOGIN_SIGNUP login_signup;
     public static OrderScreen orderScreen;
     public static OrderGenerateForm orderGenerateForm;
+    public static InventoryScreen inventoryScreen;
+public static AddInventory addInventory;
+
+
 }
