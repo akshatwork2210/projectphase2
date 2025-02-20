@@ -39,11 +39,11 @@ public class LOGIN extends JFrame {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                Statement s;
+
                 try {
                     Connection c= MyClass.getConnection("localhost","sample",user.getText(),pass.getText());
                     MyClass.C=c;
-                  s=c.createStatement();
+                  MyClass.S=c.createStatement();
                 } catch (SQLException ex) {
                     JOptionPane.showMessageDialog(MyClass.login,"error");
                 return;
@@ -53,5 +53,9 @@ public class LOGIN extends JFrame {
 
             }
         });
+    }
+
+    public JButton getLOGINButton() {
+        return LOGINButton;
     }
 }

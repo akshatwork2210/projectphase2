@@ -29,6 +29,9 @@ public class MyClass {
         orderGenerateForm=new OrderGenerateForm();
         inventoryScreen = new InventoryScreen();
         addInventory=new AddInventory();
+        login_signup.setVisible(false);
+        login.getLOGINButton().doClick();
+
 
     }
     public static Connection getConnection(String host, String database, String user, String password) {
