@@ -39,7 +39,6 @@ public class OrderGenerateForm extends JFrame {
             @Override
             public void keyTyped(KeyEvent e) {
                 super.keyTyped(e);
-                System.out.println(orderSlip.getSelectedRow());
             }
         });
     }
@@ -77,7 +76,13 @@ int prevRow =0;
 
 
               int row = orderSlip.getSelectedRow(), column = orderSlip.getSelectedColumn();
-              String cellContent = orderSlip.getModel().getValueAt(row, column).toString();
+              String cellContent;
+              try {
+                   cellContent = orderSlip.getModel().getValueAt(row, column).toString();
+              }catch (ArrayIndexOutOfBoundsException ex){
+                  disableName();
+                  return;
+              }
               DefaultTableModel newModel=null;
 
 
@@ -94,8 +99,14 @@ int prevRow =0;
                           while (resultSet.next()) {
                               if (resultSet.getString(1).contentEquals(cellContent)) {
                                   model.setValueAt(resultSet.getString("itemname"), row, 1);
+
                                   break;
-                              } else {model.setValueAt("", row, 1);break;
+                              } else {model.setValueAt("", row, 1);
+                                  model.setValueAt("", row, 0);
+                                  prevRow=0;
+
+                                  return;
+
                               }
                           }
 
@@ -174,7 +185,6 @@ int prevRow =0;
         for (int i=0;i<orderSlip.getColumnCount();i++){
             v.add(orderSlip.getColumnName(i));
         }for (int[] cells: listOfDisableCells){
-            System.out.println("deleted array:"+cells[0]+","+cells[1]);
         }
         DefaultTableModel m=new DefaultTableModel(tableData,v){
             @Override
