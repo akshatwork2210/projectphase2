@@ -10,25 +10,31 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Vector;
 
 public class OrderGenerateForm extends JFrame {
     private JPanel panel;
+    DefaultTableModel backupModel;
     private JButton backButton;
     TableModelListener modelListener;
     private JComboBox customerNameComboBox;
     private JComboBox panaTypeComboBox;
     private JTable orderSlip;
     private JButton submitButton;
+    private JButton resetFormButton;
+    private JButton undoResetButton;
     ArrayList<Integer[][]> ar;
 
     public OrderGenerateForm() {
         setContentPane(panel);
+
         pack();
+        undoResetButton.setEnabled(false);
+
         backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -40,6 +46,70 @@ public class OrderGenerateForm extends JFrame {
             @Override
             public void keyTyped(KeyEvent e) {
                 super.keyTyped(e);
+            }
+        });
+
+        resetFormButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                backupModel= (DefaultTableModel) orderSlip.getModel();
+                init();
+                undoResetButton.setEnabled(true);
+                resetFormButton.setEnabled(false);
+            }
+        });
+        undoResetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                model=backupModel;
+                    orderSlip.setModel(backupModel);
+                    backupModel=null;
+                undoResetButton.setEnabled(false);
+                resetFormButton.setEnabled(true);
+            }
+        });
+        submitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DefaultTableModel model = (DefaultTableModel) orderSlip.getModel();
+                int rowCount = model.getRowCount();
+
+                try {
+                    // Generate a new slip_id for the entire batch
+                    String getSlipIdQuery = "SELECT IFNULL(MAX(slip_id), 0) + 1 FROM order_slips";
+                    ResultSet rs = MyClass.S.executeQuery(getSlipIdQuery);
+                    int slipId = 1;
+                    if (rs.next()) {
+                        slipId = rs.getInt(1);  // New slip_id
+                    }
+                    rs.close();
+
+                    // Loop through each row and insert into order_slips
+                    for (int i = 0; i < rowCount-1; i++) {
+                        int itemNumber = i + 1;  // Item number starts from 1 for each new slip
+                        if(model.getValueAt(i,1).toString().contentEquals(""))break;
+                        String designId = (String) model.getValueAt(i, 0);
+                        String itemName = (String) model.getValueAt(i, 1);
+
+                        int quantity =!model.getValueAt(i,2).toString().contentEquals("")?Integer.parseInt( model.getValueAt(i, 2).toString()
+                        ):0;
+                        double platingGrams = Double.parseDouble(model.getValueAt(i, 3).toString());
+                        double rawMaterialCost = Double.parseDouble( model.getValueAt(i, 4).toString());
+                        String otherDetails =  model.getValueAt(i, 5).toString();
+                        String customerName=customerNameComboBox.getSelectedItem().toString();
+                        String panaType=panaTypeComboBox.getSelectedItem().toString();
+                        // Insert Query
+                        String query = "INSERT INTO order_slips (slip_type,customer_name,slip_id, item_number, design_id, item_name, quantity, plating_grams, raw_material_price, other_details) "
+                                + "VALUES ("+"\""+panaType+"\","+"\""+customerName+"\"," + slipId + ", " + itemNumber + ", '" + designId + "', '" + itemName + "', " + quantity + ", " + platingGrams + ", " + rawMaterialCost + ", \"" + otherDetails + "\")";
+
+                        MyClass.S.executeUpdate(query);
+                    }
+                    System.out.println("New order slip created: Slip ID = " + slipId);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+
             }
         });
     }
@@ -57,6 +127,8 @@ int prevRow =0;
       @Override
       public void tableChanged(TableModelEvent e) {
           if (e.getType() == TableModelEvent.UPDATE) {
+              if(model.getRowCount()==3)undoResetButton.setEnabled(false);
+              resetFormButton.setEnabled(true);
               int lastRow = model.getRowCount() - 1;
               boolean isRowFilled = false;
 
