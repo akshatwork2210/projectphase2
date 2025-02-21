@@ -34,5 +34,10 @@ public class OrderScreen extends JFrame {
                 MyClass.orderGenerateForm.init();
             }
         });
+
     }
+public JButton getGenerateANewOrderButton(){
+        return generateANewOrderButton;
+
+}
 }

@@ -31,8 +31,9 @@ public class MyClass {
         addInventory=new AddInventory();
         login_signup.setVisible(false);
         login.getLOGINButton().doClick();
+        mainScreen.setVisible(false);
         login.setVisible(false);
-        orderGenerateForm.setVisible(true);
+        orderScreen.getGenerateANewOrderButton().doClick();
 
 
     }

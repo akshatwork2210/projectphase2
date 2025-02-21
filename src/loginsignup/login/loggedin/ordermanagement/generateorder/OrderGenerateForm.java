@@ -13,6 +13,7 @@ import java.awt.event.KeyEvent;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Vector;
 
 public class OrderGenerateForm extends JFrame {
@@ -45,7 +46,6 @@ public class OrderGenerateForm extends JFrame {
 int prevRow =0;
     DefaultTableModel model;
     public void init() {
-
         ar = new ArrayList<>();
         // this method will be initializing functinality of this window
         String[] columnNames = {"design id", "Item Name", "Quantity", "Plating", "Raw Material Cost", "Other Details"};//jtable content
@@ -99,14 +99,14 @@ int prevRow =0;
                           while (resultSet.next()) {
                               if (resultSet.getString(1).contentEquals(cellContent)) {
                                   model.setValueAt(resultSet.getString("itemname"), row, 1);
+                                  model.setValueAt(resultSet.getString("price"),row,4);
+                                  model.setValueAt(resultSet.getString(1), row, 0);
 
                                   break;
-                              } else {model.setValueAt("", row, 1);
+                              } else {
+                                  model.setValueAt("", row, 1);
                                   model.setValueAt("", row, 0);
                                   prevRow=0;
-
-                                  return;
-
                               }
                           }
 
@@ -157,21 +157,28 @@ int prevRow =0;
         orderSlip.setModel(model);
 
     }
-
     private DefaultTableModel disableName() {
+        Vector<int[]> listOfDisableCells=new Vector<>();
+
         Vector<Vector<Object>> tableData = new Vector<>();
          model = (DefaultTableModel) orderSlip.getModel();
-        Vector<int[]> listOfDisableCells=new Vector<>();
-        int[] arr=new int[2];
+
+        System.out.println(orderSlip.getRowCount()+"this row numbers");
         for(int countRow=0;countRow<orderSlip.getRowCount();countRow++){
 
+
                 if(!orderSlip.getModel().getValueAt(countRow,0).toString().contentEquals("")){
+                int[] arr=new int[2];
                     arr[0]=countRow;
                     arr[1]=1;
-                    listOfDisableCells.add(arr);
+
+                        listOfDisableCells.add(arr);
+
+                }else{
                 }
 
         }
+
 
 
         for (int ro = 0; ro < model.getRowCount(); ro++) {
