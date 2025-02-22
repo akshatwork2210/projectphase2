@@ -84,9 +84,10 @@ public class OrderGenerateForm extends JFrame {
                         slipId = rs.getInt(1);  // New slip_id
                     }
                     rs.close();
-
+                    boolean created=false;
                     // Loop through each row and insert into order_slips
                     for (int i = 0; i < rowCount-1; i++) {
+                        created=true;
                         int itemNumber = i + 1;  // Item number starts from 1 for each new slip
                         if(model.getValueAt(i,1).toString().contentEquals(""))break;
                         String designId = (String) model.getValueAt(i, 0);
@@ -96,7 +97,8 @@ public class OrderGenerateForm extends JFrame {
                         ):0;
                         double platingGrams = Double.parseDouble(model.getValueAt(i, 3).toString());
                         double rawMaterialCost = Double.parseDouble( model.getValueAt(i, 4).toString());
-                        String otherDetails =  model.getValueAt(i, 5).toString();
+                        String otherDetails ;
+                        try{ otherDetails =model.getValueAt(i, 5).toString();}catch (java.lang.NullPointerException ex){ otherDetails ="";}
                         String customerName=customerNameComboBox.getSelectedItem().toString();
                         String panaType=panaTypeComboBox.getSelectedItem().toString();
                         // Insert Query
@@ -105,11 +107,14 @@ public class OrderGenerateForm extends JFrame {
 
                         MyClass.S.executeUpdate(query);
                     }
+                    if(created)
                     System.out.println("New order slip created: Slip ID = " + slipId);
+                else JOptionPane.showMessageDialog(MyClass.orderGenerateForm,"Empty form  error","error",JOptionPane.ERROR_MESSAGE);
+
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
-
+                init();
             }
         });
     }
