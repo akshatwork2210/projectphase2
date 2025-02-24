@@ -9,6 +9,7 @@ import loginsignup.login.loggedin.inventorymanagement.InventoryScreen;
 import loginsignup.login.loggedin.inventorymanagement.addinventory.AddInventory;
 import loginsignup.login.loggedin.ordermanagement.OrderScreen;
 import loginsignup.login.loggedin.ordermanagement.generateorder.OrderGenerateForm;
+import loginsignup.login.loggedin.ordermanagement.vieworders.ViewOrders;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -19,6 +20,7 @@ import java.sql.Statement;
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class MyClass {
     public static void main(String[] args) {
+
         login=new LOGIN();
         login_signup=new LOGIN_SIGNUP();
         billingScreen =new BillingScreen();
@@ -31,11 +33,14 @@ public class MyClass {
         addInventory=new AddInventory();
         login_signup.setVisible(false);
         login.getLOGINButton().doClick();
+        mainScreen.setVisible(false);
         login.setVisible(false);
-        orderGenerateForm.setVisible(true);
-
+        viewOrders=new ViewOrders();
+//        orderScreen.getGenerateANewOrderButton().doClick();
+        viewOrders.setVisible(true);
 
     }
+   public static ViewOrders viewOrders;
     public static Connection getConnection(String host, String database, String user, String password) {
         Connection conn = null;
         try {
