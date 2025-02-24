@@ -11,9 +11,7 @@ public class OrderScreen extends JFrame {
     private JPanel panel;
     private JButton generateANewOrderButton;
     private JButton backButton;
-    private JButton kachheKaJamaButton;
-    private JButton kachheKaBaakiButton;
-    private JButton repairingButton;
+    private JButton viewOrdersButton;
     private JButton analyseLateOrderAndButton;
 
     public OrderScreen(){
@@ -35,6 +33,14 @@ public class OrderScreen extends JFrame {
             }
         });
 
+        viewOrdersButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                MyClass.viewOrders.setVisible(true);
+                MyClass.viewOrders.init();
+                setVisible(false);
+            }
+        });
     }
 public JButton getGenerateANewOrderButton(){
         return generateANewOrderButton;
