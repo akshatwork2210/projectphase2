@@ -31,6 +31,11 @@ public class AddInventory extends JFrame
                         int rowsAffected = stmt.executeUpdate();
                         if (rowsAffected > 0) {
                             JOptionPane.showMessageDialog(MyClass.addInventory, "Data added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                           itemName.setText("");
+                           openingStock.setText("");
+                           designID.setText("");
+
+
                         } else {
                             JOptionPane.showMessageDialog(MyClass.addInventory, "Failed to add data.", "Error", JOptionPane.ERROR_MESSAGE);
                         }

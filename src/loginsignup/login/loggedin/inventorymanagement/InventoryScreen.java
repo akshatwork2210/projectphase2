@@ -8,6 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class InventoryScreen extends  JFrame {
     private JPanel panel;
@@ -51,8 +52,8 @@ public class InventoryScreen extends  JFrame {
         inventoryTable.setModel(m);
        try {
             String query = "SELECT `DesignID`, `TotalQuantity`, `SupplierName` FROM inventory";
-            MyClass.S=MyClass.C.createStatement();
-            ResultSet resultSet=MyClass.S.executeQuery(query);
+           Statement stmt = MyClass.C.createStatement();
+            ResultSet resultSet=stmt.executeQuery(query);
 
             while (resultSet.next()) {
                 String designId = resultSet.getString("DesignID");

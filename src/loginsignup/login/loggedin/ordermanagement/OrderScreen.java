@@ -13,7 +13,9 @@ public class OrderScreen extends JFrame {
     private JButton backButton;
     private JButton viewOrdersButton;
     private JButton analyseLateOrderAndButton;
-
+public JButton getViewOrdersButton(){
+    return viewOrdersButton;
+}
     public OrderScreen(){
         setContentPane(panel);
         pack();

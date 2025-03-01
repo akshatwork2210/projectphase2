@@ -13,6 +13,7 @@ import java.awt.event.KeyEvent;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Vector;
 
@@ -72,13 +73,19 @@ public class OrderGenerateForm extends JFrame {
         submitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(customerNameComboBox.getSelectedIndex()==0){
+                    JOptionPane.showMessageDialog(MyClass.orderGenerateForm,"please select a customer name","incomplete information",JOptionPane.ERROR_MESSAGE);
+                return;
+                }
                 DefaultTableModel model = (DefaultTableModel) orderSlip.getModel();
                 int rowCount = model.getRowCount();
 
                 try {
                     // Generate a new slip_id for the entire batch
                     String getSlipIdQuery = "SELECT IFNULL(MAX(slip_id), 0) + 1 FROM order_slips";
-                    ResultSet rs = MyClass.S.executeQuery(getSlipIdQuery);
+                    Statement stmt=MyClass.C.createStatement();
+
+                    ResultSet rs = stmt.executeQuery(getSlipIdQuery);
                     int slipId = 1;
                     if (rs.next()) {
                         slipId = rs.getInt(1);  // New slip_id
@@ -105,7 +112,7 @@ public class OrderGenerateForm extends JFrame {
                         String query = "INSERT INTO order_slips (slip_type,customer_name,slip_id, item_number, design_id, item_name, quantity, plating_grams, raw_material_price, other_details) "
                                 + "VALUES ("+"\""+panaType+"\","+"\""+customerName+"\"," + slipId + ", " + itemNumber + ", '" + designId + "', '" + itemName + "', " + quantity + ", " + platingGrams + ", " + rawMaterialCost + ", \"" + otherDetails + "\")";
 
-                        MyClass.S.executeUpdate(query);
+                        stmt.executeUpdate(query);
                     }
                     if(created)
                     System.out.println("New order slip created: Slip ID = " + slipId);
@@ -171,8 +178,9 @@ int prevRow =0;
 //                            JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "success in building algorithm");
 
                       try {
+                          Statement stmt = MyClass.C.createStatement();
 
-                          ResultSet resultSet = MyClass.S.executeQuery("Select * from inventory;");
+                          ResultSet resultSet = stmt.executeQuery("Select * from inventory;");
                           while (resultSet.next()) {
                               if (resultSet.getString(1).contentEquals(cellContent)) {
                                   model.setValueAt(resultSet.getString("itemname"), row, 1);
@@ -205,8 +213,9 @@ int prevRow =0;
         ArrayList<String> customerNames = new ArrayList<>();
         try {
 
+            Statement stmt = MyClass.C.createStatement();
 
-            ResultSet rs = MyClass.S.executeQuery("SELECT customer_name FROM customers");
+            ResultSet rs = stmt.executeQuery("SELECT customer_name FROM customers");
             // Clear previous entries in combo boxes before populating
             customerNameComboBox.removeAllItems();
             customerNames.add("Select Customer");

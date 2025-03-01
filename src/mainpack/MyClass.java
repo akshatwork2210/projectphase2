@@ -11,6 +11,12 @@ import loginsignup.login.loggedin.ordermanagement.OrderScreen;
 import loginsignup.login.loggedin.ordermanagement.generateorder.OrderGenerateForm;
 import loginsignup.login.loggedin.ordermanagement.vieworders.ViewOrders;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -37,7 +43,7 @@ public class MyClass {
         login.setVisible(false);
         viewOrders=new ViewOrders();
 //        orderScreen.getGenerateANewOrderButton().doClick();
-        viewOrders.setVisible(true);
+        orderScreen.getViewOrdersButton().doClick();
 
     }
    public static ViewOrders viewOrders;
@@ -65,8 +71,41 @@ public class MyClass {
         return conn;
     }
     public static Connection C;
-    public static Statement S;
 
+    public static void printPanel(JPanel panel) {
+        PrinterJob job = PrinterJob.getPrinterJob();
+        job.setJobName("Print Panel");
+
+        job.setPrintable(new Printable() {
+            @Override
+            public int print(Graphics g, PageFormat pf, int pageIndex) throws PrinterException {
+                if (pageIndex > 0) {
+                    return NO_SUCH_PAGE;
+                }
+
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.translate(pf.getImageableX(), pf.getImageableY());
+
+                // Scale panel to fit page
+                double scaleX = pf.getImageableWidth() / panel.getWidth();
+                double scaleY = pf.getImageableHeight() / panel.getHeight();
+                double scale = Math.min(scaleX, scaleY); // Maintain aspect ratio
+                g2d.scale(scale, scale);
+
+                panel.paint(g2d);
+                return PAGE_EXISTS;
+            }
+        });
+
+        boolean doPrint = job.printDialog();
+        if (doPrint) {
+            try {
+                job.print();
+            } catch (PrinterException e) {
+                e.printStackTrace();
+            }
+        }
+    }
     public static NewBill newBill;
     public static LOGIN login;
     public static BillingScreen billingScreen;

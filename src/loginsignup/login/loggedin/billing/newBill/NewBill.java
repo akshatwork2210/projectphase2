@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class NewBill extends JFrame {
     private JComboBox customerComboBox;
@@ -33,14 +34,15 @@ public class NewBill extends JFrame {
         customerComboBox.addItem("Select Customer");
 
         try {
-            MyClass.S = MyClass.C.createStatement();
-            ResultSet rs = MyClass.S.executeQuery("SELECT customer_name FROM customers");
+            Statement stmt;
+            stmt= MyClass.C.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT customer_name FROM customers");
             while (rs.next()) {
                 customerComboBox.addItem(rs.getString("customer_name"));
             }
             String query = "SELECT MAX(BillID) FROM bills;";
 
-            rs = MyClass.S.executeQuery(query);
+            rs = stmt.executeQuery(query);
 
             int newBillID = 1; // Default BillID if no bills exist
 
