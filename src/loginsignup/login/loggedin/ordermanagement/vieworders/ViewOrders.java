@@ -2,11 +2,13 @@ package loginsignup.login.loggedin.ordermanagement.vieworders;
 
 import mainpack.MyClass;
 import org.jdesktop.swingx.prompt.PromptSupport;
+import testpackage.TestClass;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -29,13 +31,13 @@ public class ViewOrders extends JFrame {
                         query += "WHERE customer_name = \"" + customerComboBox.getSelectedItem().toString() + "\" ";
                         if (!(panaTypeComboBox.getSelectedIndex() == 0)) {
                             query += "AND slip_type = \"" + panaTypeComboBox.getSelectedItem().toString() + "\";";
-                        }else {
-                            query+=";";
+                        } else {
+                            query += ";";
                         }
-                    }else if (!(panaTypeComboBox.getSelectedIndex() == 0)){
-                        query+="WHERE slip_type =\""+ panaTypeComboBox.getSelectedItem().toString() + "\";";
+                    } else if (!(panaTypeComboBox.getSelectedIndex() == 0)) {
+                        query += "WHERE slip_type =\"" + panaTypeComboBox.getSelectedItem().toString() + "\";";
 
-                    }else query+=";";
+                    } else query += ";";
 
 
                     ResultSet rs = stmt.executeQuery(query);
@@ -66,13 +68,13 @@ public class ViewOrders extends JFrame {
                         query += "WHERE customer_name = \"" + customerComboBox.getSelectedItem().toString() + "\" ";
                         if (!(panaTypeComboBox.getSelectedIndex() == 0)) {
                             query += "AND slip_type = \"" + panaTypeComboBox.getSelectedItem().toString() + "\";";
-                        }else {
-                            query+=";";
+                        } else {
+                            query += ";";
                         }
-                    }else if (!(panaTypeComboBox.getSelectedIndex() == 0)){
-                        query+="WHERE slip_type =\""+ panaTypeComboBox.getSelectedItem().toString() + "\";";
+                    } else if (!(panaTypeComboBox.getSelectedIndex() == 0)) {
+                        query += "WHERE slip_type =\"" + panaTypeComboBox.getSelectedItem().toString() + "\";";
 
-                    }else query+=";";
+                    } else query += ";";
 
 
                     ResultSet rs = stmt.executeQuery(query);
@@ -179,8 +181,8 @@ public class ViewOrders extends JFrame {
 
                     if (resultSet.next()) {
                         setCurrentBill(Integer.parseInt(resultSet.getString("slip_id"))); // Set previous slip_id
+                    } else {
                     }
-                    else{}
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -201,17 +203,48 @@ public class ViewOrders extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 MyClass.printPanel(panel);
+                TestClass.writeTableToExcel(orderSlipTable, "myfile.xlxx");
             }
         });
         deleteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int deleteAction=JOptionPane.showConfirmDialog(MyClass.viewOrders, "Are you sure you want to delete order slip "+id, "confirm delete action", JOptionPane.OK_CANCEL_OPTION);
-                if(deleteAction==JOptionPane.CANCEL_OPTION){return;}
-                if(deleteAction==JOptionPane.OK_OPTION){
+                int deleteAction = JOptionPane.showConfirmDialog(MyClass.viewOrders, "Are you sure you want to delete order slip " + id, "confirm delete action", JOptionPane.OK_CANCEL_OPTION);
+                if (deleteAction == JOptionPane.CANCEL_OPTION) {
+                    return;
+                }
+                if (deleteAction == JOptionPane.OK_OPTION) {
                     try {
-                        MyClass.C.createStatement().executeUpdate("delete from order_slips where slip_id="+id);
-                        prevButton.doClick();
+                        String query;
+                        query = "select min(slip_id) from order_slips ";
+                        if (!(customerComboBox.getSelectedIndex() == 0)) {
+                            query += "where customer_name=\"" + customerName + "\" ";
+                            if (!(panaTypeComboBox.getSelectedIndex() == 0)) {
+                                query += " and slip_type= \"" + panaType + "\";";
+                            } else {
+                                query += ";";
+                            }
+
+                        } else if (!(panaTypeComboBox.getSelectedIndex() == 0)) {
+                            query += "where slip_type=\"" + panaType + "\";";
+                        } else query += ";";
+
+
+                        ResultSet rs = MyClass.C.createStatement().executeQuery(query);
+                        int idd=MyClass.viewOrders.id;
+
+                        if (rs.next()) {
+                            if (rs.getString(1).contentEquals("" + idd)) {
+                                System.out.println(rs.getString(1) + "       " + idd);
+                                nextButton.doClick();
+                            } else {
+                                prevButton.doClick();
+                                System.out.println(rs.getString(1)+"       "+idd);
+
+                            }
+                        }
+                        MyClass.C.createStatement().executeUpdate("delete from order_slips where slip_id=" + idd);
+                        System.out.println("id ->"+idd+"deleted");
                     } catch (SQLException ex) {
                         throw new RuntimeException(ex);
                     }
@@ -241,22 +274,26 @@ public class ViewOrders extends JFrame {
             while (rs.next()) {
                 customerName = rs.getString("customer_name");
                 slipId = rs.getInt("slip_id");
-                panaType=rs.getString("slip_type");
+                panaType = rs.getString("slip_type");
                 totalPlating += Double.parseDouble(rs.getString("plating_grams"));
                 totalPlatingField.setText("total plating: " + totalPlating);
                 model.addRow(new Object[]{rs.getString("design_id"), rs.getString("item_name"), rs.getInt("quantity"), rs.getBigDecimal("plating_grams"), rs.getBigDecimal("raw_material_price"), rs.getString("other_details")});
             }
-
             orderSlipTable.setModel(model);
-            nameLabel.setText(customerName+"-> "+panaType);
+            nameLabel.setText(customerName + "-> " + panaType);
             billIDLabel.setText(String.valueOf(slipId));
             this.id = slipId;
+             query = "SELECT DATE_FORMAT(created_at, '%d-%m-%y') AS formatted_date FROM order_slips WHERE slip_id = "+id+";";
+            Statement stmt2 = MyClass.C.createStatement();
+            ResultSet rs2 = stmt2.executeQuery(query);
+            if(rs2.next())dateLabel.setText("date: "+rs2.getString(1));
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error fetching bill details: " + e.getMessage());
         }
     }
-    String customerName="",panaType="";
+
+    String customerName = "", panaType = "";
 
     public void init() {
         String[] columnNames = {"design id", "Item Name", "Quantity", "Plating", "Raw Material Cost", "Other Details"};//jtable content
@@ -305,4 +342,5 @@ public class ViewOrders extends JFrame {
     private JTextField totalPlatingField;
     private JButton printButton;
     private JButton deleteButton;
+    private JLabel dateLabel;
 }
