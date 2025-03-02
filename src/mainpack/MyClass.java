@@ -43,8 +43,8 @@ public class MyClass {
         login.setVisible(false);
         viewOrders=new ViewOrders();
 //        orderScreen.getGenerateANewOrderButton().doClick();
-        orderScreen.getViewOrdersButton().doClick();
-
+//        orderScreen.getViewOrdersButton().doClick();
+        billingScreen.getNewBillButton().doClick();
     }
    public static ViewOrders viewOrders;
     public static Connection getConnection(String host, String database, String user, String password) {

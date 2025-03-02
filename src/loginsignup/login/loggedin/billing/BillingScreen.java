@@ -11,6 +11,10 @@ public class BillingScreen extends JFrame {
     private JButton newBillButton;
     private JButton backButton;
 
+    public JButton getNewBillButton() {
+        return newBillButton;
+    }
+
     public BillingScreen(){
         setContentPane(panel);
         pack();
