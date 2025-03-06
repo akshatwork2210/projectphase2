@@ -5,6 +5,7 @@ import mainpack.MyClass;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 
 public class MainScreen extends JFrame{
     public MainScreen(){
@@ -24,6 +25,11 @@ public class MainScreen extends JFrame{
             @Override
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
+                try {
+                    MyClass.C.close();
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
                 MyClass.login.setVisible(true);
             }
         });
