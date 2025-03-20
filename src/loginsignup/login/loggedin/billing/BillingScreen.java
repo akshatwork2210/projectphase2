@@ -16,6 +16,8 @@ public class BillingScreen extends JFrame {
     }
 
     public BillingScreen(){
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         setContentPane(panel);
         pack();
 

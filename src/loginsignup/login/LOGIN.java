@@ -45,6 +45,7 @@ public class LOGIN extends JFrame {
 
     public LOGIN() {
         setContentPane(panel);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         QUITButton.addActionListener(new ActionListener() {
             @Override

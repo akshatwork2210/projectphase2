@@ -40,6 +40,7 @@ public class SearchResultWindow extends JFrame {
     }
 
     public SearchResultWindow() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         setContentPane(panel1);
 

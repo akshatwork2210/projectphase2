@@ -40,11 +40,11 @@ public class MyClass {
         searchResultWindow =new SearchResultWindow();
         login_signup.setVisible(false);
         login.getLOGINButton().doClick();
-        mainScreen.setVisible(false);
+//        mainScreen.setVisible(false);
         login.setVisible(false);
         viewOrders=new ViewOrders();
 //        orderScreen.getGenerateANewOrderButton().doClick();
-        orderScreen.getViewOrdersButton().doClick();
+//        orderScreen.getViewOrdersButton().doClick();
 //        billingScreen.getNewBillButton().doClick();
     }
    public static ViewOrders viewOrders;

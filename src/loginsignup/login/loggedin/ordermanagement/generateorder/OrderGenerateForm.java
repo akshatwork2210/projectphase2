@@ -39,6 +39,8 @@ public class OrderGenerateForm extends JFrame {
     }
 
     public OrderGenerateForm() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         setContentPane(panel);
 
         pack();

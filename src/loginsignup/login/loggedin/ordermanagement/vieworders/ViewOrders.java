@@ -21,6 +21,8 @@ public class ViewOrders extends JFrame {
 
 
     public ViewOrders() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         setContentPane(panel);
         pack();
         customerComboBox.addActionListener(e -> {

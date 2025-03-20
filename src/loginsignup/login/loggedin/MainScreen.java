@@ -7,6 +7,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class MainScreen extends JFrame{
     public void createBackup() {
@@ -40,16 +42,28 @@ public class MainScreen extends JFrame{
         }
     }
 
-
+    private String escapeForBatch(String input) {
+        return input.replace("%", "%%")  // Escape %
+                .replace("^", "^^")  // Escape ^
+                .replace("&", "^&")  // Escape &
+                .replace("|", "^|")  // Escape |
+                .replace("<", "^<")  // Escape <
+                .replace(">", "^>")  // Escape >
+                .replace("!", "^!"); // Escape !
+    }
     public void createFile(String dbUser, String dbPassword, String dbName) {
         String filePath = "tempBack.bat";
-        String backupFile = System.getProperty("user.dir") + "\\src\\resources\\backup.sql"; // Adjust path as needed
+        SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yy___HH_mm_ss"); // Format: 20250320_153045
+        String timestamp = sdf.format(new Date());
+        timestamp+="_backup.sql";
+        String backupFile = System.getProperty("user.dir") + "\\src\\resources\\"+timestamp; // Adjust path as needed
 
         try {
+//            dbPassword=escapeForBatch(dbPassword)
             // Create the batch file
             FileWriter writer = new FileWriter(filePath);
             writer.write("@echo off\n");
-            writer.write("mysqldump -u " + dbUser + " -p" + dbPassword + " " + dbName + " > \"" + backupFile + "\"\n");
+            writer.write("mysqldump -u " + dbUser + " -p" + escapeForBatch(dbPassword) + " " + dbName + " > \"" + backupFile + "\"\n");
             writer.close();
 
             // Run the batch file
@@ -73,12 +87,12 @@ public class MainScreen extends JFrame{
             }
 
             // Delete the batch file after execution
-            File file = new File(filePath);
-            if (file.delete()) {
-                System.out.println("Temporary file deleted.");
-            } else {
-                System.err.println("Failed to delete temporary file.");
-            }
+//            File file = new File(filePath);
+//            if (file.delete()) {
+//                System.out.println("Temporary file deleted.");
+//            } else {
+//                System.err.println("Failed to delete temporary file.");
+//            }
 
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -86,6 +100,8 @@ public class MainScreen extends JFrame{
     }
 
     public MainScreen(){
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         this.setContentPane(panel);
         pack();
 

@@ -13,6 +13,8 @@ import java.sql.SQLException;
 public class AddInventory extends JFrame
 {
     public AddInventory(){
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         setContentPane(panel);
 
         submitQueryButton.addActionListener(new ActionListener() {

@@ -40,6 +40,7 @@ public class NewBill extends JFrame {
     }
 
     public NewBill() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         setContentPane(panel);
         pack();

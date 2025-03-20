@@ -17,6 +17,8 @@ public class InventoryScreen extends  JFrame {
     private JButton addInventoryButton;
 
     public InventoryScreen() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         setContentPane(panel);
 
 

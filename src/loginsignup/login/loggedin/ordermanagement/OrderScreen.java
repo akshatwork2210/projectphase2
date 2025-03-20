@@ -17,6 +17,8 @@ public JButton getViewOrdersButton(){
     return viewOrdersButton;
 }
     public OrderScreen(){
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         setContentPane(panel);
         pack();
         backButton.addActionListener(new ActionListener() {
