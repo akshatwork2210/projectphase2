@@ -5,6 +5,7 @@ import loginsignup.login.loggedin.billing.BillingScreen;
 import loginsignup.login.LOGIN;
 import loginsignup.LOGIN_SIGNUP;
 import loginsignup.login.loggedin.billing.newBill.NewBill;
+import loginsignup.login.loggedin.billing.newBill.SearchResultWindow;
 import loginsignup.login.loggedin.inventorymanagement.InventoryScreen;
 import loginsignup.login.loggedin.inventorymanagement.addinventory.AddInventory;
 import loginsignup.login.loggedin.ordermanagement.OrderScreen;
@@ -20,7 +21,6 @@ import java.awt.print.PrinterJob;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
@@ -37,29 +37,29 @@ public class MyClass {
         orderGenerateForm=new OrderGenerateForm();
         inventoryScreen = new InventoryScreen();
         addInventory=new AddInventory();
+        searchResultWindow =new SearchResultWindow();
         login_signup.setVisible(false);
         login.getLOGINButton().doClick();
         mainScreen.setVisible(false);
         login.setVisible(false);
         viewOrders=new ViewOrders();
 //        orderScreen.getGenerateANewOrderButton().doClick();
-//        orderScreen.getViewOrdersButton().doClick();
-        billingScreen.getNewBillButton().doClick();
+        orderScreen.getViewOrdersButton().doClick();
+//        billingScreen.getNewBillButton().doClick();
     }
    public static ViewOrders viewOrders;
-    public static Connection getConnection(String host, String database, String user, String password) {
+    public static SearchResultWindow searchResultWindow;
+    public static Connection getConnection(String url, String user, String password) {
         Connection conn = null;
         try {
             // Construct the full JDBC URL
-            String url = "jdbc:mysql://" + host + ":3306/" + database;
 
             // Load MySQL JDBC Driver
             Class.forName("com.mysql.cj.jdbc.Driver");
 
             // Establish Connection
             conn = DriverManager.getConnection(url, user, password);
-            System.out.println("✅ Database Connected Successfully to: " + database);
-            C=conn;
+            System.out.println("✅ Database Connected Successfully to: " );
 
         } catch (ClassNotFoundException e) {
             System.out.println("❌ MySQL Driver Not Found!");
@@ -116,5 +116,14 @@ public class MyClass {
     public static InventoryScreen inventoryScreen;
 public static AddInventory addInventory;
 
+    public static void positionFrames(JFrame topFrame, JFrame bottomFrame ) {
+        // Screen dimensions
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int screenWidth = screenSize.width;
+        int screenHeight = screenSize.height;
 
+        // Position and size the frames
+        topFrame.setBounds(0, 0, screenWidth, screenHeight / 2);
+        bottomFrame.setBounds(0, screenHeight / 2, screenWidth, screenHeight / 2);
+    }
 }

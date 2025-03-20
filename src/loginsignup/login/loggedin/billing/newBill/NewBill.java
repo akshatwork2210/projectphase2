@@ -5,26 +5,39 @@ import mainpack.MyClass;
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.plaf.nimbus.State;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.math.BigDecimal;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Vector;
 
+import org.jdesktop.swingx.prompt.PromptSupport;
+
 public class NewBill extends JFrame {
     private JComboBox customerComboBox;
     private JPanel panel;
+    private int curBillID;
+
     private JLabel idLabel;
     private JTable billTable;
     private JButton backButton;
-    private JComboBox comboBox1;
+    private JComboBox slipDetailComboBox;
     private JComboBox dateComboBox;
+    private JButton submitButton;
+    private JButton resetButton;
+    private JButton undoButton;
+    private JTextField slipNumberField;
+    private Connection transacTemp;
+
+    public int getCurBillID() {
+        return curBillID;
+    }
 
     public NewBill() {
 
@@ -36,24 +49,147 @@ public class NewBill extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
                 MyClass.billingScreen.setVisible(true);
+                MyClass.searchResultWindow.dispose();
             }
         });
+        submitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int billID = getCurBillID();
+
+                    // Insert into bills table
+                    String insertBillQuery = "INSERT INTO bills (BillID) VALUES (?)";
+                    try (PreparedStatement billStmt = MyClass.C.prepareStatement(insertBillQuery)) {
+                        billStmt.setInt(1, billID);
+                        billStmt.executeUpdate();
+                    }
+
+                    // Insert into billdetails table
+                    String insertDetailsQuery = "INSERT INTO billdetails (BillID, SNo, ItemName, DesignID, OrderType, LabourCost, " + "DullChillaiCost, MeenaColorMeenaCost, RhodiumCost, NagSettingCost, OtherBaseCosts, OtherBaseCostNotes, " + "TotalBaseCosting, GoldRate, GoldPlatingWeight, TotalGoldCost, TotalFinalCost, OrderSlipNumber) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+                    try (PreparedStatement detailsStmt = MyClass.C.prepareStatement(insertDetailsQuery)) {
+                        DefaultTableModel model = (DefaultTableModel) billTable.getModel();
+                        String panaType = "";
+                        String orderSlipNumber = "";
+
+                        for (int i = 0; i < model.getRowCount() - 1; i++) {
+                            detailsStmt.setInt(1, billID); // BillID
+                            detailsStmt.setInt(2, i + 1); // SNo
+                            detailsStmt.setString(3, model.getValueAt(i, 1).toString()); // ItemName
+                            detailsStmt.setString(4, model.getValueAt(i, 2).toString()); // DesignID
+                            detailsStmt.setString(5, panaType); // OrderType
+                            detailsStmt.setBigDecimal(6, new BigDecimal(model.getValueAt(i, 3).toString())); // LabourCost
+                            detailsStmt.setBigDecimal(7, new BigDecimal(model.getValueAt(i, 5).toString())); // DullChillaiCost
+                            detailsStmt.setBigDecimal(8, new BigDecimal(model.getValueAt(i, 6).toString())); // MeenaColorMeenaCost
+                            detailsStmt.setBigDecimal(9, new BigDecimal(model.getValueAt(i, 7).toString())); // RhodiumCost
+                            detailsStmt.setBigDecimal(10, new BigDecimal(model.getValueAt(i, 8).toString())); // NagSettingCost
+                            detailsStmt.setBigDecimal(11, new BigDecimal(model.getValueAt(i, 9).toString())); // OtherBaseCosts
+                            detailsStmt.setString(12, model.getValueAt(i, 10).toString()); // OtherBaseCostNotes
+                            detailsStmt.setBigDecimal(13, new BigDecimal(model.getValueAt(i, 11).toString())); // TotalBaseCosting (+G)
+                            detailsStmt.setBigDecimal(14, new BigDecimal(model.getValueAt(i, 13).toString())); // GoldRate
+                            detailsStmt.setBigDecimal(15, new BigDecimal(model.getValueAt(i, 12).toString())); // GoldPlatingWeight
+                            detailsStmt.setBigDecimal(16, new BigDecimal(model.getValueAt(i, 14).toString())); // TotalGoldCost
+                            detailsStmt.setBigDecimal(17, new BigDecimal(model.getValueAt(i, 15).toString())); // TotalFinalCost
+                            detailsStmt.setString(18, orderSlipNumber); // OrderSlipNumber (optional)
+
+                            detailsStmt.addBatch();
+                        }
+                        detailsStmt.executeBatch();
+                        getTransacTemp().commit();
+                        getTransacTemp().close();
+                    }
+
+                    System.out.println("Data inserted successfully.");
+
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        NewBill temp = this;
+        slipNumberField.addActionListener(new ActionListener() {
+            @Override
+
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int x = Integer.parseInt(slipNumberField.getText());
+                } catch (NumberFormatException ex) {
+                    ex.printStackTrace();
+                    slipNumberField.setText("");
+                    JOptionPane.showMessageDialog(MyClass.newBill, "an error occured, invalid input");
+                    return;
+                }
+
+                try {
+
+                    Statement stmt = MyClass.C.createStatement();
+                    String query = "select slip_id from order_slips where slip_id=" + slipNumberField.getText() + ";";
+                    ResultSet rs = stmt.executeQuery(query);
+                    if (!rs.next()) {
+                        JOptionPane.showMessageDialog(MyClass.newBill, "orderslip not found");
+                        return;
+                    }
+                } catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(MyClass.newBill, "sql exception occured");
+                    ex.printStackTrace();
+                    return;
+                }
+
+                if (MyClass.searchResultWindow.isVisible()) {
+                    MyClass.searchResultWindow.dispose();
+                }
+                MyClass.searchResultWindow = new SearchResultWindow(Integer.parseInt(slipNumberField.getText()));
+                MyClass.searchResultWindow.setVisible(true);
+                backButton.setEnabled(false);
+                MyClass.positionFrames(temp, MyClass.searchResultWindow);
+
+            }
+        });
+    }
+
+    public int getNextBillID() {
+        String query = "SELECT MAX(BillID) FROM bills";
+        try (Statement stmt = MyClass.C.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
+            if (rs.next()) {
+                return rs.getInt(1) + 1;
+            }
+        } catch (SQLException e) {
+e.printStackTrace();        }
+        return 1; // Default if no records exist
+    }
+
+    public Connection getTransacTemp() {
+        return transacTemp;
     }
 
     DefaultTableModel tableModel;
     Vector<String> billDetails = new Vector<>();
 
     public void initSystemlogin() {
-        billDetails = new Vector<>();
+        curBillID = getNextBillID();
+        try {
+            if (transacTemp != null) if (!transacTemp.isClosed()) transacTemp.close();
+            transacTemp = MyClass.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
+            transacTemp.setAutoCommit(false);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        PromptSupport.setPrompt("Slip Number", slipNumberField);
+        PromptSupport.setForeground(Color.GRAY, slipNumberField);
+
         listOfNonEditableCells = new ArrayList<>();
         Vector<String> dateList = new Vector<>();
         LocalDate today = LocalDate.now();
         LocalDate oneYearAgo = today.minusYears(1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        billDetails = new Vector<>();
         billDetails.add("SNo");
         billDetails.add("ItemName");
         billDetails.add("DesignID");
         billDetails.add("Labour");
+        billDetails.add("Raw");
         billDetails.add("DullChillai");
         billDetails.add("M/CM");
         billDetails.add("Rh");
@@ -92,8 +228,7 @@ public class NewBill extends JFrame {
                     // Check if any column in this row has data
                     boolean rowHasData = false;
                     for (int i = 0; i < tableModel.getColumnCount(); i++) {
-                        if (tableModel.getValueAt(row, i) != null &&
-                                !tableModel.getValueAt(row, i).toString().trim().isEmpty()) {
+                        if (tableModel.getValueAt(row, i) != null && !tableModel.getValueAt(row, i).toString().trim().isEmpty()) {
                             rowHasData = true;
                             break;
                         }
@@ -121,12 +256,12 @@ public class NewBill extends JFrame {
                     DefaultTableModel newModel = redoModel();
                     billTable.setModel(newModel);
                     tableModel = newModel;
-                    if(col==designIdIndex){
+                    if (col == designIdIndex) {
                         tableModel.removeTableModelListener(this);
                         String designID = tableModel.getValueAt(row, designIdIndex).toString().trim();
 
                         if (!designID.isEmpty()) {
-                            String query = "SELECT itemname FROM inventory WHERE DesignID = ?";
+                            String query = "SELECT itemname,price FROM inventory WHERE DesignID = ?";
 
                             try (PreparedStatement stmt = MyClass.C.prepareStatement(query)) {
 
@@ -136,7 +271,9 @@ public class NewBill extends JFrame {
                                 if (rs.next()) {
                                     // If DesignID exists, update ItemName column
                                     String itemName = rs.getString("itemname");
+                                    String price = rs.getString("price");
                                     tableModel.setValueAt(itemName, row, billDetails.indexOf("ItemName"));
+                                    tableModel.setValueAt(price, row, billDetails.indexOf("Raw"));
                                 } else {
                                     // If DesignID does not exist, clear ItemName column
                                     tableModel.setValueAt("", row, billDetails.indexOf("ItemName"));
@@ -162,8 +299,7 @@ public class NewBill extends JFrame {
             }
         });
         // Step 1: Get InputMap of JTable for WHEN_ANCESTOR_OF_FOCUSED_COMPONENT
-        billTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
-                .put(KeyStroke.getKeyStroke("control D"), "copyAbove");
+        billTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke("control D"), "copyAbove");
 
 // Step 2: Bind the KeyStroke to an Action
         billTable.getActionMap().put("copyAbove", new AbstractAction() {
@@ -181,38 +317,41 @@ public class NewBill extends JFrame {
         });
 
 
-
         try {
-            Statement stmt;
-            stmt = MyClass.C.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT customer_name FROM customers");
-            while (rs.next()) {
-                customerComboBox.addItem(rs.getString("customer_name"));
+            Statement stmt1;
+            stmt1 = MyClass.C.createStatement();
+            ResultSet rs1 = stmt1.executeQuery("SELECT customer_name FROM customers");
+            while (rs1.next()) {
+                customerComboBox.addItem(rs1.getString("customer_name"));
             }
             String query = "SELECT MAX(BillID) FROM bills;";
+            Statement stmt2 = MyClass.C.createStatement();
 
-            rs = stmt.executeQuery(query);
+            rs1 = stmt1.executeQuery(query);
 
             int newBillID = 1; // Default BillID if no bills exist
 
             // If the query returns a result, get the max BillID and increment it
-            if (rs.next()) {
-                int lastBillID = rs.getInt(1);
-                if (rs.wasNull()) {
+            if (rs1.next()) {
+                int lastBillID = rs1.getInt(1);
+                if (rs1.wasNull()) {
                     newBillID = 1; // If no bills, set BillID to 1
                 } else {
                     newBillID = lastBillID + 1; // Increment the last BillID
                 }
+            }
+            ResultSet rs2 = stmt2.executeQuery("select type_name from ordertype;");
+            while (rs2.next()) {
+                slipDetailComboBox.addItem(rs2.getString(1));
             }
 
             idLabel.setText("Bill ID: " + newBillID);
             pack();
             setExtendedState(JFrame.MAXIMIZED_BOTH);
 
-            rs.close();
+            rs1.close();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+e.printStackTrace();        }
 
 
     }
@@ -261,9 +400,13 @@ public class NewBill extends JFrame {
             }
         };
 
-        for (TableModelListener tlm:((DefaultTableModel) billTable.getModel()).getTableModelListeners()){
-            m.addTableModelListener( tlm);
+        for (TableModelListener tlm : ((DefaultTableModel) billTable.getModel()).getTableModelListeners()) {
+            m.addTableModelListener(tlm);
         }
         return m;
+    }
+
+    public JButton getBackButton() {
+        return backButton;
     }
 }

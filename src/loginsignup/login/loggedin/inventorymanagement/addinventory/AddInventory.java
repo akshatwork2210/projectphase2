@@ -61,7 +61,10 @@ public class AddInventory extends JFrame
             }
         });
     }
-    public void init(){}
+    public void init(){
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    }
     private JButton submitQueryButton;
     private JButton backButton;
     private JTextField itemName;
