@@ -13,14 +13,16 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Vector;
 
 import org.jdesktop.swingx.prompt.PromptSupport;
 
 public class NewBill extends JFrame {
     int itemID;
+    private double goldrate;
 
     public void setItemID(int itemID) {
         this.itemID = itemID;
@@ -47,6 +49,7 @@ public class NewBill extends JFrame {
     private JButton resetButton;
     private JButton undoButton;
     private JTextField slipNumberField;
+    private JTextField goldRateTextField;
     private Connection transacTemp;
     public boolean notThroughOrderSlip = true;
 
@@ -258,6 +261,53 @@ public class NewBill extends JFrame {
 
             }
         });
+        goldRateTextField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                double goldrate = goldRateTextField.getText().isEmpty() ? 0 : Double.parseDouble(goldRateTextField.getText());
+                setGoldRate(goldrate);
+                reCalculateValuesAndAppend();
+            }
+        });
+    }
+
+    private void reCalculateValuesAndAppend() {
+        List<Integer> mathColumns = Arrays.asList(
+                billDetails.indexOf("Labour"),
+                billDetails.indexOf("Raw"),
+                billDetails.indexOf("DullChillai"),
+                billDetails.indexOf("M/CM"),
+                billDetails.indexOf("Rh"),
+                billDetails.indexOf("Nag"),
+                billDetails.indexOf("Other"),
+                billDetails.indexOf("+G"),
+                billDetails.indexOf("Gold(ing g)"),
+                billDetails.indexOf("gold cost"),
+                billDetails.indexOf("total")
+        );
+
+        for (int row = 0; row < tableModel.getRowCount(); row++) {
+            for (int col : mathColumns) {
+                Object value = tableModel.getValueAt(row, col);
+                double numericValue = 0.0;
+
+                if (value != null && !value.toString().trim().isEmpty()) {
+                    try {
+                        numericValue = Double.parseDouble(value.toString());
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid number at row " + row + ", col " + col);
+                    }
+                }
+
+
+                System.out.println("Row " + row + ", Col " + col + " -> " + numericValue);
+            }
+        }
+
+    }
+
+    private void setGoldRate(double goldrate) {
+        this.goldrate = goldrate;
     }
 
     public int getNextBillID() {
@@ -316,7 +366,8 @@ public class NewBill extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         PromptSupport.setPrompt("Slip Number", slipNumberField);
         PromptSupport.setForeground(Color.GRAY, slipNumberField);
-
+        PromptSupport.setPrompt("gold rate", goldRateTextField);
+        PromptSupport.setForeground(Color.GRAY, goldRateTextField);
         listOfNonEditableCells = new Vector<>();
         Vector<String> dateList = new Vector<>();
         LocalDate today = LocalDate.now();
@@ -324,6 +375,7 @@ public class NewBill extends JFrame {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         billDetails = new Vector<>();
         billDetails.add("SNo");
+        billDetails.add("OrderSlip");
 
         billDetails.add("ItemName");
         billDetails.add("Quantity");
@@ -376,23 +428,6 @@ public class NewBill extends JFrame {
 
                 int row = e.getFirstRow();
                 int col = e.getColumn();
-                double labour = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Labour")));
-                double raw = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Raw")));
-                double dullChillai = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("DullChillai")));
-                double mCm = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("M/CM")));
-                double rh = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Rh")));
-                double nag = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Nag")));
-                double other = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Other")));
-                double plusG = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("+G")));
-                double goldIngG = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Gold(ing g)")));
-                double goldCost = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("gold cost")));
-                double total = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("total")));
-                if (col == billDetails.indexOf("Labour") || col == billDetails.indexOf("Raw") || col == billDetails.indexOf("DullChillai") || col == billDetails.indexOf("M/CM") || col == billDetails.indexOf("Rh") || col == billDetails.indexOf("Nag") || col == billDetails.indexOf("Other") || col == billDetails.indexOf("+G") || col == billDetails.indexOf("Gold(ing g)") || col == billDetails.indexOf("gold cost") || col == billDetails.indexOf("total")) {
-                        plusG=labour+raw+dullChillai+mCm+rh+nag+other;
-                        goldCost=goldIngG*goldRate;
-                }
-
-
                 int snoValue = (tableModel.getValueAt(row, billDetails.indexOf("SNo")) != null && !tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString().isEmpty()) ? Integer.parseInt(tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString().contentEquals("") ? "0" : tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString()) : -1;
                 if (snoValue == -1) {
                     sno++;
@@ -438,6 +473,34 @@ public class NewBill extends JFrame {
                     JOptionPane.showMessageDialog(MyClass.newBill, "invalid value entered");
 
                 }
+                double labour = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Labour")));
+                double raw = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Raw")));
+                double dullChillai = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("DullChillai")));
+                double mCm = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("M/CM")));
+                double rh = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Rh")));
+                double nag = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Nag")));
+                double other = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Other")));
+                getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("+G")));
+                double plusG;
+                double goldIngG = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Gold(ing g)")));
+                getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("gold cost")));
+                double goldCost;
+                getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("total")));
+                double total;
+//                if (col == billDetails.indexOf("Labour") || col == billDetails.indexOf("Raw") || col == billDetails.indexOf("DullChillai") || col == billDetails.indexOf("M/CM") || col == billDetails.indexOf("Rh") || col == billDetails.indexOf("Nag") || col == billDetails.indexOf("Other") || col == billDetails.indexOf("+G") || col == billDetails.indexOf("Gold(ing g)") || col == billDetails.indexOf("gold cost") || col == billDetails.indexOf("total"))
+                {
+                    plusG = labour + raw + dullChillai + mCm + rh + nag + other;
+                    goldCost = goldIngG * goldrate;
+                    plusG*=quantity;
+                    total=plusG+goldCost;
+
+                    tableModel.setValueAt(total,row,billDetails.indexOf("total"));
+                    tableModel.setValueAt(plusG,row,billDetails.indexOf("+G"));
+                    tableModel.setValueAt(goldCost,row,billDetails.indexOf("gold cost"));
+                }
+
+
+
 
                 Object curValue = tableModel.getValueAt(row, col) == null ? "" : tableModel.getValueAt(row, col);
                 int curSlipID = -1;
