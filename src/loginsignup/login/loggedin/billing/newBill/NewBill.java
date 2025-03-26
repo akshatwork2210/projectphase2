@@ -27,7 +27,7 @@ public class NewBill extends JFrame {
     }
 
     public void createBillToOrderSlipAssosciation(int sNo, int itemID) {
-        System.out.println("before inserting sno is"+sNo);
+        System.out.println("before inserting sno is" + sNo);
 
         snoToItemIdMap.put(sNo, itemID);
     }
@@ -273,6 +273,17 @@ public class NewBill extends JFrame {
         return 1; // Default if no records exist
     }
 
+    private double getDoubleValue(Object value) {
+        if (value == null || value.toString().trim().isEmpty()) {
+            return 0.0;
+        }
+        try {
+            return Double.parseDouble(value.toString().trim());
+        } catch (NumberFormatException e) {
+            return 0.0; // Return 0.0 if parsing fails
+        }
+    }
+
     public Connection getTransacTemp() {
         return transacTemp;
     }
@@ -352,27 +363,47 @@ public class NewBill extends JFrame {
         tableModel.addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
-                for (int key:snoToItemIdMap.keySet())
-                {
-                    System.out.println(key+" : "+snoToItemIdMap.get(key));
+                // Get the row index where the data is stored
+
+// Extract values from the table, handling null or empty values
+// Utility function to safely parse values
+
+
+                for (int key : snoToItemIdMap.keySet()) {
+                    System.out.println(key + " : " + snoToItemIdMap.get(key));
                 }
                 TableModelListener[] listeners = removeModelListener(tableModel);
 
                 int row = e.getFirstRow();
                 int col = e.getColumn();
+                double labour = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Labour")));
+                double raw = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Raw")));
+                double dullChillai = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("DullChillai")));
+                double mCm = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("M/CM")));
+                double rh = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Rh")));
+                double nag = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Nag")));
+                double other = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Other")));
+                double plusG = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("+G")));
+                double goldIngG = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Gold(ing g)")));
+                double goldCost = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("gold cost")));
+                double total = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("total")));
+                if (col == billDetails.indexOf("Labour") || col == billDetails.indexOf("Raw") || col == billDetails.indexOf("DullChillai") || col == billDetails.indexOf("M/CM") || col == billDetails.indexOf("Rh") || col == billDetails.indexOf("Nag") || col == billDetails.indexOf("Other") || col == billDetails.indexOf("+G") || col == billDetails.indexOf("Gold(ing g)") || col == billDetails.indexOf("gold cost") || col == billDetails.indexOf("total")) {
+                        plusG=labour+raw+dullChillai+mCm+rh+nag+other;
+                        goldCost=goldIngG*goldRate;
+                }
 
-                int snoValue = (tableModel.getValueAt(row, billDetails.indexOf("SNo")) != null && !tableModel.getValueAt(row,billDetails.indexOf("SNo")).toString().isEmpty()) ? Integer.parseInt(tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString().contentEquals("") ? "0" : tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString()) : -1;
+
+                int snoValue = (tableModel.getValueAt(row, billDetails.indexOf("SNo")) != null && !tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString().isEmpty()) ? Integer.parseInt(tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString().contentEquals("") ? "0" : tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString()) : -1;
                 if (snoValue == -1) {
                     sno++;
                     tableModel.setValueAt(sno, row, billDetails.indexOf("SNo"));
                     if (updateThroughSlip) {
-                        System.out.println(sno+" is the value of sno before passing");
+                        System.out.println(sno + " is the value of sno before passing");
                         createBillToOrderSlipAssosciation(sno, itemID);
-                        updateThroughSlip=false;
+                        updateThroughSlip = false;
                     }
                 }
-                snoValue = tableModel.getValueAt(row, billDetails.indexOf("SNo")) == null ? -1 : Integer.parseInt(tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString().contentEquals("")?"0":tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString());
-
+                snoValue = tableModel.getValueAt(row, billDetails.indexOf("SNo")) == null ? -1 : Integer.parseInt(tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString().contentEquals("") ? "0" : tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString());
 
 
                 if (col == -1) return;
@@ -413,8 +444,7 @@ public class NewBill extends JFrame {
                 if (snoToItemIdMap.containsKey(snoValue)) {
                     int itemId = snoToItemIdMap.get(snoValue);
 
-                    String query = "SELECT * FROM order_slips WHERE slip_id = " +
-                            "(SELECT slip_id FROM order_slips WHERE item_id = ?)";
+                    String query = "SELECT * FROM order_slips WHERE slip_id = " + "(SELECT slip_id FROM order_slips WHERE item_id = ?)";
 
                     try (PreparedStatement stmt = MyClass.C.prepareStatement(query)) {
                         stmt.setInt(1, itemId); // Use PreparedStatement to prevent SQL injection
@@ -518,25 +548,36 @@ public class NewBill extends JFrame {
 
 
                     }
-                    for(Integer a:snoToItemIdMap.keySet()){
-                        System.out.println("key set values:"+a);
+                    for (Integer a : snoToItemIdMap.keySet()) {
+                        System.out.println("key set values:" + a);
                     }
                     if (snoToItemIdMap.containsKey(snoValue)) {
                         try {
                             System.out.println("damn it yrr");
-                            Statement stmt = getTransacTemp().createStatement();
+                            Statement stmt = MyClass.C.createStatement();
                             String query = "select * from order_slips where item_id=" + snoToItemIdMap.get(snoValue);
                             int item_id = snoToItemIdMap.get(snoValue);
                             int netQuantity = 0;
-                            int keyy=0;
+                            int keyy = 0;
                             for (int key : snoToItemIdMap.keySet()) {
                                 if (snoToItemIdMap.get(key) == item_id) {
                                     System.out.println("");
-                                    netQuantity = netQuantity + ((tableModel.getValueAt(key - 1, quantityIndex) == null) ? 0 : Integer.parseInt(tableModel.getValueAt(key - 1, quantityIndex).toString()));
-
+                                    netQuantity = netQuantity + ((tableModel.getValueAt(key - 1, quantityIndex) != null && !tableModel.getValueAt(key - 1, quantityIndex).toString().isEmpty()) ? Integer.parseInt(tableModel.getValueAt(key - 1, quantityIndex).toString()) : 0);
+                                }
+                                ResultSet rs = stmt.executeQuery(query);
+                                if (rs.next()) {
+                                    int quantityTemp = rs.getInt("quantity") - rs.getInt("billed_quantity");
+                                    if (quantityTemp < netQuantity) {
+                                        JOptionPane.showMessageDialog(MyClass.newBill, "invalid quanity has been entered for an item connected to a order slip");
+                                        tableModel.setValueAt("", row, quantityIndex);
+                                    }
+                                } else {
+                                    JOptionPane.showMessageDialog(MyClass.newBill, "error has occured");
+                                    System.exit(-1);
+                                    throw new RuntimeException();
                                 }
                             }
-                            System.out.println("item id:"+item_id+" has total "+netQuantity);
+                            System.out.println("item id:" + item_id + " has total " + netQuantity);
 
                         } catch (SQLException ex) {
                             throw new RuntimeException(ex);
