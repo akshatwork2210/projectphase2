@@ -4,6 +4,7 @@ import mainpack.MyClass;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumnModel;
 import java.awt.event.*;
 import java.sql.*;
 import java.util.HashMap;
@@ -57,15 +58,16 @@ public class SearchResultWindow extends JFrame {
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 
-                    appendToBill(ID);
+                    pushDetails(doSqlUpadates(ID));
 
                 }
             }
         });
     }
 
-    private void appendToBill(int BID) {
-
+    private Vector<Integer> doSqlUpadates(int BID) //this will also writen values to append to the bill
+    {
+        Vector<Integer> detailsToPush = new Vector<>();
 
         DefaultTableModel model = (DefaultTableModel) orderSlipTable.getModel();
         int selectedRow = orderSlipTable.getSelectedRow();
@@ -73,25 +75,32 @@ public class SearchResultWindow extends JFrame {
         int maxQuantity = Integer.parseInt(model.getValueAt(selectedRow, model.findColumn("Quantity")).toString());
 
         int selectedQuantity = showPrompt(maxQuantity, itemName);
-        if (selectedQuantity < 0) return;
+
+        if (selectedQuantity < 0) return null;
         String query = "UPDATE order_slips "
-                + "SET quantity = quantity - ? "
+                + "SET billed_quantity = billed_quantity + ? "
                 + "WHERE slip_id = ? AND item_id = ?";
         try {
             Connection con = MyClass.newBill.getTransacTemp();
             PreparedStatement statement = con.prepareStatement(query);
+            int itemid = snoToItemIdMap.get(Integer.parseInt(orderSlipTable.getValueAt(orderSlipTable.getSelectedRow(), ((DefaultTableModel) orderSlipTable.getModel()).findColumn("sno")).toString()));
             statement.setInt(1, selectedQuantity);
             statement.setInt(2, BID);
-            statement.setInt(3, snoToItemIdMap.get(Integer.parseInt(orderSlipTable.getValueAt(orderSlipTable.getSelectedRow(), ((DefaultTableModel) orderSlipTable.getModel()).findColumn("sno")).toString())));
+            statement.setInt(3, itemid);
             statement.executeUpdate();
+            detailsToPush.add(itemid);
+            detailsToPush.add(selectedQuantity);
             JOptionPane.showMessageDialog(MyClass.searchResultWindow, "succesfully updated data");
             fetchData((DefaultTableModel) orderSlipTable.getModel());
+
         } catch (SQLException e) {
             e.printStackTrace();
+            return null;
         } catch (NullPointerException e) {
             e.printStackTrace();
+            return null;
         }
-
+        return detailsToPush;
     }
 
     int showPrompt(int maxQuantity, String itemName) {
@@ -161,7 +170,13 @@ public class SearchResultWindow extends JFrame {
         orderSlipTable.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2 && orderSlipTable.getSelectedRow() != -1) {
-                    appendToBill(ID);
+                    MyClass.newBill.notThroughOrderSlip = false;
+                    try {
+                        pushDetails(doSqlUpadates(ID));
+                    } finally {
+                        MyClass.newBill.notThroughOrderSlip = true;
+                    }
+
                 }
             }
         });
@@ -169,11 +184,78 @@ public class SearchResultWindow extends JFrame {
 
     }
 
+    private void pushDetails(Vector<Integer> detailsToPush) {
+        if (detailsToPush == null || detailsToPush.size() < 2) {
+            JOptionPane.showMessageDialog(null, "Invalid details to push!");
+            return;
+        }
+        Connection con = MyClass.newBill.getTransacTemp();
+        int itemId = detailsToPush.get(0);
+        int quantity = detailsToPush.get(1);
+
+        JTable billTable = MyClass.newBill.getBillTable();
+        DefaultTableModel model = (DefaultTableModel) billTable.getModel();
+
+        String query = "SELECT  item_name, design_id, raw_material_price FROM order_slips WHERE item_id = ?";
+
+        try (PreparedStatement pstmt = con.prepareStatement(query)) {
+            pstmt.setInt(1, itemId);
+            ResultSet rs = pstmt.executeQuery();
+            int lastrow = billTable.getRowCount() - 1;
+
+            for (int i = model.getRowCount() - 1; i >= 0; i--) { // Iterate from last row to first
+                boolean isEmpty = true;
+
+                // Check if any column in this row has data
+
+                for (int j = 0; j < model.getColumnCount(); j++) {
+                    if(j==MyClass.newBill.billDetails.indexOf("SNo")){
+                        continue;
+                    }
+                    Object value = model.getValueAt(i, j);
+                    if (value != null && !value.toString().trim().isEmpty()) {
+                        isEmpty = false;
+                        break; // No need to check further, this row has data
+                    }
+                }
+
+                if (!isEmpty) {
+                    lastrow = i + 1;
+                    break; // Stop at the first non-empty row
+                }
+            }
+            System.out.println("last row is " + lastrow);
+            if (rs.next()) {
+                TableColumnModel columnModel = billTable.getColumnModel();
+                setUpdateThroughSlip(true);
+                MyClass.newBill.setItemID(itemId);
+                model.setValueAt(String.valueOf(quantity), lastrow, columnModel.getColumnIndex("Quantity"));
+                model.setValueAt(rs.getString("design_id"), lastrow, columnModel.getColumnIndex("DesignID"));
+            } else {
+                JOptionPane.showMessageDialog(null, "Item not found in order_slips!");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Database error occurred!");
+        }
+
+    }
+
+    private void setUpdateThroughSlip(boolean b) {
+        MyClass.newBill.updateThroughSlip=b;
+
+
+    }
+    public boolean getUpdatThroughSlip(){
+        return MyClass.newBill.updateThroughSlip;
+    }
+
+
     HashMap<Integer, Integer> snoToItemIdMap;
 
     private void fetchData(DefaultTableModel model) {
         model.setRowCount(0);
-        String query = "SELECT customer_name,slip_id,item_id,sno,design_id, item_name, quantity, plating_grams, raw_material_price, other_details " +
+        String query = "SELECT customer_name ,slip_id,item_id,sno,design_id, item_name, quantity, plating_grams, raw_material_price, other_details, billed_quantity " +
                 "FROM order_slips WHERE slip_id = ? Order by item_id";
 
         try {
@@ -182,13 +264,10 @@ public class SearchResultWindow extends JFrame {
             pstmt.setInt(1, ID); // Use the slip_id provided
             ResultSet rs = pstmt.executeQuery();
             snoToItemIdMap = new HashMap<>();
-
-            int slipID = 0;
-            String customerName = "";
+            int i = 0;
 
             while (rs.next()) {
-                slipID = rs.getInt("slip_id");
-                customerName = rs.getString("customer_name");
+
                 int sno = rs.getInt("sno");
                 int itemId = rs.getInt("item_id");
 
@@ -199,11 +278,12 @@ public class SearchResultWindow extends JFrame {
                         rs.getString("sno"),
                         rs.getString("design_id"),
                         rs.getString("item_name"),
-                        rs.getInt("quantity"),
+                        (rs.getInt("quantity") - rs.getInt("billed_quantity")),
                         rs.getBigDecimal("plating_grams"),
                         rs.getBigDecimal("raw_material_price"),
                         rs.getString("other_details")
                 });
+
             }
         } catch (SQLException e) {
             e.printStackTrace(); // For debugging; consider proper error handling

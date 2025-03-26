@@ -25,7 +25,7 @@ public class BillingScreen extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 MyClass.newBill.setVisible(true);
-                MyClass.newBill.initSystemlogin();
+                MyClass.newBill.init();
                 setVisible(false);
 
             }

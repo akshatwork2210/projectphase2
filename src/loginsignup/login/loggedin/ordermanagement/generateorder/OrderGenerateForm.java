@@ -10,7 +10,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -39,12 +38,13 @@ public class OrderGenerateForm extends JFrame {
     }
 
     public OrderGenerateForm() {
+        backupModel=null;
+
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         setContentPane(panel);
 
         pack();
-        undoResetButton.setEnabled(false);
 
         backButton.addActionListener(new ActionListener() {
             @Override
@@ -63,87 +63,109 @@ public class OrderGenerateForm extends JFrame {
         resetFormButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
                 backupModel = (DefaultTableModel) orderSlip.getModel();
                 init();
-                undoResetButton.setEnabled(true);
-                resetFormButton.setEnabled(false);
             }
         });
         undoResetButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                model = backupModel;
-                orderSlip.setModel(backupModel);
-                backupModel = null;
-                undoResetButton.setEnabled(false);
-                resetFormButton.setEnabled(true);
+                if(backupModel!=null) {
+                    int columnCount = model.getColumnCount();
+                    Vector<String> columnnames = new Vector<>();
+                    for (int i = 0; i < columnCount; i++) {
+                        columnnames.add(model.getColumnName(i));
+                    }
+                    DefaultTableModel temp = new DefaultTableModel(model.getDataVector(), columnnames);
+                    TableModelListener[] listeners = model.getTableModelListeners();
+                    for (TableModelListener listener : listeners) {
+                        temp.addTableModelListener(listener);
+                    }
+                    model = backupModel;
+                    orderSlip.setModel(model);
+                    backupModel = temp;
+                }
             }
         });
-        submitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+            submitButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
 
-                if (customerNameComboBox.getSelectedIndex() == 0) {
-                    JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "please select a customer name", "incomplete information", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                DefaultTableModel model = (DefaultTableModel) orderSlip.getModel();
-                int rowCount = model.getRowCount();
-
-                try {
-                    // Generate a new slip_id for the entire batch
-                    String insertMainQuery = "INSERT INTO order_slips_main (slip_type) VALUES (?)";
-                    PreparedStatement stmt = MyClass.C.prepareStatement(insertMainQuery, Statement.RETURN_GENERATED_KEYS);
-                    stmt.setString(1, panaTypeComboBox.getSelectedItem().toString());
-                    stmt.executeUpdate();
-
-// Get the generated slip_id
-                    ResultSet rs = stmt.getGeneratedKeys();
-
-                    int slipId = -1;
-                    if (rs.next()) {
-                        slipId = rs.getInt(1);  // Retrieve the auto-incremented slip_id
+                    if (customerNameComboBox.getSelectedIndex() == 0) {
+                        JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "please select a customer name", "incomplete information", JOptionPane.ERROR_MESSAGE);
+                        return;
                     }
-                    rs.close();
-                    boolean created = false;
-                    // Loop through each row and insert into order_slips
-                    for (int i = 0; i < rowCount - 1; i++) {
-                        created = true;
-                        int itemNumber = i + 1;  // Item number starts from 1 for each new slip
-                        if (model.getValueAt(i, 1).toString().contentEquals("")) break;
-                        String designId = (String) model.getValueAt(i, 0);
-                        String itemName = (String) model.getValueAt(i, 1);
+                    DefaultTableModel model = (DefaultTableModel) orderSlip.getModel();
+                    int rowCount = model.getRowCount();
 
-                        int quantity = !model.getValueAt(i, 2).toString().contentEquals("") ? Integer.parseInt(model.getValueAt(i, 2).toString()) : 0;
-                        double platingGrams = Double.parseDouble(model.getValueAt(i, 3).toString());
-                        double rawMaterialCost = Double.parseDouble(model.getValueAt(i, 4).toString());
-                        String otherDetails;
-                        try {
-                            otherDetails = model.getValueAt(i, 5).toString();
-                        } catch (java.lang.NullPointerException ex) {
-                            otherDetails = "";
+                    try {
+                        // Generate a new slip_id for the entire batch
+                        String insertMainQuery = "INSERT INTO order_slips_main (slip_type) VALUES (?)";
+                        PreparedStatement stmt = MyClass.C.prepareStatement(insertMainQuery, Statement.RETURN_GENERATED_KEYS);
+                        stmt.setString(1, panaTypeComboBox.getSelectedItem().toString());
+                        stmt.executeUpdate();
+
+    // Get the generated slip_id
+                        ResultSet rs = stmt.getGeneratedKeys();
+
+                        int slipId = -1;
+                        if (rs.next()) {
+                            slipId = rs.getInt(1);  // Retrieve the auto-incremented slip_id
                         }
-                        String customerName = customerNameComboBox.getSelectedItem().toString();
-                        String panaType = panaTypeComboBox.getSelectedItem().toString();
-                        int sno=i+1;
-                        // Insert Query
-                        String query = "INSERT INTO order_slips (slip_type,customer_name,slip_id, item_number, design_id, item_name, quantity, plating_grams, raw_material_price, other_details,sno) " + "VALUES (" + "\"" + panaType + "\"," + "\"" + customerName + "\"," + slipId + ", " + itemNumber + ", '" + designId + "', '" + itemName + "', " + quantity + ", " + platingGrams + ", " + rawMaterialCost + ", \"" + otherDetails + "\","+sno+");";
+                        rs.close();
+                        boolean created = false;
+                        // Loop through each row and insert into order_slips
+                        for (int i = 0; i < rowCount - 1; i++) {
+                            created = true;
+                            int itemNumber = i + 1;  // Item number starts from 1 for each new slip
+                            if (model.getValueAt(i, 1).toString().contentEquals("")) break;
+                            String designId = (String) model.getValueAt(i, 0);
+                            String itemName = (String) model.getValueAt(i, 1);
 
-                        stmt.executeUpdate(query);
+                            int quantity = !model.getValueAt(i, 2).toString().contentEquals("") ? Integer.parseInt(model.getValueAt(i, 2).toString()) : 0;
+                            double platingGrams = Double.parseDouble(model.getValueAt(i, 3).toString());
+                            double rawMaterialCost = Double.parseDouble(model.getValueAt(i, 4).toString());
+                            String otherDetails;
+                            try {
+                                otherDetails = model.getValueAt(i, 5).toString();
+                            } catch (java.lang.NullPointerException ex) {
+                                otherDetails = "";
+                            }
+                            String customerName = customerNameComboBox.getSelectedItem().toString();
+                            String panaType = panaTypeComboBox.getSelectedItem().toString();
+                            int sno = i + 1;
+                            // Insert Query
+                            String query = "INSERT INTO order_slips (slip_type, customer_name, slip_id, design_id, item_name, quantity, plating_grams, raw_material_price, other_details, sno) " +
+                                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
+                            PreparedStatement pstmt = MyClass.C.prepareStatement(query);
+                            pstmt.setString(1, panaType);
+                            pstmt.setString(2, customerName);
+                            pstmt.setInt(3, slipId);
+                            pstmt.setString(4, designId);
+                            pstmt.setString(5, itemName);
+                            pstmt.setInt(6, quantity);
+                            pstmt.setDouble(7, platingGrams);
+                            pstmt.setDouble(8, rawMaterialCost);
+                            pstmt.setString(9, otherDetails);
+                            pstmt.setInt(10, sno);
+
+                            pstmt.executeUpdate();
+                            pstmt.close();
+
+
+                        }
+                        if (created) System.out.println("New  slip created: Slip ID = " + slipId);
+                        else
+                            JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "Empty form  error", "error", JOptionPane.ERROR_MESSAGE);
+
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
                     }
-                    if (created) System.out.println("New  slip created: Slip ID = " + slipId);
-                    else
-                        JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "Empty form  error", "error", JOptionPane.ERROR_MESSAGE);
-
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
+                    init();
                 }
-                init();
-            }
-        });
-    }
+            });
+        }
 
     int prevRow = 0;
     DefaultTableModel model;
@@ -159,8 +181,6 @@ public class OrderGenerateForm extends JFrame {
             @Override
             public void tableChanged(TableModelEvent e) {
                 if (e.getType() == TableModelEvent.UPDATE) {
-                    if (model.getRowCount() == 3) undoResetButton.setEnabled(false);
-                    resetFormButton.setEnabled(true);
                     int lastRow = model.getRowCount() - 1;
                     boolean isRowFilled = false;
 

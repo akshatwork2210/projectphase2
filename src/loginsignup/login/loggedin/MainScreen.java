@@ -53,10 +53,10 @@ public class MainScreen extends JFrame{
     }
     public void createFile(String dbUser, String dbPassword, String dbName) {
         String filePath = "tempBack.bat";
-        SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yy___HH_mm_ss"); // Format: 20250320_153045
+        SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yy___HH_mm_ss");
         String timestamp = sdf.format(new Date());
         timestamp+="_backup.sql";
-        String backupFile = System.getProperty("user.dir") + "\\src\\resources\\"+timestamp; // Adjust path as needed
+        String backupFile = System.getProperty("user.dir") + "\\src\\resources\\"+timestamp;
 
         try {
 //            dbPassword=escapeForBatch(dbPassword)
@@ -83,7 +83,7 @@ public class MainScreen extends JFrame{
             if (exitCode == 0) {
                 JOptionPane.showMessageDialog(this,"Backup completed successfully.");
             } else {
-                JOptionPane.showMessageDialog(this,"Backup failed with exit code: " + exitCode);
+                JOptionPane.showMessageDialog(this,"Backup failed with exit code: " + exitCode,"eror",JOptionPane.ERROR_MESSAGE);
             }
 
             // Delete the batch file after execution
