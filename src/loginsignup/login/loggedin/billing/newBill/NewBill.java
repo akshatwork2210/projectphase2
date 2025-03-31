@@ -3,9 +3,15 @@ package loginsignup.login.loggedin.billing.newBill;
 import mainpack.MyClass;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -13,25 +19,25 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Vector;
 
 import org.jdesktop.swingx.prompt.PromptSupport;
+import testpackage.TestClass;
 
 public class NewBill extends JFrame {
     int itemID;
     private double goldrate;
+    private int temp = 0;
+    private String customerName;
 
     public void setItemID(int itemID) {
         this.itemID = itemID;
     }
 
     public void createBillToOrderSlipAssosciation(int sNo, int itemID) {
-        System.out.println("before inserting sno is" + sNo);
-
         snoToItemIdMap.put(sNo, itemID);
+        System.out.println(sNo + "-> " + itemID);
     }
 
     public boolean updateThroughSlip = false;
@@ -50,6 +56,7 @@ public class NewBill extends JFrame {
     private JButton undoButton;
     private JTextField slipNumberField;
     private JTextField goldRateTextField;
+    private JScrollPane scrollPane;
     private Connection transacTemp;
     public boolean notThroughOrderSlip = true;
 
@@ -84,7 +91,38 @@ public class NewBill extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         setContentPane(panel);
+
         pack();
+        ((AbstractDocument) goldRateTextField.getDocument()).setDocumentFilter(new DecimalDocumentFilter());
+
+        goldRateTextField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                textChanged();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                textChanged();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                // Not needed for plain text fields.
+            }
+
+            private void textChanged() {
+                double goldrate = 0;
+                try {
+                    goldrate = goldRateTextField.getText().isEmpty() ? 0 : Double.parseDouble(goldRateTextField.getText());
+                } catch (NumberFormatException e) {
+
+                }
+                setGoldRate(goldrate);
+                reCalculateValuesAndAppend();
+            }
+        });
+
         snoToItemIdMap = new HashMap<>();
         backButton.addActionListener(new ActionListener() {
             @Override
@@ -190,6 +228,7 @@ public class NewBill extends JFrame {
                     ex.printStackTrace();
                     slipNumberField.setText("");
                     JOptionPane.showMessageDialog(MyClass.newBill, "an error occured, invalid input");
+
                     throw new RuntimeException();
 
                 }
@@ -197,10 +236,14 @@ public class NewBill extends JFrame {
                 try {
 
                     Statement stmt = MyClass.C.createStatement();
-                    String query = "select slip_id from order_slips where slip_id=" + slipNumberField.getText() + ";";
+//                    String query = "select slip_id from order_slips where (slip_id=" + slipNumberField.getText() +" and customer_name='"+customerName+"'"+ ";";
+                    String query = "SELECT slip_id FROM order_slips WHERE slip_id=" + slipNumberField.getText() + " AND customer_name='" + customerName + "';";
+
                     ResultSet rs = stmt.executeQuery(query);
                     if (!rs.next()) {
                         JOptionPane.showMessageDialog(MyClass.newBill, "orderslip not found");
+                        slipNumberField.setText("");
+
                         return;
                     }
                 } catch (SQLException ex) {
@@ -226,68 +269,165 @@ public class NewBill extends JFrame {
                 DefaultTableModel model = (DefaultTableModel) billTable.getModel();
                 int rowCount = model.getRowCount();
 
-                for (int i = 0; i < rowCount; i++) {
-                    String serialNo = getStringValue(model, i, 0);
-                    String itemName = getStringValue(model, i, 1);
-                    String quantity = getStringValue(model, i, 2);
-                    String designID = getStringValue(model, i, 3);
-                    String labour = getStringValue(model, i, 4);
-                    String raw = getStringValue(model, i, 5);
-                    String dullChillai = getStringValue(model, i, 6);
-                    String mcm = getStringValue(model, i, 7);
-                    String rh = getStringValue(model, i, 8);
-                    String nag = getStringValue(model, i, 9);
-                    String other = getStringValue(model, i, 10);
-                    String otherDetails = getStringValue(model, i, 11);
-                    String gPlus = getStringValue(model, i, 12);
-                    String goldIngGrams = getStringValue(model, i, 13);
-                    String goldCost = getStringValue(model, i, 14);
-                    String total = getStringValue(model, i, 15);
+                // Database connection setup
+                String url = "jdbc:mysql://localhost:3306/" + MyClass.login.getDatabase();
+                String user = MyClass.login.getLoginID();
+                String password = MyClass.login.getPassword();
+                int billID = -1;
+                Connection conn = null;
+                PreparedStatement stmt = null;
 
-                    // Convert necessary values to BigDecimal safely
-                    BigDecimal labourCost = convertToBigDecimal(labour);
-                    BigDecimal dullChillaiCost = convertToBigDecimal(dullChillai);
-                    BigDecimal meenaCost = convertToBigDecimal(mcm);
-                    BigDecimal rhodiumCost = convertToBigDecimal(rh);
-                    BigDecimal nagSettingCost = convertToBigDecimal(nag);
-                    BigDecimal otherBaseCosts = convertToBigDecimal(other);
-                    BigDecimal totalBaseCosting = convertToBigDecimal(gPlus);
-                    BigDecimal goldRate = convertToBigDecimal(goldIngGrams);
-                    BigDecimal goldPlatingWeight = convertToBigDecimal(goldCost);
-                    BigDecimal totalGoldCost = convertToBigDecimal(total);
+                try {
+                    conn = DriverManager.getConnection(url, user, password);
+                    conn.setAutoCommit(false); // Start transaction
+                    String sql = "INSERT INTO bills () VALUES ()";
+                    try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                        int affectedRows = pstmt.executeUpdate();
+                        if (affectedRows > 0) {
+                            try (ResultSet rs = pstmt.getGeneratedKeys()) {
+                                if (rs.next()) {
+                                    billID = rs.getInt(1);
+                                }
+                            }
+                        }
+                    } catch (SQLException exception) {
+                        JOptionPane.showMessageDialog(MyClass.newBill, "error");
+                        exception.printStackTrace();
+                    }
+                    sql = "INSERT INTO billdetails (BillID, SNo, ItemName, DesignID, OrderType, LabourCost, DullChillaiCost, " + "MeenaColorMeenaCost, RhodiumCost, NagSettingCost, OtherBaseCosts, TotalBaseCosting, GoldRate, " + "GoldPlatingWeight, TotalGoldCost, TotalFinalCost, OrderSlipNumber,OtherBaseCostNotes) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
 
-                    // Print fetched values (for debugging)
+                    stmt = conn.prepareStatement(sql);
+
+                    for (int i = 0; i < rowCount - 1; i++) {
+                        int serialNo = Integer.parseInt(getStringValue(model, i, billDetails.indexOf("SNo"), "0"));
+                        String itemName = getStringValue(model, i, billDetails.indexOf("ItemName"), "Unknown");
+
+                        String designID = getStringValue(model, i, billDetails.indexOf("DesignID"), "NoID");
+                        String orderType = "Repairing";
+                        System.out.println(serialNo + "\t" + itemName + "\t" + designID + "\t" + orderType);
+
+
+                        if (snoToItemIdMap.containsKey(serialNo)) {
+                            int itemId = snoToItemIdMap.get(serialNo);
+
+                            // Fetch OrderType from orderslip table using itemId
+                            String query = "SELECT slip_type FROM order_slips WHERE item_id = ?";
+                            PreparedStatement pstmt = conn.prepareStatement(query);
+                            pstmt.setInt(1, itemId);
+                            ResultSet rs = pstmt.executeQuery();
+
+                            orderType = slipDetailComboBox.getSelectedItem().toString();
+                            if (rs.next()) {
+                                orderType = rs.getString("slip_type"); // Override with DB value
+                            }
+                            rs.close();
+                            pstmt.close();
+                        }// Default, update as needed
+                        double raw = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Raw"), " "));
+                        double labour = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Labour"), "0"));
+                        double dullChillai = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("DullChillai"), "0"));
+                        double mcm = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("M/CM"), "0"));
+                        double rh = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Rh"), "0"));
+                        double nag = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Nag"), "0"));
+                        double other = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Other"), "0"));
+                        double totalBaseCost = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("total"), "0"));
+                        double goldRate = MyClass.newBill.goldrate;
+                        double goldPlatingWeight = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Gold(ing g)"), "0"));
+                        double totalGoldCost = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("gold cost"), "0"));
+                        double totalFinalCost = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("total"), "0"));
+                        String otherDetails = getStringValue(model, i, billDetails.indexOf("OtherDetails"), "");
+                        int orderSlipNumber = snoToItemIdMap.getOrDefault(serialNo, 0);
+
+                        stmt.setInt(1, billID); // Replace with actual BillID
+                        stmt.setInt(2, serialNo);
+                        stmt.setString(3, itemName);
+                        stmt.setString(4, designID);
+                        stmt.setString(5, orderType);
+                        stmt.setDouble(6, labour);
+                        stmt.setDouble(7, dullChillai);
+                        stmt.setDouble(8, mcm);
+                        stmt.setDouble(9, rh);
+                        stmt.setDouble(10, nag);
+                        stmt.setDouble(11, other);
+                        stmt.setDouble(12, totalBaseCost);
+                        stmt.setDouble(13, goldRate);
+                        stmt.setDouble(14, goldPlatingWeight);
+                        stmt.setDouble(15, totalGoldCost);
+                        stmt.setDouble(16, totalFinalCost);
+                        stmt.setInt(17, orderSlipNumber);
+                        stmt.setString(18, otherDetails);
+                        stmt.addBatch();
+                    }
+
+                    stmt.executeBatch();
+                    conn.commit(); // Commit transaction
+
+                    for (int key : snoToItemIdMap.keySet()) {
+                        System.out.println(key + "-> " + snoToItemIdMap.get(key));
+                    }
+                    JOptionPane.showMessageDialog(null, "Bill details saved successfully!");
+                    billTable.repaint();
+                } catch (Exception ex) {
+                    try {
+                        if (conn != null) {
+                            conn.rollback(); // Rollback on error
+                        }
+                    } catch (SQLException rollbackEx) {
+                        rollbackEx.printStackTrace();
+                    }
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(null, "Error saving bill details!", "Error", JOptionPane.ERROR_MESSAGE);
+                } finally {
+                    try {
+                        if (stmt != null) stmt.close();
+                        if (conn != null) conn.close();
+                    } catch (SQLException closeEx) {
+                        closeEx.printStackTrace();
+                    }
                 }
+            }
 
+            private String getStringValue(DefaultTableModel model, int row, int columnIndex, String defaultValue) {
+                Object value = model.getValueAt(row, columnIndex);
+                return (value != null && !value.toString().trim().isEmpty()) ? value.toString() : defaultValue;
             }
         });
+
+
         goldRateTextField.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                double goldrate = goldRateTextField.getText().isEmpty() ? 0 : Double.parseDouble(goldRateTextField.getText());
-                setGoldRate(goldrate);
-                reCalculateValuesAndAppend();
+            }
+        });
+        resetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                TestClass.csvOut(tableModel);
+            }
+        });
+        customerComboBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                customerName = customerComboBox.getSelectedItem().toString();
+            }
+        });
+        undoButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                TestClass.csvToTableModel(tableModel, "C:\\Users\\Aparw\\ShreeGurukripaJewellers\\output.csv");
+                billTable.repaint();
             }
         });
     }
 
     private void reCalculateValuesAndAppend() {
-        List<Integer> mathColumns = Arrays.asList(
-                billDetails.indexOf("Labour"),
-                billDetails.indexOf("Raw"),
-                billDetails.indexOf("DullChillai"),
-                billDetails.indexOf("M/CM"),
-                billDetails.indexOf("Rh"),
-                billDetails.indexOf("Nag"),
-                billDetails.indexOf("Other"),
-                billDetails.indexOf("+G"),
-                billDetails.indexOf("Gold(ing g)"),
-                billDetails.indexOf("gold cost"),
-                billDetails.indexOf("total")
-        );
-
+        List<Integer> mathColumns = Arrays.asList(billDetails.indexOf("Labour"), billDetails.indexOf("Raw"), billDetails.indexOf("DullChillai"), billDetails.indexOf("M/CM"), billDetails.indexOf("Rh"), billDetails.indexOf("Nag"), billDetails.indexOf("Other"), billDetails.indexOf("+G"), billDetails.indexOf("Gold(ing g)"), billDetails.indexOf("gold cost"), billDetails.indexOf("total"));
+        double plusG = 0;
+//        TableModelListener[] listeners = removeModelListener(tableModel);
+        int i = 0;
         for (int row = 0; row < tableModel.getRowCount(); row++) {
             for (int col : mathColumns) {
+
                 Object value = tableModel.getValueAt(row, col);
                 double numericValue = 0.0;
 
@@ -295,14 +435,39 @@ public class NewBill extends JFrame {
                     try {
                         numericValue = Double.parseDouble(value.toString());
                     } catch (NumberFormatException e) {
-                        System.out.println("Invalid number at row " + row + ", col " + col);
+                        e.printStackTrace();
                     }
+
                 }
 
+                if (i < 7) {
+                    plusG += numericValue;
+                }
+                double goldrate = this.goldrate;
+                double goldcost = 0;
+                if (i == 8) {
+                    goldcost = goldrate * numericValue;
+                    tableModel.setValueAt(goldcost == 0 ? "" : goldcost, row, billDetails.indexOf("gold cost"));
 
-                System.out.println("Row " + row + ", Col " + col + " -> " + numericValue);
+                    tableModel.setValueAt((goldcost + plusG) == 0 ? "" : (goldcost + plusG), row, billDetails.indexOf("total"));
+                }
+
+                i++;
+
             }
+            int quantity = tableModel.getValueAt(row, billDetails.indexOf("Quantity")) != null && !tableModel.getValueAt(row, billDetails.indexOf("Quantity")).toString().isEmpty() ? Integer.parseInt((tableModel.getValueAt(row, billDetails.indexOf("Quantity")).toString())) : 0;
+            plusG = plusG * quantity;
+            tableModel.setValueAt(plusG == 0 ? "" : plusG, row, billDetails.indexOf("+G"));
+
+            plusG = 0;
+            i = 0;
         }
+
+        for (int row = 0; row < tableModel.getRowCount() - 1; row++)
+            checkAndRemoveRow(row, tableModel, billDetails.indexOf("SNo"), false);
+        billTable.repaint();
+        scrollPane.repaint();
+//        addModelListeners(listeners, tableModel);
 
     }
 
@@ -355,6 +520,26 @@ public class NewBill extends JFrame {
     }
 
     public void init() {
+        billTable.getInputMap(JTable.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("DELETE"), "deleteRow");
+        billTable.getActionMap().put("deleteRow", new AbstractAction() {
+            @Override
+
+            public void actionPerformed(ActionEvent e) {
+                Action oldAction = billTable.getActionMap().get("deleteRow");
+                billTable.getActionMap().remove("deleteRow");
+                int selectedRow = billTable.getSelectedRow(); // Get selected row
+                TableModelListener[] listeners = removeModelListener((tableModel));
+                if (selectedRow != -1) {
+                    // Ensure a row is selected
+                    if (billTable.getRowCount() != 1)
+                        checkAndRemoveRow(selectedRow, tableModel, billDetails.indexOf("SNo"), true);// Remove the row
+                    billTable.repaint();
+                }
+                addModelListeners(listeners, tableModel);
+                billTable.getActionMap().put("deleteRow", oldAction);
+            }
+        });
+
         curBillID = getNextBillID();
         try {
             if (transacTemp != null) if (!transacTemp.isClosed()) transacTemp.close();
@@ -375,7 +560,7 @@ public class NewBill extends JFrame {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         billDetails = new Vector<>();
         billDetails.add("SNo");
-        billDetails.add("OrderSlip");
+        billDetails.add("OrderSlip/quantity");
 
         billDetails.add("ItemName");
         billDetails.add("Quantity");
@@ -395,7 +580,12 @@ public class NewBill extends JFrame {
         tableModel = new DefaultTableModel(billDetails, 1) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return column != billDetails.indexOf("SNo");
+                if (column == billDetails.indexOf("SNo")) return false;
+                if (column == billDetails.indexOf("OrderSlip/quantity")) return false;
+                if (column == billDetails.indexOf("total")) return false;
+                if (column == billDetails.indexOf("+G")) return false;
+                if (column == billDetails.indexOf("gold cost")) return false;
+                else return true;
             }
 
         };
@@ -419,26 +609,23 @@ public class NewBill extends JFrame {
 
 // Extract values from the table, handling null or empty values
 // Utility function to safely parse values
-
-
-                for (int key : snoToItemIdMap.keySet()) {
-                    System.out.println(key + " : " + snoToItemIdMap.get(key));
-                }
                 TableModelListener[] listeners = removeModelListener(tableModel);
-
+                System.out.println("triggered");
                 int row = e.getFirstRow();
                 int col = e.getColumn();
+                System.out.println(sno + " raw value of sno");
                 int snoValue = (tableModel.getValueAt(row, billDetails.indexOf("SNo")) != null && !tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString().isEmpty()) ? Integer.parseInt(tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString().contentEquals("") ? "0" : tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString()) : -1;
                 if (snoValue == -1) {
+                    System.out.println(sno + " is the value of sno before inc");
                     sno++;
+                    System.out.println("Sno modified! Current Value: " + sno + " | Stack Trace:");
+
+                    System.out.println(sno + " is the value of sno after inc");
                     tableModel.setValueAt(sno, row, billDetails.indexOf("SNo"));
-                    if (updateThroughSlip) {
-                        System.out.println(sno + " is the value of sno before passing");
-                        createBillToOrderSlipAssosciation(sno, itemID);
-                        updateThroughSlip = false;
-                    }
+                    snoValue = sno;
+
+//                    tableModel.getValueAt(row, billDetails.indexOf("SNo")) == null ? -1 : Integer.parseInt(tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString().contentEquals("") ? "0" : tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString());
                 }
-                snoValue = tableModel.getValueAt(row, billDetails.indexOf("SNo")) == null ? -1 : Integer.parseInt(tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString().contentEquals("") ? "0" : tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString());
 
 
                 if (col == -1) return;
@@ -473,35 +660,6 @@ public class NewBill extends JFrame {
                     JOptionPane.showMessageDialog(MyClass.newBill, "invalid value entered");
 
                 }
-                double labour = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Labour")));
-                double raw = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Raw")));
-                double dullChillai = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("DullChillai")));
-                double mCm = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("M/CM")));
-                double rh = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Rh")));
-                double nag = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Nag")));
-                double other = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Other")));
-                getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("+G")));
-                double plusG;
-                double goldIngG = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Gold(ing g)")));
-                getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("gold cost")));
-                double goldCost;
-                getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("total")));
-                double total;
-//                if (col == billDetails.indexOf("Labour") || col == billDetails.indexOf("Raw") || col == billDetails.indexOf("DullChillai") || col == billDetails.indexOf("M/CM") || col == billDetails.indexOf("Rh") || col == billDetails.indexOf("Nag") || col == billDetails.indexOf("Other") || col == billDetails.indexOf("+G") || col == billDetails.indexOf("Gold(ing g)") || col == billDetails.indexOf("gold cost") || col == billDetails.indexOf("total"))
-                {
-                    plusG = labour + raw + dullChillai + mCm + rh + nag + other;
-                    goldCost = goldIngG * goldrate;
-                    plusG*=quantity;
-                    total=plusG+goldCost;
-
-                    tableModel.setValueAt(total,row,billDetails.indexOf("total"));
-                    tableModel.setValueAt(plusG,row,billDetails.indexOf("+G"));
-                    tableModel.setValueAt(goldCost,row,billDetails.indexOf("gold cost"));
-                }
-
-
-
-
                 Object curValue = tableModel.getValueAt(row, col) == null ? "" : tableModel.getValueAt(row, col);
                 int curSlipID = -1;
                 if (snoToItemIdMap.containsKey(snoValue)) {
@@ -524,11 +682,6 @@ public class NewBill extends JFrame {
                     }
                 }
 
-                if (row != tableModel.getRowCount() - 1) {
-                    if (curValue.toString().isEmpty()) {
-                        checkAndRemoveRow(row, tableModel, billDetails.indexOf("SNo"));
-                    }
-                }
 
                 if (col == designIdIndex) {
                     String designID = tableModel.getValueAt(row, designIdIndex) == null ? "" : tableModel.getValueAt(row, designIdIndex).toString().trim();
@@ -543,32 +696,25 @@ public class NewBill extends JFrame {
 
                             if (rs.next()) {
 
-                                // If DesignID exists, update ItemName column
                                 listOfNonEditableCells.add(new Integer[]{row, billDetails.indexOf("ItemName")});
-
+                                System.out.println("added to list non editabe " + row + ", " + billDetails.indexOf("ItemName"));
                                 String itemName = rs.getString("itemname");
                                 String price = rs.getString("price");
                                 tableModel.setValueAt(itemName, row, billDetails.indexOf("ItemName"));
                                 tableModel.setValueAt(price, row, billDetails.indexOf("Raw"));
                             } else {
-                                int i = 0;
-                                for (Integer[] cell : listOfNonEditableCells) {
-                                    if (cell[0] == row && cell[1] == billDetails.indexOf("ItemName")) {
-                                        listOfNonEditableCells.remove(i);
-                                        break;
-                                    }
-                                    i++;
-                                }
+                                listOfNonEditableCells.removeIf(cell -> cell[0] == row && cell[1] == billDetails.indexOf("ItemName"));
+                                System.out.println("removed from the list " + row + billDetails.indexOf("ItemName"));
+
                                 tableModel.setValueAt("", row, designIdIndex);
-                                addModelListeners(listeners, tableModel);
                                 tableModel.setValueAt("", row, billDetails.indexOf("ItemName"));
                                 tableModel.setValueAt("", row, billDetails.indexOf("Raw"));
-                                removeModelListener(tableModel);
                             }
 
                             DefaultTableModel newModel = redoModel();
 
                             billTable.setModel(newModel);
+                            System.out.println("new model set");
                             tableModel = newModel;
                         } catch (SQLException ex) {
                             ex.printStackTrace();
@@ -577,19 +723,10 @@ public class NewBill extends JFrame {
                     } else {
                         // If designID field is empty, clear ItemName as well
                         tableModel.setValueAt("", row, designIdIndex);
-                        addModelListeners(listeners, tableModel);
                         tableModel.setValueAt("", row, billDetails.indexOf("ItemName"));
                         tableModel.setValueAt("", row, billDetails.indexOf("Raw"));
-                        removeModelListener(tableModel);
                         int i = 0;
-                        for (Integer[] cell : listOfNonEditableCells) {
-                            if (cell[0] == row && cell[1] == billDetails.indexOf("ItemName")) {
-                                listOfNonEditableCells.remove(i);
-
-                                break;
-                            }
-                            i++;
-                        }
+                        listOfNonEditableCells.removeIf(cell -> cell[0] == row && cell[1] == billDetails.indexOf("ItemName"));
 
                     }
 
@@ -612,11 +749,9 @@ public class NewBill extends JFrame {
 
                     }
                     for (Integer a : snoToItemIdMap.keySet()) {
-                        System.out.println("key set values:" + a);
                     }
                     if (snoToItemIdMap.containsKey(snoValue)) {
                         try {
-                            System.out.println("damn it yrr");
                             Statement stmt = MyClass.C.createStatement();
                             String query = "select * from order_slips where item_id=" + snoToItemIdMap.get(snoValue);
                             int item_id = snoToItemIdMap.get(snoValue);
@@ -624,7 +759,6 @@ public class NewBill extends JFrame {
                             int keyy = 0;
                             for (int key : snoToItemIdMap.keySet()) {
                                 if (snoToItemIdMap.get(key) == item_id) {
-                                    System.out.println("");
                                     netQuantity = netQuantity + ((tableModel.getValueAt(key - 1, quantityIndex) != null && !tableModel.getValueAt(key - 1, quantityIndex).toString().isEmpty()) ? Integer.parseInt(tableModel.getValueAt(key - 1, quantityIndex).toString()) : 0);
                                 }
                                 ResultSet rs = stmt.executeQuery(query);
@@ -640,7 +774,6 @@ public class NewBill extends JFrame {
                                     throw new RuntimeException();
                                 }
                             }
-                            System.out.println("item id:" + item_id + " has total " + netQuantity);
 
                         } catch (SQLException ex) {
                             throw new RuntimeException(ex);
@@ -648,11 +781,52 @@ public class NewBill extends JFrame {
                     }
 
                 }
+
+                double labour = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Labour")));
+                tableModel.setValueAt(labour == 0 ? "" : labour, row, billDetails.indexOf("Labour"));
+                double raw = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Raw")));
+                tableModel.setValueAt(raw == 0 ? "" : raw, row, billDetails.indexOf("Raw"));
+                double dullChillai = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("DullChillai")));
+                tableModel.setValueAt(dullChillai == 0 ? "" : dullChillai, row, billDetails.indexOf("DullChillai"));
+                double mCm = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("M/CM")));
+                tableModel.setValueAt(mCm == 0 ? "" : mCm, row, billDetails.indexOf("M/CM"));
+                double rh = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Rh")));
+                tableModel.setValueAt(rh == 0 ? "" : rh, row, billDetails.indexOf("Rh"));
+                double nag = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Nag")));
+                tableModel.setValueAt(nag == 0 ? "" : nag, row, billDetails.indexOf("Nag"));
+                double other = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Other")));
+                tableModel.setValueAt(other == 0 ? "" : other, row, billDetails.indexOf("Other"));
+                double plusG;
+                double goldIngG = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Gold(ing g)")));
+                tableModel.setValueAt(goldIngG == 0 ? "" : goldIngG, row, billDetails.indexOf("Gold(ing g)"));
+                double goldCost;
+                double total;
+//                if (col == billDetails.indexOf("Labour") || col == billDetails.indexOf("Raw") || col == billDetails.indexOf("DullChillai") || col == billDetails.indexOf("M/CM") || col == billDetails.indexOf("Rh") || col == billDetails.indexOf("Nag") || col == billDetails.indexOf("Other") || col == billDetails.indexOf("+G") || col == billDetails.indexOf("Gold(ing g)") || col == billDetails.indexOf("gold cost") || col == billDetails.indexOf("total"))
+
+                plusG = labour + raw + dullChillai + mCm + rh + nag + other;
+                goldCost = goldIngG * goldrate;
+                plusG *= quantity;
+                total = plusG + goldCost;
+                tableModel.setValueAt(total == 0 ? "" : total, row, billDetails.indexOf("total"));
+                tableModel.setValueAt(plusG == 0 ? "" : plusG, row, billDetails.indexOf("+G"));
+                tableModel.setValueAt(goldCost == 0 ? "" : goldCost, row, billDetails.indexOf("gold cost"));
+
+
+                if (updateThroughSlip) {
+                    System.out.println(sno + " is the current sno value");
+                    createBillToOrderSlipAssosciation(sno, itemID);
+                    updateThroughSlip = false;
+                }
+                if (row != tableModel.getRowCount() - 1) {
+                    checkAndRemoveRow(row, tableModel, billDetails.indexOf("SNo"), false);
+                }
+                billTable.repaint();
                 addModelListeners(listeners, tableModel);
             }
 
 
         });
+
         billTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke("control D"), "copyAbove");
 
         billTable.getActionMap().put("copyAbove", new AbstractAction() {
@@ -710,9 +884,9 @@ public class NewBill extends JFrame {
 
     }
 
-    private void checkAndRemoveRow(int row, DefaultTableModel tableModel, int snoIndex) {
+    private void checkAndRemoveRow(int row, DefaultTableModel tableModel, int snoIndex, boolean forceRemove) {
         // Ensure the row index is valid
-        TableModelListener[] listeners = removeModelListener(tableModel);
+
         if (row < 0 || row >= tableModel.getRowCount()) {
             return; // Invalid row index, exit method
         }
@@ -720,7 +894,7 @@ public class NewBill extends JFrame {
         boolean isEmpty = true;
 
         // Check if all columns in the given row are empty
-        for (int col = 0; col < tableModel.getColumnCount(); col++) {
+        if (!forceRemove) for (int col = 0; col < tableModel.getColumnCount(); col++) {
             if (col == snoIndex) continue;
             Object value = tableModel.getValueAt(row, col);
             if (value != null && !value.toString().trim().isEmpty()) {
@@ -731,29 +905,50 @@ public class NewBill extends JFrame {
 
         if (isEmpty) {
             int sno = tableModel.getValueAt(row, billDetails.indexOf("SNo")) == null ? -1 : Integer.parseInt(tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString());
+            relinkAssociations(row + 1);
             tableModel.removeRow(row);
-            snoToItemIdMap.remove(sno);
+            if (!(tableModel.getValueAt(row, billDetails.indexOf("DesignID")) != null && !tableModel.getValueAt(row, billDetails.indexOf("DesignID")).toString().isEmpty())) {
+                listOfNonEditableCells.removeIf(cell -> (cell[0] == row));
+            }
         }
         int sno = 0;
-        for (int i = 0; i < tableModel.getRowCount(); i++) {
+        for (int i = 0; i < tableModel.getRowCount() - 1; i++) {
             sno++; // Increment SNo
             tableModel.setValueAt(sno, i, snoIndex); // Set new value in SNo column
         }
+        tableModel.setValueAt("", billTable.getRowCount() - 1, billDetails.indexOf("SNo"));
         this.sno = sno;
-        addModelListeners(listeners, tableModel);
 
     }
 
-    private void addModelListeners(TableModelListener[] listeners, DefaultTableModel model) {
+    private void relinkAssociations(int removeSNO) {
+        HashMap<Integer, Integer> tempMap = new HashMap<>();
+        Iterator<Integer> i = snoToItemIdMap.keySet().iterator();
+        while (i.hasNext()) {
+            int key = i.next();
+            if (key < removeSNO) tempMap.put(key, snoToItemIdMap.get(key));
+            if (key > removeSNO) {
+                tempMap.put(key - 1, snoToItemIdMap.get(key));
+            }
+            if (key == removeSNO) i.remove();
+        }
+        snoToItemIdMap.clear();
+        snoToItemIdMap.putAll(tempMap);
+
+    }
+
+    public void addModelListeners(TableModelListener[] listeners, DefaultTableModel model) {
         for (TableModelListener listener : listeners) {
             model.addTableModelListener(listener);
         }
     }
 
-    private TableModelListener[] removeModelListener(DefaultTableModel tableModel) {
+    public TableModelListener[] removeModelListener(DefaultTableModel tableModel) {
 
         TableModelListener[] listeners = tableModel.getTableModelListeners();
         for (TableModelListener listener : listeners) {
+
+
             tableModel.removeTableModelListener(listener);
         }
         return listeners;
@@ -762,9 +957,9 @@ public class NewBill extends JFrame {
     Vector<Integer[]> listOfNonEditableCells;
 
     DefaultTableModel redoModel() {
+        for (Integer[] cell : listOfNonEditableCells)
+            System.out.println("list contains: " + cell[0] + ", " + cell[1]);
 
-        for (Integer[] i : listOfNonEditableCells) {
-        }
         Vector<Vector<String>> v = new Vector<>();
         for (int i = 0; i < tableModel.getRowCount(); i++) {
             Vector<String> data = new Vector<>();
@@ -792,7 +987,12 @@ public class NewBill extends JFrame {
                         return false;
                     }
                 }
+
                 if (column == billDetails.indexOf("SNo")) return false;
+                if (column == billDetails.indexOf("OrderSlip/quantity")) return false;
+                if (column == billDetails.indexOf("total")) return false;
+                if (column == billDetails.indexOf("+G")) return false;
+                if (column == billDetails.indexOf("gold cost")) return false;
                 if (listOfNonEditableCells.isEmpty()) {
                     return true;  // If no locked cells, allow editing
                 }
@@ -809,5 +1009,44 @@ public class NewBill extends JFrame {
 
     public JButton getBackButton() {
         return backButton;
+    }
+}
+
+class DecimalDocumentFilter extends DocumentFilter {
+    @Override
+    public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+        String newText = getUpdatedText(fb, offset, 0, string);
+        if (isValidInput(newText)) {
+            super.insertString(fb, offset, string, attr);
+        } else {
+            Toolkit.getDefaultToolkit().beep(); // Invalid input feedback
+        }
+    }
+
+    @Override
+    public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+        String newText = getUpdatedText(fb, offset, length, text);
+        if (isValidInput(newText)) {
+            super.replace(fb, offset, length, text, attrs);
+        } else {
+            Toolkit.getDefaultToolkit().beep(); // Invalid input feedback
+        }
+    }
+
+    @Override
+    public void remove(FilterBypass fb, int offset, int length) throws BadLocationException {
+        super.remove(fb, offset, length); // Allow deletion
+    }
+
+    private String getUpdatedText(FilterBypass fb, int offset, int length, String text) throws BadLocationException {
+        String existingText = fb.getDocument().getText(0, fb.getDocument().getLength());
+        StringBuilder newText = new StringBuilder(existingText);
+        newText.replace(offset, offset + length, text);
+        return newText.toString();
+    }
+
+    private boolean isValidInput(String text) {
+        // Regex to allow only numeric values with optional decimal (max 3 decimal places)
+        return text.matches("\\d*(\\.\\d{0,3})?");
     }
 }

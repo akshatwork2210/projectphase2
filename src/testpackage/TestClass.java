@@ -4,9 +4,11 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import javax.swing.*;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.util.Vector;
 
 public class TestClass {
     public static void writeTableToExcel(JTable table, String filename) {
@@ -60,6 +62,88 @@ public class TestClass {
         }
     }
 
+    public static void csvOut(TableModel tableModel) {
+        String fileName = "output.csv";
+        try (FileWriter writer = new FileWriter(fileName)) {
+            int columnCount = tableModel.getColumnCount();
+            int rowCount = tableModel.getRowCount();
+
+            // Writing headers
+            for (int col = 0; col < columnCount; col++) {
+                writer.append(tableModel.getColumnName(col));
+                if (col < columnCount - 1) {
+                    writer.append(",");
+                }
+            }
+            writer.append("\n");
+
+            // Writing rows
+            for (int row = 0; row < rowCount; row++) {
+                for (int col = 0; col < columnCount; col++) {
+                    Object value = tableModel.getValueAt(row, col);
+                    writer.append(value != null ? value.toString() : "");
+                    if (col < columnCount - 1) {
+                        writer.append(",");
+                    }
+                }
+                writer.append("\n");
+            }
+            writer.flush();
+            System.out.println("CSV file generated successfully: " + fileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void csvToTableModel(DefaultTableModel tableModel, String filename) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+            String line;
+            boolean isHeader = tableModel.getColumnCount() == 0; // Only set headers if model is empty
+            TableModelListener[] tl = tableModel.getTableModelListeners();
+            for (TableModelListener listener : tl) {
+                tableModel.removeTableModelListener(listener);
+            }
+            tableModel.setRowCount(0);
+            int i = 0;
+            while ((line = br.readLine()) != null) {
+                if (i == 0) {
+                    i++;
+                    continue;
+                }
+                String[] values = line.split(",", -1); // Split by comma, preserve empty values
+
+                if (isHeader) {
+                    for (String columnName : values) {
+                        System.out.println("header");
+                        tableModel.addColumn(columnName.trim());
+                    }
+                    isHeader = false;
+                } else {
+                    // Add row data
+
+                    Vector<String> row = new Vector<>();
+                    for (String value : values) {
+                        row.add(value.trim().isEmpty() ? "" : value.trim());
+                    }
+
+                    tableModel.addRow(row);
+
+                }
+            }
+            for (TableModelListener listener : tl) {
+                tableModel.addTableModelListener(listener);
+            }
+            for (Vector row : tableModel.getDataVector()) {
+                for (Object data : row) {
+                    System.out.print(data + "  ");
+                }
+                System.out.println();
+            }
+            System.out.println("success");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static void main(String[] args) {
         // Data to be written

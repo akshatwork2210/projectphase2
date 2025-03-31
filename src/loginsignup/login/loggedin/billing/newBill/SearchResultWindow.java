@@ -3,6 +3,7 @@ package loginsignup.login.loggedin.billing.newBill;
 import mainpack.MyClass;
 
 import javax.swing.*;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
 import java.awt.event.*;
@@ -77,9 +78,7 @@ public class SearchResultWindow extends JFrame {
         int selectedQuantity = showPrompt(maxQuantity, itemName);
 
         if (selectedQuantity < 0) return null;
-        String query = "UPDATE order_slips "
-                + "SET billed_quantity = billed_quantity + ? "
-                + "WHERE slip_id = ? AND item_id = ?";
+        String query = "UPDATE order_slips " + "SET billed_quantity = billed_quantity + ? " + "WHERE slip_id = ? AND item_id = ?";
         try {
             Connection con = MyClass.newBill.getTransacTemp();
             PreparedStatement statement = con.prepareStatement(query);
@@ -104,31 +103,19 @@ public class SearchResultWindow extends JFrame {
     }
 
     int showPrompt(int maxQuantity, String itemName) {
-        String quantity = JOptionPane.showInputDialog(
-                null,
-                "How many " + itemName + "s would you like to include?",
-                "Quantity Selection",
-                JOptionPane.QUESTION_MESSAGE
-        );
+        String quantity = JOptionPane.showInputDialog(null, "How many " + itemName + "s would you like to include?", "Quantity Selection", JOptionPane.QUESTION_MESSAGE);
 
         try {
             int selectedQuantity = Integer.parseInt(quantity);
             if (selectedQuantity > 0 && selectedQuantity <= maxQuantity) {
-                JOptionPane.showMessageDialog(null,
-                        selectedQuantity + " " + itemName + "(s) added to the bill.");
+                JOptionPane.showMessageDialog(null, selectedQuantity + " " + itemName + "(s) added to the bill.");
                 return selectedQuantity;
             } else {
-                JOptionPane.showMessageDialog(null,
-                        "Invalid quantity! Please enter a value between 1 and " + maxQuantity,
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Invalid quantity! Please enter a value between 1 and " + maxQuantity, "Error", JOptionPane.ERROR_MESSAGE);
                 return -2;
             }
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(null,
-                    "Please enter a valid number.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Please enter a valid number.", "Error", JOptionPane.ERROR_MESSAGE);
             return -1;
         }
     }
@@ -196,7 +183,7 @@ public class SearchResultWindow extends JFrame {
         JTable billTable = MyClass.newBill.getBillTable();
         DefaultTableModel model = (DefaultTableModel) billTable.getModel();
 
-        String query = "SELECT  item_name, design_id, raw_material_price FROM order_slips WHERE item_id = ?";
+        String query = "SELECT  quantity,billed_quantity,slip_id,item_name, design_id, raw_material_price FROM order_slips WHERE item_id = ?";
 
         try (PreparedStatement pstmt = con.prepareStatement(query)) {
             pstmt.setInt(1, itemId);
@@ -209,7 +196,7 @@ public class SearchResultWindow extends JFrame {
                 // Check if any column in this row has data
 
                 for (int j = 0; j < model.getColumnCount(); j++) {
-                    if(j==MyClass.newBill.billDetails.indexOf("SNo")){
+                    if (j == MyClass.newBill.billDetails.indexOf("SNo")) {
                         continue;
                     }
                     Object value = model.getValueAt(i, j);
@@ -224,13 +211,16 @@ public class SearchResultWindow extends JFrame {
                     break; // Stop at the first non-empty row
                 }
             }
-            System.out.println("last row is " + lastrow);
+
             if (rs.next()) {
                 TableColumnModel columnModel = billTable.getColumnModel();
                 setUpdateThroughSlip(true);
                 MyClass.newBill.setItemID(itemId);
+                model.setValueAt(rs.getString("slip_id") + "." + itemId + "/" + (rs.getInt("quantity") - rs.getInt("billed_quantity")), lastrow, columnModel.getColumnIndex("OrderSlip/quantity"));
+                model.setValueAt(rs.getString("item_name"), lastrow, columnModel.getColumnIndex("ItemName"));
                 model.setValueAt(String.valueOf(quantity), lastrow, columnModel.getColumnIndex("Quantity"));
                 model.setValueAt(rs.getString("design_id"), lastrow, columnModel.getColumnIndex("DesignID"));
+
             } else {
                 JOptionPane.showMessageDialog(null, "Item not found in order_slips!");
             }
@@ -242,11 +232,12 @@ public class SearchResultWindow extends JFrame {
     }
 
     private void setUpdateThroughSlip(boolean b) {
-        MyClass.newBill.updateThroughSlip=b;
+        MyClass.newBill.updateThroughSlip = b;
 
 
     }
-    public boolean getUpdatThroughSlip(){
+
+    public boolean getUpdatThroughSlip() {
         return MyClass.newBill.updateThroughSlip;
     }
 
@@ -255,8 +246,7 @@ public class SearchResultWindow extends JFrame {
 
     private void fetchData(DefaultTableModel model) {
         model.setRowCount(0);
-        String query = "SELECT customer_name ,slip_id,item_id,sno,design_id, item_name, quantity, plating_grams, raw_material_price, other_details, billed_quantity " +
-                "FROM order_slips WHERE slip_id = ? Order by item_id";
+        String query = "SELECT customer_name ,slip_id,item_id,sno,design_id, item_name, quantity, plating_grams, raw_material_price, other_details, billed_quantity " + "FROM order_slips WHERE slip_id = ? Order by item_id";
 
         try {
 //            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/your_database", "username", "password");
@@ -275,14 +265,7 @@ public class SearchResultWindow extends JFrame {
                 model.addRow(new Object[]{
 // Map sno to item_id
 
-                        rs.getString("sno"),
-                        rs.getString("design_id"),
-                        rs.getString("item_name"),
-                        (rs.getInt("quantity") - rs.getInt("billed_quantity")),
-                        rs.getBigDecimal("plating_grams"),
-                        rs.getBigDecimal("raw_material_price"),
-                        rs.getString("other_details")
-                });
+                        rs.getString("sno"), rs.getString("design_id"), rs.getString("item_name"), (rs.getInt("quantity") - rs.getInt("billed_quantity")), rs.getBigDecimal("plating_grams"), rs.getBigDecimal("raw_material_price"), rs.getString("other_details")});
 
             }
         } catch (SQLException e) {
