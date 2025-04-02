@@ -51,6 +51,8 @@ public class SearchResultWindow extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 MyClass.newBill.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 MyClass.newBill.getBackButton().setEnabled(true);
+                MyClass.newBill.getSubmitButton().setEnabled(true);
+
                 dispose();
             }
         });
