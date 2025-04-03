@@ -1,6 +1,5 @@
 package loginsignup.login.loggedin.billing;
 
-import loginsignup.login.loggedin.billing.newBill.NewBill;
 import mainpack.MyClass;
 
 import javax.swing.*;
@@ -11,12 +10,14 @@ public class BillingScreen extends JFrame {
     private JPanel panel;
     private JButton newBillButton;
     private JButton backButton;
+    private JButton viewCustomerBillsButton;
+    private JButton viewBillButton;
 
     public JButton getNewBillButton() {
         return newBillButton;
     }
 
-    public BillingScreen(){
+    public BillingScreen() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         setContentPane(panel);
@@ -36,6 +37,13 @@ public class BillingScreen extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
                 MyClass.mainScreen.setVisible(true);
+            }
+        });
+        viewCustomerBillsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                MyClass.viewBill.setVisible(true);
+                MyClass.viewBill.init("customer");
             }
         });
     }
