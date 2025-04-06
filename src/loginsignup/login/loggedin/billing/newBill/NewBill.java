@@ -8,16 +8,14 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.text.AbstractDocument;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DocumentFilter;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
@@ -27,6 +25,7 @@ import testpackage.TestClass;
 
 public class NewBill extends JFrame {
     int itemID;
+    private LocalDateTime dateTime;
     private double goldrate;
     private int temp = 0;
     private String customerName;
@@ -53,7 +52,6 @@ public class NewBill extends JFrame {
     private JTable billTable;
     private JButton backButton;
     private JComboBox slipDetailComboBox;
-    private JComboBox dateComboBox;
     private JButton submitButton;
     private HashMap<Integer, Integer> snoToItemIdMap;
     private JButton resetButton;
@@ -61,34 +59,12 @@ public class NewBill extends JFrame {
     private JTextField slipNumberField;
     private JTextField goldRateTextField;
     private JScrollPane scrollPane;
+    private JComboBox dateComboBox;
     private Connection transacTemp;
     public boolean notThroughOrderSlip = true;
 
     public JTable getBillTable() {
         return billTable;
-    }
-
-    public int getCurBillID() {
-        return curBillID;
-    }
-
-    // Safely get string values from JTable model
-    private String getStringValue(DefaultTableModel model, int row, int col) {
-        Object value = model.getValueAt(row, col);
-        return (value == null) ? "" : value.toString();
-    }
-
-    // Safely get BigDecimal values from JTable model
-    private BigDecimal getBigDecimalValue(DefaultTableModel model, int row, int col) {
-        Object value = model.getValueAt(row, col);
-        if (value == null || value.toString().trim().isEmpty()) {
-            return BigDecimal.ZERO;
-        }
-        try {
-            return new BigDecimal(value.toString());
-        } catch (NumberFormatException e) {
-            return BigDecimal.ZERO;
-        }
     }
 
     public NewBill() {
@@ -143,7 +119,7 @@ public class NewBill extends JFrame {
 
             public void actionPerformed(ActionEvent e) {
                 try {
-                    int x = Integer.parseInt(slipNumberField.getText());
+                        int x = Integer.parseInt(slipNumberField.getText());
                 } catch (NumberFormatException ex) {
                     ex.printStackTrace();
                     slipNumberField.setText("");
@@ -208,9 +184,12 @@ public class NewBill extends JFrame {
                     conn = DriverManager.getConnection(url, user, password);
                     conn.setAutoCommit(false); // Start transaction
 
-                    String sql = "INSERT INTO bills () VALUES ()";
+                    String sql = "INSERT INTO bills (date) VALUES (?)";
                     try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+                        pstmt.setTimestamp(1, Timestamp.valueOf(getDateTime()));
                         int affectedRows = pstmt.executeUpdate();
+
                         if (affectedRows > 0) {
                             try (ResultSet rs = pstmt.getGeneratedKeys()) {
                                 if (rs.next()) {
@@ -349,7 +328,7 @@ public class NewBill extends JFrame {
         customerComboBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                customerName = customerComboBox.getSelectedItem().toString();
+                customerName = customerComboBox.getSelectedItem()==null?"":customerComboBox.getSelectedItem().toString();
             }
         });
         undoButton.addActionListener(new ActionListener() {
@@ -359,6 +338,26 @@ public class NewBill extends JFrame {
                 billTable.repaint();
             }
         });
+        dateComboBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setCurrentDate(TestClass.parseDate(dateComboBox.getSelectedItem()==null?"":dateComboBox.getSelectedItem().toString()));
+                System.out.println(getDateTime());
+            }
+        });
+    }
+
+    private void setCurrentDate(LocalDateTime localDateTime) {
+        if(localDateTime==null) {
+            Thread.dumpStack();
+            return;
+        }
+        dateTime=localDateTime;
+    }
+
+    public LocalDateTime getDateTime() {
+        DateTimeFormatter format=DateTimeFormatter.ofPattern("dd-MM-yy hh:mm a");
+        return dateTime;
     }
 
     private void reCalculateValuesAndAppend() {
@@ -459,7 +458,6 @@ public class NewBill extends JFrame {
             throw e; // Stop execution since an invalid value was entered
         }
     }
-
     public void init() {
 
         billTable.getInputMap(JTable.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("DELETE"), "deleteRow");
@@ -547,8 +545,8 @@ public class NewBill extends JFrame {
             dateList.add(today.format(formatter));
             today = today.minusDays(1);
         }
-        DefaultComboBoxModel m = new DefaultComboBoxModel<>(dateList);
-        dateComboBox.setModel(m);
+//        DefaultComboBoxModel m = new DefaultComboBoxModel<>(dateList);
+//        dateComboBox.setModel(m);
         customerComboBox.removeAllItems();
         customerComboBox.addItem("Select Customer");
         tableModel.addTableModelListener(new TableModelListener() {
@@ -832,7 +830,7 @@ public class NewBill extends JFrame {
             throw new RuntimeException();
         }
 
-
+TestClass.generateAndAddDates(dateComboBox);
     }
 
     private void checkAndRemoveRow(int row, DefaultTableModel tableModel, int snoIndex, boolean forceRemove) {

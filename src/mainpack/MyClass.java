@@ -12,6 +12,8 @@ import loginsignup.login.loggedin.inventorymanagement.addinventory.AddInventory;
 import loginsignup.login.loggedin.ordermanagement.OrderScreen;
 import loginsignup.login.loggedin.ordermanagement.generateorder.OrderGenerateForm;
 import loginsignup.login.loggedin.ordermanagement.vieworders.ViewOrders;
+import loginsignup.login.loggedin.transactionsandaccounts.Transactions;
+import loginsignup.login.loggedin.transactionsandaccounts.newtransaction.NewTransaction;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,8 +24,6 @@ import java.awt.print.PrinterJob;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Iterator;
-import java.util.Vector;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
@@ -41,6 +41,8 @@ public class MyClass {
         orderGenerateForm = new OrderGenerateForm();
         inventoryScreen = new InventoryScreen();
         addInventory = new AddInventory();
+        transactions=new Transactions();
+        newTransaction= new NewTransaction();
         searchResultWindow = new SearchResultWindow();
         login_signup.setVisible(false);
         login.getLOGINButton().doClick();
@@ -49,6 +51,7 @@ public class MyClass {
 
         viewOrders = new ViewOrders();
         viewBill=new ViewBill();
+
 //        orderScreen.getGenerateANewOrderButton().doClick();
 //        orderScreen.getViewOrdersButton().doClick();
         billingScreen.getNewBillButton().doClick();
@@ -57,6 +60,7 @@ public class MyClass {
     }
 
     public static ViewOrders viewOrders;
+    public static NewTransaction newTransaction;
     public static SearchResultWindow searchResultWindow;
 
     public static Connection getConnection(String url, String user, String password) {
@@ -119,10 +123,17 @@ public class MyClass {
     }
 
     public static NewBill newBill;
+    public static Transactions transactions;
+
+
+
     public static LOGIN login;
     public static BillingScreen billingScreen;
+
     public static ViewBill viewBill;
+
     public static MainScreen mainScreen;
+
     public static LOGIN_SIGNUP login_signup;
     public static OrderScreen orderScreen;
     public static OrderGenerateForm orderGenerateForm;

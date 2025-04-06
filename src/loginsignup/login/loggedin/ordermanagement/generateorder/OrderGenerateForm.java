@@ -1,6 +1,8 @@
 package loginsignup.login.loggedin.ordermanagement.generateorder;
 
 import mainpack.MyClass;
+import org.apache.commons.io.input.TeeInputStream;
+import testpackage.TestClass;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
@@ -31,6 +33,7 @@ public class OrderGenerateForm extends JFrame {
     private JButton submitButton;
     private JButton resetFormButton;
     private JButton undoResetButton;
+    private JComboBox dateComboBox;
     ArrayList<Integer[][]> ar;
 
     public HashMap<Integer, String> getCustomerNameMap() {
@@ -172,6 +175,8 @@ public class OrderGenerateForm extends JFrame {
 
     public void init() {
         ar = new ArrayList<>();
+
+        TestClass.generateAndAddDates(dateComboBox);
         // this method will be initializing functinality of this window
         String[] columnNames = {"design id", "Item Name", "Quantity", "Plating", "Raw Material Cost", "Other Details"};//jtable content
         orderSlip.getTableHeader().setReorderingAllowed(false);

@@ -5,7 +5,6 @@ import mainpack.MyClass;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.*;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -148,13 +147,22 @@ public class MainScreen extends JFrame{
 createFile(MyClass.login.getLoginID(),MyClass.login.getPassword(),"sample");
             }
         });
+        transactionManagementButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setVisible(false);
+
+                MyClass.transactions.init();
+                MyClass.transactions.setVisible(true);
+            }
+        });
     }
     private JButton billingButton;
     private JPanel panel;
     private JButton backButton;
     private JButton orderManagementButton;
     private JButton backUpDataButton;
-    private JButton button2;
+    private JButton transactionManagementButton;
     private JButton button3;
     private JButton inventoryManagementButton;
 }

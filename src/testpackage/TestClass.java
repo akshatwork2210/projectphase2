@@ -8,6 +8,10 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import java.io.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Vector;
 
 public class TestClass {
@@ -184,5 +188,35 @@ public class TestClass {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static LocalDateTime parseDate(String dateStr) {
+        if(dateStr.isEmpty())return null;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yy");
+        LocalDate inputDate = LocalDate.parse(dateStr, formatter);
+        LocalDate today = LocalDate.now();
+
+        if (inputDate.equals(today)) {
+            return LocalDateTime.now();
+        } else {
+            return LocalDateTime.of(inputDate, LocalTime.of(13, 0)); // 1 PM
+        }
+    }
+
+    public static void generateAndAddDates(JComboBox<String> comboBox) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yy");
+
+        LocalDate today = LocalDate.now();
+        LocalDate oneYearAgo = today.minusYears(1);
+
+        // Clear any existing items
+        if (comboBox != null) {
+            comboBox.removeAllItems();
+
+            // Add dates from today to 1 year ago
+            for (LocalDate date = today; !date.isBefore(oneYearAgo); date = date.minusDays(1)) {
+                comboBox.addItem(date.format(formatter));
+            }
+        }else Thread.dumpStack();
     }
 }
