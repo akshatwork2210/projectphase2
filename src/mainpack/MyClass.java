@@ -41,8 +41,11 @@ public class MyClass {
         orderGenerateForm = new OrderGenerateForm();
         inventoryScreen = new InventoryScreen();
         addInventory = new AddInventory();
+<<<<<<< HEAD
         transactions=new Transactions();
         newTransaction= new NewTransaction();
+=======
+>>>>>>> 96725f8f4f09ffccbe22342c52e2d935c8c27fd1
         searchResultWindow = new SearchResultWindow();
         login_signup.setVisible(false);
         login.getLOGINButton().doClick();
@@ -51,7 +54,10 @@ public class MyClass {
 
         viewOrders = new ViewOrders();
         viewBill=new ViewBill();
+<<<<<<< HEAD
 
+=======
+>>>>>>> 96725f8f4f09ffccbe22342c52e2d935c8c27fd1
 //        orderScreen.getGenerateANewOrderButton().doClick();
 //        orderScreen.getViewOrdersButton().doClick();
         billingScreen.getNewBillButton().doClick();
@@ -60,7 +66,10 @@ public class MyClass {
     }
 
     public static ViewOrders viewOrders;
+<<<<<<< HEAD
     public static NewTransaction newTransaction;
+=======
+>>>>>>> 96725f8f4f09ffccbe22342c52e2d935c8c27fd1
     public static SearchResultWindow searchResultWindow;
 
     public static Connection getConnection(String url, String user, String password) {
@@ -129,9 +138,13 @@ public class MyClass {
 
     public static LOGIN login;
     public static BillingScreen billingScreen;
+<<<<<<< HEAD
 
     public static ViewBill viewBill;
 
+=======
+    public static ViewBill viewBill;
+>>>>>>> 96725f8f4f09ffccbe22342c52e2d935c8c27fd1
     public static MainScreen mainScreen;
 
     public static LOGIN_SIGNUP login_signup;

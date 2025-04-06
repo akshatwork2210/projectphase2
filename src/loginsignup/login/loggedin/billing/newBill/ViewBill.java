@@ -5,12 +5,21 @@ import mainpack.MyClass;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
+<<<<<<< HEAD
 import javax.swing.text.DateFormatter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+=======
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+>>>>>>> 96725f8f4f09ffccbe22342c52e2d935c8c27fd1
 
 public class ViewBill extends JFrame {
     private int billID;
@@ -31,7 +40,10 @@ public class ViewBill extends JFrame {
     private JButton nextButton;
     private JComboBox customerNameComboBox;
     private JTextField billIDTextField;
+<<<<<<< HEAD
     private JLabel dateLabel;
+=======
+>>>>>>> 96725f8f4f09ffccbe22342c52e2d935c8c27fd1
 
     public ViewBill() {
         setContentPane(panel);
@@ -47,7 +59,10 @@ public class ViewBill extends JFrame {
     }
 
     public void init(String mode) {
+<<<<<<< HEAD
         pack();
+=======
+>>>>>>> 96725f8f4f09ffccbe22342c52e2d935c8c27fd1
         setListOfCustomer();// sets the list of customers in jcombobox
 
         if (mode.contentEquals("customer")) {
@@ -91,10 +106,16 @@ public class ViewBill extends JFrame {
                                 " AND customer_name = '" + selectedCustomer + "' ORDER BY BillID ASC LIMIT 1";
                     }
                     try {
+<<<<<<< HEAD
                         Statement stmt = MyClass.C.createStatement();
                         ResultSet rs = stmt.executeQuery(query);
                         if (rs.next()) loadBillData(billTable, rs.getInt(1));
                         else return;
+=======
+                        Statement stmt=MyClass.C.createStatement();
+                        ResultSet rs=stmt.executeQuery(query);
+                        if(rs.next())loadBillData(billTable,rs.getInt(1)); else return;
+>>>>>>> 96725f8f4f09ffccbe22342c52e2d935c8c27fd1
                     } catch (SQLException ex) {
                         throw new RuntimeException(ex);
                     }
@@ -142,10 +163,14 @@ public class ViewBill extends JFrame {
 
                         if (rs.next()) {
                             loadBillData(billTable, inputBillID);
+<<<<<<< HEAD
 
                             billIDTextField.setText("");
                             ActionListener[] temp=customerNameComboBox.getActionListeners();
 
+=======
+                            billIDTextField.setText("");
+>>>>>>> 96725f8f4f09ffccbe22342c52e2d935c8c27fd1
                             // Load bill data if found
                         } else {
                             billIDTextField.setText("");
@@ -162,6 +187,10 @@ public class ViewBill extends JFrame {
             });
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 96725f8f4f09ffccbe22342c52e2d935c8c27fd1
         }
     }
 
@@ -214,14 +243,19 @@ public class ViewBill extends JFrame {
 
     public void loadBillData(JTable table, int billID) {
 
+<<<<<<< HEAD
         String sql = "SELECT SNo, ItemName, TotalBaseCosting, GoldPlatingWeight, TotalGoldCost, TotalFinalCost , customer_name " + "FROM billdetails WHERE BillID = ?";
 
+=======
+        String sql = "SELECT SNo, ItemName, TotalBaseCosting, GoldPlatingWeight, TotalGoldCost, TotalFinalCost " + "FROM billdetails WHERE BillID = ?";
+>>>>>>> 96725f8f4f09ffccbe22342c52e2d935c8c27fd1
 
         try (PreparedStatement pstmt = MyClass.C.prepareStatement(sql)) {
             pstmt.setInt(1, billID);
             ResultSet rs = pstmt.executeQuery();
 
             // Define table columns
+<<<<<<< HEAD
             String[] columns = {"S.No","customer_name", "Item Name", "Plus G", "Gold (g)", "TGC", "Total"};
             DefaultTableModel model = (DefaultTableModel) table.getModel();
             model.setRowCount(0);
@@ -230,6 +264,13 @@ public class ViewBill extends JFrame {
             while (rs.next()) {
                 customer_name=rs.getString("customer_name");
 
+=======
+            String[] columns = {"S.No", "Item Name", "Plus G", "Gold (g)", "TGC", "Total"};
+            DefaultTableModel model = (DefaultTableModel) table.getModel();
+            model.setRowCount(0);
+            // Populate model with data from ResultSet
+            while (rs.next()) {
+>>>>>>> 96725f8f4f09ffccbe22342c52e2d935c8c27fd1
                 Object[] row = {rs.getInt("SNo"), rs.getString("ItemName"), rs.getDouble("TotalBaseCosting"),  // plusG
                         rs.getDouble("GoldPlatingWeight"), // gold (g)
                         rs.getDouble("TotalGoldCost"),     // tgc
@@ -241,15 +282,19 @@ public class ViewBill extends JFrame {
             idLabel.setText("billID: " + billID);
             setBillID(billID);
             table.setModel(model);
+<<<<<<< HEAD
             sql="select *from bills where billid=?;";
             PreparedStatement pstmt2=MyClass.C.prepareStatement(sql);
             pstmt2.setInt(1,billID);
             rs=pstmt2.executeQuery();
             if(rs.next())setDateTime(rs.getTimestamp("date"));
+=======
+>>>>>>> 96725f8f4f09ffccbe22342c52e2d935c8c27fd1
             System.out.println("Table updated successfully!");
         } catch (SQLException e) {
             e.printStackTrace();
         }
+<<<<<<< HEAD
 
     }
 
@@ -257,6 +302,8 @@ public class ViewBill extends JFrame {
         LocalDateTime datetime=date.toLocalDateTime();
         DateTimeFormatter formatter=DateTimeFormatter.ofPattern("dd-MM-yy hh:mm a");
         dateLabel.setText(datetime.format(formatter));
+=======
+>>>>>>> 96725f8f4f09ffccbe22342c52e2d935c8c27fd1
     }
 
 }
