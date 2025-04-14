@@ -9,12 +9,20 @@ import java.awt.event.ActionListener;
 public class Transactions extends JFrame {
     private JButton backButton;
     private JButton newTransactionButton;
-    private JButton button3;
+    private JButton viewTransactionsButton;
     private JButton button4;
     private JPanel panel;
 
+    public JButton getNewTransactionButton() {
+        return newTransactionButton;
+    }
+
+    public JButton getViewTransactionsButton() {
+        return viewTransactionsButton;
+    }
 
     public Transactions() {
+
         setContentPane(panel);
         pack();
         backButton.addActionListener(new ActionListener() {
@@ -31,6 +39,14 @@ public class Transactions extends JFrame {
                 MyClass.newTransaction.setVisible(true);
                 setVisible(false);
 
+            }
+        });
+        viewTransactionsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setVisible(false);
+                MyClass.viewTransactions.setVisible(true);
+                MyClass.viewTransactions.init();
             }
         });
     }

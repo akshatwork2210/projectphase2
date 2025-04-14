@@ -14,6 +14,7 @@ import loginsignup.login.loggedin.ordermanagement.generateorder.OrderGenerateFor
 import loginsignup.login.loggedin.ordermanagement.vieworders.ViewOrders;
 import loginsignup.login.loggedin.transactionsandaccounts.Transactions;
 import loginsignup.login.loggedin.transactionsandaccounts.newtransaction.NewTransaction;
+import loginsignup.login.loggedin.transactionsandaccounts.viewTransactions.ViewTransactions;
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,19 +43,21 @@ public class MyClass {
         inventoryScreen = new InventoryScreen();
         addInventory = new AddInventory();
         transactions=new Transactions();
+        viewTransactions=new ViewTransactions();
         newTransaction= new NewTransaction();
         searchResultWindow = new SearchResultWindow();
         login_signup.setVisible(false);
         login.getLOGINButton().doClick();
         mainScreen.setVisible(false);
         login.setVisible(false);
-
+transactions=new Transactions();
         viewOrders = new ViewOrders();
         viewBill=new ViewBill();
+        transactions.getViewTransactionsButton().doClick();
 
 //        orderScreen.getGenerateANewOrderButton().doClick();
 //        orderScreen.getViewOrdersButton().doClick();
-        billingScreen.getNewBillButton().doClick();
+//        billingScreen.getNewBillButton().doClick();
 
 
     }
@@ -62,7 +65,7 @@ public class MyClass {
     public static ViewOrders viewOrders;
     public static NewTransaction newTransaction;
     public static SearchResultWindow searchResultWindow;
-
+public static ViewTransactions viewTransactions;
     public static Connection getConnection(String url, String user, String password) {
         Connection conn = null;
         try {

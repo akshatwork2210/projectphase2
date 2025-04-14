@@ -1,13 +1,22 @@
 package testpackage;
 
+import mainpack.MyClass;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import javax.swing.*;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
+import java.awt.*;
 import java.io.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -15,6 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Vector;
 
 public class TestClass {
+
     public static void writeTableToExcel(JTable table, String filename) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Table Data");
@@ -191,7 +201,7 @@ public class TestClass {
     }
 
     public static LocalDateTime parseDate(String dateStr) {
-        if(dateStr.isEmpty())return null;
+        if (dateStr.isEmpty()) return null;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yy");
         LocalDate inputDate = LocalDate.parse(dateStr, formatter);
         LocalDate today = LocalDate.now();
@@ -203,7 +213,7 @@ public class TestClass {
         }
     }
 
-    public static void generateAndAddDates(JComboBox<String> comboBox) {
+    public static void generateAndAddDates(JComboBox<String> comboBox,boolean headerrow) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yy");
 
         LocalDate today = LocalDate.now();
@@ -214,9 +224,94 @@ public class TestClass {
             comboBox.removeAllItems();
 
             // Add dates from today to 1 year ago
+            if(headerrow)comboBox.addItem("Select date");
             for (LocalDate date = today; !date.isBefore(oneYearAgo); date = date.minusDays(1)) {
                 comboBox.addItem(date.format(formatter));
             }
-        }else Thread.dumpStack();
+        } else Thread.dumpStack();
+    }
+
+    public static void generateAndAddNames(JComboBox<String> comboBox) {
+        if (comboBox == null) return;
+        comboBox.removeAllItems();
+        comboBox.addItem("Select Customer");
+        Statement stmt1 = null;
+        ResultSet rs = null;
+        try {
+            stmt1 = MyClass.C.createStatement();
+            rs = stmt1.executeQuery("SELECT customer_name FROM customers");
+            while (rs.next()) comboBox.addItem(rs.getString(1));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                if (rs != null)
+                    rs.close();
+                if (stmt1 != null)
+                    stmt1.close();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public static DecimalDocumentFilter getDocFilter() {
+        return new DecimalDocumentFilter();
+        }
+
+    public static TableModelListener[] removeModelListener(DefaultTableModel tableModel) {
+
+        TableModelListener[] listeners = tableModel.getTableModelListeners();
+        for (TableModelListener listener : listeners) {
+
+
+            tableModel.removeTableModelListener(listener);
+        }
+        return listeners;
+    }
+
+    public static void addModelListeners(TableModelListener[] listeners, DefaultTableModel model) {
+        for (TableModelListener listener : listeners) {
+            model.addTableModelListener(listener);
+        }
+    }
+}
+
+class DecimalDocumentFilter extends DocumentFilter {
+    @Override
+    public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+        String newText = getUpdatedText(fb, offset, 0, string);
+        if (isValidInput(newText)) {
+            super.insertString(fb, offset, string, attr);
+        } else {
+            Toolkit.getDefaultToolkit().beep(); // Invalid input feedback
+        }
+    }
+
+    @Override
+    public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+        String newText = getUpdatedText(fb, offset, length, text);
+        if (isValidInput(newText)) {
+            super.replace(fb, offset, length, text, attrs);
+        } else {
+            Toolkit.getDefaultToolkit().beep(); // Invalid input feedback
+        }
+    }
+
+    @Override
+    public void remove(FilterBypass fb, int offset, int length) throws BadLocationException {
+        super.remove(fb, offset, length); // Allow deletion
+    }
+
+    private String getUpdatedText(FilterBypass fb, int offset, int length, String text) throws BadLocationException {
+        String existingText = fb.getDocument().getText(0, fb.getDocument().getLength());
+        StringBuilder newText = new StringBuilder(existingText);
+        newText.replace(offset, offset + length, text);
+        return newText.toString();
+    }
+
+    private boolean isValidInput(String text) {
+        // Regex to allow only numeric values with optional decimal (max 3 decimal places)
+        return text.matches("\\d*(\\.\\d{0,3})?");
     }
 }
