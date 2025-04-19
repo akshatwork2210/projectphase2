@@ -3,10 +3,12 @@ package loginsignup.login.loggedin.billing.newBill;
 import mainpack.MyClass;
 
 import javax.swing.*;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
-import java.awt.event.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Vector;
@@ -14,13 +16,15 @@ import java.util.Vector;
 public class SearchResultWindow extends JFrame {
     private JPanel panel1;
     private JButton backButton;
-    private JButton button2;
     private JTable orderSlipTable;
     private JLabel slipID;
     private JLabel cutomerName;
     private JLabel panaTypeLabel;
     int ID;
 
+    public DefaultTableModel getTableModel() {
+        return (DefaultTableModel) orderSlipTable.getModel();
+    }
 
     public String getCutomerName() {
         String name;
@@ -34,8 +38,7 @@ public class SearchResultWindow extends JFrame {
                 throw new SQLException();
             }
         } catch (SQLException e) {
-            e.printStackTrace();
-            return "";
+            throw new RuntimeException();
         }
 
 
@@ -46,15 +49,12 @@ public class SearchResultWindow extends JFrame {
 
         setContentPane(panel1);
 
-        backButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                MyClass.newBill.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                MyClass.newBill.getBackButton().setEnabled(true);
-                MyClass.newBill.getSubmitButton().setEnabled(true);
+        backButton.addActionListener(e -> {
+            MyClass.newBill.setExtendedState(JFrame.MAXIMIZED_BOTH);
+            MyClass.newBill.getBackButton().setEnabled(true);
+            MyClass.newBill.getSubmitButton().setEnabled(true);
 
-                dispose();
-            }
+            dispose();
         });
         orderSlipTable.addKeyListener(new KeyAdapter() {
             @Override
@@ -94,12 +94,8 @@ public class SearchResultWindow extends JFrame {
             JOptionPane.showMessageDialog(MyClass.searchResultWindow, "succesfully updated data");
             fetchData((DefaultTableModel) orderSlipTable.getModel());
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-            return null;
+        } catch (SQLException | NullPointerException e) {
+            throw new RuntimeException();
         }
         return detailsToPush;
     }
@@ -134,8 +130,8 @@ public class SearchResultWindow extends JFrame {
             }
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "SQL EXCEPTION OCCURED");
-            e.printStackTrace();
-            return null;
+            throw new RuntimeException();
+
         }
 
     }
@@ -210,8 +206,10 @@ public class SearchResultWindow extends JFrame {
 
                 if (!isEmpty) {
                     lastrow = i + 1;
+
                     break; // Stop at the first non-empty row
                 }
+                System.out.println("last row is "+i);
             }
 
             if (rs.next()) {
@@ -227,8 +225,9 @@ public class SearchResultWindow extends JFrame {
                 JOptionPane.showMessageDialog(null, "Item not found in order_slips!");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
             JOptionPane.showMessageDialog(null, "Database error occurred!");
+            throw new RuntimeException();
+
         }
 
     }
@@ -239,14 +238,10 @@ public class SearchResultWindow extends JFrame {
 
     }
 
-    public boolean getUpdatThroughSlip() {
-        return MyClass.newBill.updateThroughSlip;
-    }
-
 
     HashMap<Integer, Integer> snoToItemIdMap;
 
-    private void fetchData(DefaultTableModel model) {
+    public void fetchData(DefaultTableModel model) {
         model.setRowCount(0);
         String query = "SELECT customer_name ,slip_id,item_id,sno,design_id, item_name, quantity, plating_grams, raw_material_price, other_details, billed_quantity " + "FROM order_slips WHERE slip_id = ? Order by item_id";
 
@@ -256,7 +251,6 @@ public class SearchResultWindow extends JFrame {
             pstmt.setInt(1, ID); // Use the slip_id provided
             ResultSet rs = pstmt.executeQuery();
             snoToItemIdMap = new HashMap<>();
-            int i = 0;
 
             while (rs.next()) {
 
@@ -271,7 +265,8 @@ public class SearchResultWindow extends JFrame {
 
             }
         } catch (SQLException e) {
-            e.printStackTrace(); // For debugging; consider proper error handling
+            throw new RuntimeException();
+
         }
 
     }

@@ -1,9 +1,9 @@
 package mainpack;
 
+import loginsignup.LOGIN_SIGNUP;
+import loginsignup.login.LOGIN;
 import loginsignup.login.loggedin.MainScreen;
 import loginsignup.login.loggedin.billing.BillingScreen;
-import loginsignup.login.LOGIN;
-import loginsignup.LOGIN_SIGNUP;
 import loginsignup.login.loggedin.billing.newBill.NewBill;
 import loginsignup.login.loggedin.billing.newBill.SearchResultWindow;
 import loginsignup.login.loggedin.billing.newBill.ViewBill;
@@ -18,7 +18,6 @@ import loginsignup.login.loggedin.transactionsandaccounts.viewTransactions.ViewT
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
@@ -42,22 +41,22 @@ public class MyClass {
         orderGenerateForm = new OrderGenerateForm();
         inventoryScreen = new InventoryScreen();
         addInventory = new AddInventory();
-        transactions=new Transactions();
-        viewTransactions=new ViewTransactions();
-        newTransaction= new NewTransaction();
+        transactions = new Transactions();
+        viewTransactions = new ViewTransactions();
+        newTransaction = new NewTransaction();
         searchResultWindow = new SearchResultWindow();
         login_signup.setVisible(false);
         login.getLOGINButton().doClick();
         mainScreen.setVisible(false);
         login.setVisible(false);
-transactions=new Transactions();
+        transactions = new Transactions();
         viewOrders = new ViewOrders();
-        viewBill=new ViewBill();
-        transactions.getViewTransactionsButton().doClick();
+        viewBill = new ViewBill();
+//        transactions.getViewTransactionsButton().doClick();
 
 //        orderScreen.getGenerateANewOrderButton().doClick();
 //        orderScreen.getViewOrdersButton().doClick();
-//        billingScreen.getNewBillButton().doClick();
+        billingScreen.getNewBillButton().doClick();
 
 
     }
@@ -65,9 +64,10 @@ transactions=new Transactions();
     public static ViewOrders viewOrders;
     public static NewTransaction newTransaction;
     public static SearchResultWindow searchResultWindow;
-public static ViewTransactions viewTransactions;
+    public static ViewTransactions viewTransactions;
+
     public static Connection getConnection(String url, String user, String password) {
-        Connection conn = null;
+        Connection conn;
         try {
             // Construct the full JDBC URL
 
@@ -80,10 +80,10 @@ public static ViewTransactions viewTransactions;
 
         } catch (ClassNotFoundException e) {
             System.out.println("❌ MySQL Driver Not Found!");
-            e.printStackTrace();
+           throw new RuntimeException();
         } catch (SQLException e) {
             System.out.println("❌ Database Connection Failed!");
-            e.printStackTrace();
+            throw new RuntimeException();
         }
         return conn;
     }
@@ -94,25 +94,22 @@ public static ViewTransactions viewTransactions;
         PrinterJob job = PrinterJob.getPrinterJob();
         job.setJobName("Print Panel");
 
-        job.setPrintable(new Printable() {
-            @Override
-            public int print(Graphics g, PageFormat pf, int pageIndex) throws PrinterException {
-                if (pageIndex > 0) {
-                    return NO_SUCH_PAGE;
-                }
-
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.translate(pf.getImageableX(), pf.getImageableY());
-
-                // Scale panel to fit page
-                double scaleX = pf.getImageableWidth() / panel.getWidth();
-                double scaleY = pf.getImageableHeight() / panel.getHeight();
-                double scale = Math.min(scaleX, scaleY); // Maintain aspect ratio
-                g2d.scale(scale, scale);
-
-                panel.paint(g2d);
-                return PAGE_EXISTS;
+        job.setPrintable((g, pf, pageIndex) -> {
+            if (pageIndex > 0) {
+                return Printable.NO_SUCH_PAGE;
             }
+
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.translate(pf.getImageableX(), pf.getImageableY());
+
+            // Scale panel to fit page
+            double scaleX = pf.getImageableWidth() / panel.getWidth();
+            double scaleY = pf.getImageableHeight() / panel.getHeight();
+            double scale = Math.min(scaleX, scaleY); // Maintain aspect ratio
+            g2d.scale(scale, scale);
+
+            panel.paint(g2d);
+            return Printable.PAGE_EXISTS;
         });
 
         boolean doPrint = job.printDialog();
@@ -120,14 +117,13 @@ public static ViewTransactions viewTransactions;
             try {
                 job.print();
             } catch (PrinterException e) {
-                e.printStackTrace();
+                throw new RuntimeException();
             }
         }
     }
 
     public static NewBill newBill;
     public static Transactions transactions;
-
 
 
     public static LOGIN login;

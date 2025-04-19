@@ -317,6 +317,8 @@ public class NewBill extends JFrame {
                 stmt.setString(21, customerName);
                 stmt.addBatch();
             }
+//            if(snoToItemIdMap.get())
+
 
             stmt.executeBatch();
             conn.commit(); // Commit transaction
@@ -451,11 +453,11 @@ public class NewBill extends JFrame {
                 billTable.getActionMap().remove("deleteRow");
                 int selectedRow = billTable.getSelectedRow(); // Get selected row
                 TableModelListener[] listeners = TestClass.removeModelListener((tableModel));
+
                 if (selectedRow != -1) {
                     // Ensure a row is selected
                     if (billTable.getRowCount() != 1)
                         checkAndRemoveRow(selectedRow, tableModel, billDetails.indexOf("SNo"), true);// Remove the row
-                    billTable.repaint();
                 }
 
                 TestClass.addModelListeners(listeners, tableModel);
@@ -535,7 +537,6 @@ public class NewBill extends JFrame {
 
 
             if (col == -1) return;
-
             if (row == tableModel.getRowCount() - 1) {
                 // Check if any column in this row has data
                 boolean rowHasData = false;
@@ -551,7 +552,6 @@ public class NewBill extends JFrame {
                 if (rowHasData) {
                     tableModel.addRow(new Vector<>(billDetails.size()));
                 }
-
 
             }
             int designIdIndex = billDetails.indexOf("DesignID");
@@ -692,9 +692,9 @@ public class NewBill extends JFrame {
                 createBillToOrderSlipAssosciation(sno, itemID);
                 updateThroughSlip = false;
             }
-            if (row != tableModel.getRowCount() - 1) {
-                checkAndRemoveRow(row, tableModel, billDetails.indexOf("SNo"), false);
-            }
+            System.out.println(row + "," + (tableModel.getRowCount() - 1));
+            checkAndRemoveRow(row, tableModel, billDetails.indexOf("SNo"), false);
+
             billTable.repaint();
             TestClass.addModelListeners(listeners, tableModel);
         });
@@ -720,6 +720,8 @@ public class NewBill extends JFrame {
         TestClass.generateAndAddDates(dateComboBox, false);
     }
 
+    int i = 0;
+
     private void generateBillID() {
         try {
             Statement stmt1;
@@ -744,11 +746,12 @@ public class NewBill extends JFrame {
 
     private void checkAndRemoveRow(int row, DefaultTableModel tableModel, int snoIndex, boolean forceRemove) {
         // Ensure the row index is valid
+//        Thread.dumpStack();
 
         if (row < 0 || row >= tableModel.getRowCount() - 1) {
             return; // Invalid row index, exit method last row can not be deleted
         }
-
+        System.out.println("call " + (++i));
         boolean isEmpty = true;
 
         // Check if all columns in the given row are empty
@@ -769,15 +772,15 @@ public class NewBill extends JFrame {
             relinkAssociations(row + 1);
             tableModel.removeRow(row);
             reCheckEnableDisableInItemNameColumn();
-        }
-        int sno = 0;
-        for (int i = 0; i < tableModel.getRowCount() - 1; i++) {
-            sno++; // Increment SNo
-            tableModel.setValueAt(sno, i, snoIndex); // Set new value in SNo column
-        }
-        tableModel.setValueAt("", billTable.getRowCount() - 1, billDetails.indexOf("SNo"));
-        this.sno = sno;
 
+            int sno = 0;
+            for (int i = 0; i < tableModel.getRowCount() - 1; i++) {
+                sno++; // Increment SNo
+                tableModel.setValueAt(sno, i, snoIndex); // Set new value in SNo column
+            }
+            tableModel.setValueAt("", billTable.getRowCount() - 1, billDetails.indexOf("SNo"));
+            this.sno = sno;
+        }
     }
 
     private void reCheckEnableDisableInItemNameColumn() {
@@ -788,8 +791,32 @@ public class NewBill extends JFrame {
         }
     }
 
-    private void relinkAssociations(int removeSNO) {
+    private void relinkAssociations(int removeSNO) //THIS FUNCTION IS ONLY CALLED WHEN DELETING A ITEM ROW FROM BILL TABLE WHICH
+//            CORRUSPONDS TO A ORDER SLIP
+
+    {
+        if (snoToItemIdMap.get(removeSNO) == null) return;
         HashMap<Integer, Integer> tempMap = new HashMap<>();
+        int itemid = snoToItemIdMap.get(removeSNO);
+        System.out.println(tableModel.getValueAt(removeSNO, billDetails.indexOf("Quantity")).toString() == null ? "" : tableModel.getValueAt(removeSNO, billDetails.indexOf("Quantity")).toString());
+        int quantity = Integer.parseInt(tableModel.getValueAt(removeSNO - 1, billDetails.indexOf("Quantity")).toString());
+        Connection temp = getTransacTemp();
+
+        try {
+            String query = "update order_slips set billed_quantity =billed_quantity-? where item_id=?";
+
+            PreparedStatement stmt = temp.prepareStatement(query);
+            stmt.setInt(1, quantity);
+            stmt.setInt(2, itemid);
+
+
+            stmt.executeUpdate();
+            if (MyClass.searchResultWindow.isVisible())
+                MyClass.searchResultWindow.fetchData(MyClass.searchResultWindow.getTableModel());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
         Iterator<Integer> i = snoToItemIdMap.keySet().iterator();
         while (i.hasNext()) {
             int key = i.next();
