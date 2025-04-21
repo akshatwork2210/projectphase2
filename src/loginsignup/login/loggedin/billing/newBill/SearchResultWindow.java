@@ -15,7 +15,19 @@ import java.util.Vector;
 
 public class SearchResultWindow extends JFrame {
     private JPanel panel1;
+
+    public void setSearchFlag(boolean searchFlag) {
+        this.searchFlag = searchFlag;
+    }
+
+    public boolean isSearchFlag() {
+        return searchFlag;
+    }
+
+    private boolean searchFlag=false;
+
     private JButton backButton;
+    private JButton button2;
     private JTable orderSlipTable;
     private JLabel slipID;
     private JLabel cutomerName;
@@ -169,7 +181,7 @@ public class SearchResultWindow extends JFrame {
 
     }
 
-    private void pushDetails(Vector<Integer> detailsToPush) {
+    private void pushDetails(Vector<Integer> detailsToPush) {//detailstopush-> item id at index 0 and quantity at index 1
         if (detailsToPush == null || detailsToPush.size() < 2) {
             JOptionPane.showMessageDialog(null, "Invalid details to push!");
             return;
@@ -188,39 +200,18 @@ public class SearchResultWindow extends JFrame {
             ResultSet rs = pstmt.executeQuery();
             int lastrow = billTable.getRowCount() - 1;
 
-            for (int i = model.getRowCount() - 1; i >= 0; i--) { // Iterate from last row to first
-                boolean isEmpty = true;
-
-                // Check if any column in this row has data
-
-                for (int j = 0; j < model.getColumnCount(); j++) {
-                    if (j == MyClass.newBill.billDetails.indexOf("SNo")) {
-                        continue;
-                    }
-                    Object value = model.getValueAt(i, j);
-                    if (value != null && !value.toString().trim().isEmpty()) {
-                        isEmpty = false;
-                        break; // No need to check further, this row has data
-                    }
-                }
-
-                if (!isEmpty) {
-                    lastrow = i + 1;
-
-                    break; // Stop at the first non-empty row
-                }
-                System.out.println("last row is "+i);
-            }
 
             if (rs.next()) {
                 TableColumnModel columnModel = billTable.getColumnModel();
                 setUpdateThroughSlip(true);
                 MyClass.newBill.setItemID(itemId);
+                setSearchFlag(true);
                 model.setValueAt(rs.getString("slip_id") + "." + itemId + "/" + (rs.getInt("quantity") - rs.getInt("billed_quantity")), lastrow, columnModel.getColumnIndex("OrderSlip/quantity"));
-                model.setValueAt(rs.getString("item_name"), lastrow, columnModel.getColumnIndex("ItemName"));
                 model.setValueAt(String.valueOf(quantity), lastrow, columnModel.getColumnIndex("Quantity"));
+                model.setValueAt(rs.getString("item_name"), lastrow, columnModel.getColumnIndex("ItemName"));
                 model.setValueAt(rs.getString("design_id"), lastrow, columnModel.getColumnIndex("DesignID"));
-
+                model.fireTableDataChanged();
+                setSearchFlag(false);
             } else {
                 JOptionPane.showMessageDialog(null, "Item not found in order_slips!");
             }
@@ -246,9 +237,8 @@ public class SearchResultWindow extends JFrame {
         String query = "SELECT customer_name ,slip_id,item_id,sno,design_id, item_name, quantity, plating_grams, raw_material_price, other_details, billed_quantity " + "FROM order_slips WHERE slip_id = ? Order by item_id";
 
         try {
-//            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/your_database", "username", "password");
             PreparedStatement pstmt = MyClass.newBill.getTransacTemp().prepareStatement(query);
-            pstmt.setInt(1, ID); // Use the slip_id provided
+            pstmt.setInt(1, ID);
             ResultSet rs = pstmt.executeQuery();
             snoToItemIdMap = new HashMap<>();
 
@@ -259,10 +249,7 @@ public class SearchResultWindow extends JFrame {
 
                 snoToItemIdMap.put(sno, itemId); //
                 model.addRow(new Object[]{
-// Map sno to item_id
-
-                        rs.getString("sno"), rs.getString("design_id"), rs.getString("item_name"), (rs.getInt("quantity") - rs.getInt("billed_quantity")), rs.getBigDecimal("plating_grams"), rs.getBigDecimal("raw_material_price"), rs.getString("other_details")});
-
+                        rs.getString("sno"), rs.getString("design_id"), rs.getString("item_name"), (rs.getInt("quantity") - rs.getInt("billed_quantity")), rs.getBigDecimal("plating_grams"), rs.getBigDecimal("raw_material_price"), rs.getString("other_details")});// now this
             }
         } catch (SQLException e) {
             throw new RuntimeException();

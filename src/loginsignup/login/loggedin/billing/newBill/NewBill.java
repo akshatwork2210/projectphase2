@@ -1,6 +1,5 @@
 package loginsignup.login.loggedin.billing.newBill;
 
-import mainpack.MyClass;
 import org.jdesktop.swingx.prompt.PromptSupport;
 import testpackage.TestClass;
 
@@ -17,6 +16,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.*;
+
+import static mainpack.MyClass.*;
 
 public class NewBill extends JFrame {
     int itemID;
@@ -90,6 +91,7 @@ public class NewBill extends JFrame {
                     goldrate = goldRateTextField.getText().isEmpty() ? 0 : Double.parseDouble(goldRateTextField.getText());
                 } catch (NumberFormatException e) {
                     Thread.dumpStack();
+                    throw new RuntimeException();
                 }
                 setGoldRate(goldrate);
                 reCalculateValuesAndAppend();
@@ -99,8 +101,8 @@ public class NewBill extends JFrame {
         snoToItemIdMap = new HashMap<>();
         backButton.addActionListener(e -> {
             setVisible(false);
-            MyClass.billingScreen.setVisible(true);
-            MyClass.searchResultWindow.dispose();
+            billingScreen.setVisible(true);
+            searchResultWindow.dispose();
         });
 
         NewBill temp = this;
@@ -110,7 +112,7 @@ public class NewBill extends JFrame {
             } catch (NumberFormatException ex) {
                 Thread.dumpStack();
                 slipNumberField.setText("");
-                JOptionPane.showMessageDialog(MyClass.newBill, "an error occured, invalid input");
+                JOptionPane.showMessageDialog(newBill, "an error occured, invalid input");
 
                 throw new RuntimeException();
 
@@ -118,32 +120,32 @@ public class NewBill extends JFrame {
 
             try {
 
-                Statement stmt = MyClass.C.createStatement();
+                Statement stmt = C.createStatement();
 //                    String query = "select slip_id from order_slips where (slip_id=" + slipNumberField.getText() +" and customer_name='"+customerName+"'"+ ";";
                 String query = "SELECT slip_id FROM order_slips WHERE slip_id=" + slipNumberField.getText() + " AND customer_name='" + customerName + "';";
 
                 ResultSet rs = stmt.executeQuery(query);
                 if (!rs.next()) {
-                    JOptionPane.showMessageDialog(MyClass.newBill, "orderslip not found");
+                    JOptionPane.showMessageDialog(newBill, "orderslip not found");
                     slipNumberField.setText("");
 
                     return;
                 }
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(MyClass.newBill, "sql exception occured");
+                JOptionPane.showMessageDialog(newBill, "sql exception occured");
                 Thread.dumpStack();
                 throw new RuntimeException();
 
             }
 
-            if (MyClass.searchResultWindow.isVisible()) {
-                MyClass.searchResultWindow.dispose();
+            if (searchResultWindow.isVisible()) {
+                searchResultWindow.dispose();
             }
-            MyClass.searchResultWindow = new SearchResultWindow(Integer.parseInt(slipNumberField.getText()));
-            MyClass.searchResultWindow.setVisible(true);
+            searchResultWindow = new SearchResultWindow(Integer.parseInt(slipNumberField.getText()));
+            searchResultWindow.setVisible(true);
             submitButton.setEnabled(false);
             backButton.setEnabled(false);
-            MyClass.positionFrames(temp, MyClass.searchResultWindow);
+            positionFrames(temp, searchResultWindow);
 
         });
         submitButton.addActionListener(e -> {
@@ -178,7 +180,7 @@ public class NewBill extends JFrame {
         String query = "UPDATE transactions SET billid = ? WHERE customer_name = ? AND billid IS NULL";
 
         try (
-                PreparedStatement pstmt = MyClass.C.prepareStatement(query)) {
+                PreparedStatement pstmt = C.prepareStatement(query)) {
 
             pstmt.setInt(1, billID);
             pstmt.setString(2, customerName);
@@ -188,6 +190,7 @@ public class NewBill extends JFrame {
         } catch (SQLException e) {
             Thread.dumpStack();
             JOptionPane.showMessageDialog(null, "Failed to update transactions!", "Error", JOptionPane.ERROR_MESSAGE);
+            throw new RuntimeException();
         }
 
 
@@ -204,16 +207,16 @@ public class NewBill extends JFrame {
         int rowCount = model.getRowCount();
 
         // Database connection setup
-        String url = "jdbc:mysql://localhost:3306/" + MyClass.login.getDatabase();
-        String user = MyClass.login.getLoginID();
-        String password = MyClass.login.getPassword();
+        String url = "jdbc:mysql://localhost:3306/" + login.getDatabase();
+        String user = login.getLoginID();
+        String password = login.getPassword();
         int billID = -1;
         Connection conn = null;
         PreparedStatement stmt = null;
         String customerName = customerComboBox.getSelectedItem() == null ? "" : customerComboBox.getSelectedItem().toString();
 
         if (customerComboBox.getSelectedIndex() == 0) {
-            JOptionPane.showMessageDialog(MyClass.newBill, "select customer please");
+            JOptionPane.showMessageDialog(newBill, "select customer please");
             return false;
         }
 
@@ -238,8 +241,9 @@ public class NewBill extends JFrame {
                     }
                 }
             } catch (SQLException exception) {
-                JOptionPane.showMessageDialog(MyClass.newBill, "error");
+                JOptionPane.showMessageDialog(newBill, "error");
                 Thread.dumpStack();
+                throw new RuntimeException();
             }
             sql = "INSERT INTO billdetails (BillID, SNo, ItemName, DesignID, OrderType, RawCost, LabourCost, DullChillaiCost, " + "MeenaColorMeenaCost, RhodiumCost, NagSettingCost, OtherBaseCosts, TotalBaseCosting, GoldRate, " + "GoldPlatingWeight, TotalGoldCost, TotalFinalCost, OrderSlipNumber,OtherBaseCostNotes,quantity,customer_name) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)";
 
@@ -250,7 +254,7 @@ public class NewBill extends JFrame {
                 String itemName = getStringValue(model, i, billDetails.indexOf("ItemName"), "Unknown");
 
                 if (itemName.isEmpty()) {
-                    JOptionPane.showMessageDialog(MyClass.newBill, "please do not leave item name empty");
+                    JOptionPane.showMessageDialog(newBill, "please do not leave item name empty");
                     throw new RuntimeException();
                 }
 
@@ -276,7 +280,7 @@ public class NewBill extends JFrame {
                 }
                 int quantity = Integer.parseInt(getStringValue(model, i, billDetails.indexOf("Quantity"), "0"));
                 if (quantity == 0) {
-                    JOptionPane.showMessageDialog(MyClass.newBill, "please do not leave quantity field empty");
+                    JOptionPane.showMessageDialog(newBill, "please do not leave quantity field empty");
                     return false;
                 }
                 double raw = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Raw"), "0"));
@@ -287,7 +291,7 @@ public class NewBill extends JFrame {
                 double nag = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Nag"), "0"));
                 double other = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Other"), "0"));
                 double totalBaseCost = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("+G"), "0"));
-                double goldRate = MyClass.newBill.goldrate;
+                double goldRate = newBill.goldrate;
                 double goldPlatingWeight = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Gold(ing g)"), "0"));
                 double totalGoldCost = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("gold cost"), "0"));
                 double totalFinalCost = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("total"), "0"));
@@ -336,6 +340,7 @@ public class NewBill extends JFrame {
 
             } catch (SQLException rollbackEx) {
                 Thread.dumpStack();
+                throw new RuntimeException();
             }
             Thread.dumpStack();
             JOptionPane.showMessageDialog(null, "Error saving bill details!", "Error", JOptionPane.ERROR_MESSAGE);
@@ -432,6 +437,7 @@ public class NewBill extends JFrame {
         try {
             return Double.parseDouble(value.toString().trim());
         } catch (NumberFormatException e) {
+
             return 0.0; // Return 0.0 if parsing fails
         }
     }
@@ -461,18 +467,21 @@ public class NewBill extends JFrame {
                 }
 
                 TestClass.addModelListeners(listeners, tableModel);
-
                 billTable.getActionMap().put("deleteRow", oldAction);
+                int selectedrow=billTable.getSelectedRow();
+                tableModel.fireTableDataChanged();
+                billTable.setRowSelectionInterval(selectedrow,selectedrow);
             }
 
         });
 
         try {
             if (transacTemp != null) if (!transacTemp.isClosed()) transacTemp.close();
-            transacTemp = MyClass.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
+            transacTemp = getConnection(login.getUrl(), login.getLoginID(), login.getPassword());
             transacTemp.setAutoCommit(false);
         } catch (SQLException e) {
             Thread.dumpStack();
+            throw new RuntimeException();
         }
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         PromptSupport.setPrompt("Slip Number", slipNumberField);
@@ -522,10 +531,13 @@ public class NewBill extends JFrame {
         tableModel.addTableModelListener(e -> {
             // Get the row index where the data is stored
 
-            TableModelListener[] listeners = TestClass.removeModelListener(tableModel);
             int row = e.getFirstRow();
             int col = e.getColumn();
+            if (row == -1 || col == -1) {
+                return;
+            }
             int snoValue = (tableModel.getValueAt(row, billDetails.indexOf("SNo")) != null && !tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString().isEmpty()) ? Integer.parseInt(tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString().contentEquals("") ? "0" : tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString()) : -1;
+            TableModelListener[] listeners = TestClass.removeModelListener(tableModel);
             if (snoValue == -1) {
                 sno++;
 
@@ -536,7 +548,6 @@ public class NewBill extends JFrame {
             }
 
 
-            if (col == -1) return;
             if (row == tableModel.getRowCount() - 1) {
                 // Check if any column in this row has data
                 boolean rowHasData = false;
@@ -565,14 +576,14 @@ public class NewBill extends JFrame {
 
             }
 
-
-            if (col == designIdIndex) {
+            String desingID = tableModel.getValueAt(row, designIdIndex) == null ? "" : tableModel.getValueAt(row, designIdIndex).toString();
+            if (col == designIdIndex && !searchResultWindow.isSearchFlag()) {
                 String designID = tableModel.getValueAt(row, designIdIndex) == null ? "" : tableModel.getValueAt(row, designIdIndex).toString().trim();
 
                 if (!designID.isEmpty()) {
                     String query = "SELECT itemname,price FROM inventory WHERE DesignID = ?";
 
-                    try (PreparedStatement stmt = MyClass.C.prepareStatement(query)) {
+                    try (PreparedStatement stmt = C.prepareStatement(query)) {
 
                         stmt.setString(1, designID);
                         ResultSet rs = stmt.executeQuery();
@@ -608,7 +619,6 @@ public class NewBill extends JFrame {
                     listOfNonEditableCells.removeIf(cell -> cell[0] == row && cell[1] == billDetails.indexOf("ItemName"));
 
                 }
-
             }
 
             if ((col == quantityIndex)) {
@@ -617,10 +627,10 @@ public class NewBill extends JFrame {
                 if (notThroughOrderSlip && designID != null && !designID.toString().contentEquals("")) {
                     try {
                         String query = "select totalquantity from inventory where designid='" + designID + "';";
-                        Statement stmt = MyClass.C.createStatement();
+                        Statement stmt = C.createStatement();
                         ResultSet resultSet = stmt.executeQuery(query);
                         if (resultSet.next()) if (resultSet.getInt("totalquantity") < quantity)
-                            JOptionPane.showMessageDialog(MyClass.newBill, "warning stock not remaining");
+                            JOptionPane.showMessageDialog(newBill, "warning stock not remaining");
                     } catch (SQLException ex) {
                         throw new RuntimeException(ex);
                     }
@@ -629,7 +639,7 @@ public class NewBill extends JFrame {
                 }
                 if (snoToItemIdMap.containsKey(snoValue)) {
                     try {
-                        Statement stmt = MyClass.C.createStatement();
+                        Statement stmt = C.createStatement();
                         String query = "select * from order_slips where item_id=" + snoToItemIdMap.get(snoValue);
                         int item_id = snoToItemIdMap.get(snoValue);
                         int netQuantity = 0;
@@ -641,11 +651,11 @@ public class NewBill extends JFrame {
                             if (rs.next()) {
                                 int quantityTemp = rs.getInt("quantity") - rs.getInt("billed_quantity");
                                 if (quantityTemp < netQuantity) {
-                                    JOptionPane.showMessageDialog(MyClass.newBill, "invalid quanity has been entered for an item connected to a order slip");
+                                    JOptionPane.showMessageDialog(newBill, "invalid quanity has been entered for an item connected to a order slip");
                                     tableModel.setValueAt("", row, quantityIndex);
                                 }
                             } else {
-                                JOptionPane.showMessageDialog(MyClass.newBill, "error has occured");
+                                JOptionPane.showMessageDialog(newBill, "error has occured");
                                 System.exit(-1);
                                 throw new RuntimeException();
                             }
@@ -692,18 +702,19 @@ public class NewBill extends JFrame {
                 createBillToOrderSlipAssosciation(sno, itemID);
                 updateThroughSlip = false;
             }
-            System.out.println(row + "," + (tableModel.getRowCount() - 1));
             checkAndRemoveRow(row, tableModel, billDetails.indexOf("SNo"), false);
 
             billTable.repaint();
             TestClass.addModelListeners(listeners, tableModel);
+            for (TableModelListener l : listeners) System.out.println(l);
+            System.out.println("listeners added");
         });
 
 
         try {
 
 
-            Statement stmt2 = MyClass.C.createStatement();
+            Statement stmt2 = C.createStatement();
             ResultSet rs2 = stmt2.executeQuery("select type_name from ordertype;");
             while (rs2.next()) {
                 slipDetailComboBox.addItem(rs2.getString(1));
@@ -725,7 +736,7 @@ public class NewBill extends JFrame {
     private void generateBillID() {
         try {
             Statement stmt1;
-            stmt1 = MyClass.C.createStatement();
+            stmt1 = C.createStatement();
             ResultSet rs1;
             String query = "SELECT MAX(BillID) FROM bills;";
             rs1 = stmt1.executeQuery(query);
@@ -751,7 +762,6 @@ public class NewBill extends JFrame {
         if (row < 0 || row >= tableModel.getRowCount() - 1) {
             return; // Invalid row index, exit method last row can not be deleted
         }
-        System.out.println("call " + (++i));
         boolean isEmpty = true;
 
         // Check if all columns in the given row are empty
@@ -798,7 +808,7 @@ public class NewBill extends JFrame {
         if (snoToItemIdMap.get(removeSNO) == null) return;
         HashMap<Integer, Integer> tempMap = new HashMap<>();
         int itemid = snoToItemIdMap.get(removeSNO);
-        System.out.println(tableModel.getValueAt(removeSNO, billDetails.indexOf("Quantity")).toString() == null ? "" : tableModel.getValueAt(removeSNO, billDetails.indexOf("Quantity")).toString());
+        System.out.println(tableModel.getValueAt(removeSNO, billDetails.indexOf("Quantity")) == null ? "" : tableModel.getValueAt(removeSNO, billDetails.indexOf("Quantity")).toString());
         int quantity = Integer.parseInt(tableModel.getValueAt(removeSNO - 1, billDetails.indexOf("Quantity")).toString());
         Connection temp = getTransacTemp();
 
@@ -811,8 +821,8 @@ public class NewBill extends JFrame {
 
 
             stmt.executeUpdate();
-            if (MyClass.searchResultWindow.isVisible())
-                MyClass.searchResultWindow.fetchData(MyClass.searchResultWindow.getTableModel());
+            if (searchResultWindow.isVisible())
+                searchResultWindow.fetchData(searchResultWindow.getTableModel());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
