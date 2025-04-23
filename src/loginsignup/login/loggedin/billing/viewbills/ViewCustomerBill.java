@@ -1,12 +1,16 @@
-package loginsignup.login.loggedin.billing.newBill;
+package loginsignup.login.loggedin.billing.viewbills;
 
 import mainpack.MyClass;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
+import static testpackage.UtilityMethods.printPanel;
 
 public class ViewBill extends JFrame {
     private int billID;
@@ -28,6 +32,9 @@ public class ViewBill extends JFrame {
     private JComboBox<String> customerNameComboBox;
     private JTextField billIDTextField;
     private JLabel dateLabel;
+    private JButton printButton;
+    private JLabel customerNameLabel;
+    private JLabel totalLabel;
 
     public ViewBill() {
         setContentPane(panel);
@@ -37,6 +44,12 @@ public class ViewBill extends JFrame {
             setVisible(false);
             MyClass.billingScreen.setVisible(true);
         });
+        printButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                printPanel(panel);
+            }
+        });
     }
 
     public void init(String mode) {
@@ -44,7 +57,7 @@ public class ViewBill extends JFrame {
         setListOfCustomer();// sets the list of customers in jcombobox
 
         if (mode.contentEquals("customer")) {
-            String[] model = new String[]{"S.No", "Item Name", "Plus G", "Gold (g)", "TGC", "Total"};
+            String[] model = new String[]{"S.No", "item", "Plus G", "Gold (g)", "TGC", "Total"};
             DefaultTableModel tableModel = new DefaultTableModel(model, 1) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -68,7 +81,7 @@ public class ViewBill extends JFrame {
                     query = "SELECT BillID FROM billdetails WHERE BillID > " + currentBillID + " ORDER BY BillID ASC LIMIT 1";
                 } else {
                     // Get selected customer
-                    String selectedCustomer = customerNameComboBox.getSelectedItem()==null?"":customerNameComboBox.getSelectedItem().toString();
+                    String selectedCustomer = customerNameComboBox.getSelectedItem() == null ? "" : customerNameComboBox.getSelectedItem().toString();
                     query = "SELECT BillID FROM billdetails WHERE BillID > " + currentBillID +
                             " AND customer_name = '" + selectedCustomer + "' ORDER BY BillID ASC LIMIT 1";
                 }
@@ -91,7 +104,7 @@ public class ViewBill extends JFrame {
                     query = "SELECT BillID FROM billdetails WHERE BillID < " + currentBillID + " ORDER BY BillID DESC LIMIT 1";
                 } else {
                     // Get selected customer
-                    String selectedCustomer = customerNameComboBox.getSelectedItem()==null?"":customerNameComboBox.getSelectedItem().toString();
+                    String selectedCustomer = customerNameComboBox.getSelectedItem() == null ? "" : customerNameComboBox.getSelectedItem().toString();
                     query = "SELECT BillID FROM billdetails WHERE BillID < " + currentBillID +
                             " AND customer_name = '" + selectedCustomer + "' ORDER BY BillID DESC LIMIT 1";
                 }
@@ -147,7 +160,7 @@ public class ViewBill extends JFrame {
         try {
             PreparedStatement stmt = MyClass.C.prepareStatement(query);
             if (customerNameComboBox.getSelectedIndex() != 0) {
-                customerName = customerNameComboBox.getSelectedItem()==null?"":customerNameComboBox.getSelectedItem().toString();
+                customerName = customerNameComboBox.getSelectedItem() == null ? "" : customerNameComboBox.getSelectedItem().toString();
                 stmt.setString(1, customerName);
             }
             ResultSet rs = stmt.executeQuery();
@@ -186,24 +199,37 @@ public class ViewBill extends JFrame {
             DefaultTableModel model = (DefaultTableModel) table.getModel();
             model.setRowCount(0);
             // Populate model with data from ResultSet
+            String customername = "";
+            double grandtotal = 0;
             while (rs.next()) {
+
 
                 Object[] row = {rs.getInt("SNo"), rs.getString("ItemName"), rs.getDouble("TotalBaseCosting"),  // plusG
                         rs.getDouble("GoldPlatingWeight"), // gold (g)
                         rs.getDouble("TotalGoldCost"),     // tgc
                         rs.getDouble("TotalFinalCost")     // total
                 };
+                grandtotal += rs.getDouble(
+                        "TotalFinalCost"
+                );
                 model.addRow(row);
+                customername = rs.getString("customer_name");
             }
+            model.setRowCount(model.getRowCount()+1);
+            model.setValueAt("Grand Total",model.getRowCount()-1,model.getColumnCount()-2);
+            model.setValueAt(grandtotal,model.getRowCount()-1,model.getColumnCount()-1);
+            totalLabel.setText(grandtotal + "");
+            customerNameLabel.setText(customername);
 
             idLabel.setText("billID: " + billID);
+
             setBillID(billID);
             table.setModel(model);
-            sql="select *from bills where billid=?;";
-            PreparedStatement pstmt2=MyClass.C.prepareStatement(sql);
-            pstmt2.setInt(1,billID);
-            rs=pstmt2.executeQuery();
-            if(rs.next())setDateTime(rs.getTimestamp("date"));
+            sql = "select *from bills where billid=?;";
+            PreparedStatement pstmt2 = MyClass.C.prepareStatement(sql);
+            pstmt2.setInt(1, billID);
+            rs = pstmt2.executeQuery();
+            if (rs.next()) setDateTime(rs.getTimestamp("date"));
             System.out.println("Table updated successfully!");
         } catch (SQLException e) {
             throw new RuntimeException();
@@ -212,8 +238,8 @@ public class ViewBill extends JFrame {
     }
 
     private void setDateTime(Timestamp date) {
-        LocalDateTime datetime=date.toLocalDateTime();
-        DateTimeFormatter formatter=DateTimeFormatter.ofPattern("dd-MM-yy hh:mm a");
+        LocalDateTime datetime = date.toLocalDateTime();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yy hh:mm a");
         dateLabel.setText(datetime.format(formatter));
     }
 
