@@ -1,7 +1,7 @@
 package loginsignup.login.loggedin.transactionsandaccounts.newtransaction;
 
 import mainpack.MyClass;
-import testpackage.TestClass;
+import testpackage.UtilityMethods;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -98,7 +98,7 @@ public class NewTransaction extends JFrame {
 
     public void init() {
         appendListOfCustomers(partyNameComboBox);
-        TestClass.generateAndAddDates(dateComboBox,false);
+        UtilityMethods.generateAndAddDates(dateComboBox,false);
         inRadioButton.setSelected(true);
         pack();
     }

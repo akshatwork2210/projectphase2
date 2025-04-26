@@ -6,11 +6,18 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import static mainpack.MyClass.*;
+
 public class BillingScreen extends JFrame {
     private JPanel panel;
     private JButton newBillButton;
     private JButton backButton;
     private JButton viewCustomerBillsButton;
+
+    public JButton getViewBillButton() {
+        return viewBillButton;
+    }
+
     private JButton viewBillButton;
 
     public JButton getNewBillButton() {
@@ -26,8 +33,8 @@ public class BillingScreen extends JFrame {
         newBillButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                MyClass.newBill.setVisible(true);
-                MyClass.newBill.init();
+                newBill.setVisible(true);
+                newBill.init();
                 setVisible(false);
 
             }
@@ -36,16 +43,20 @@ public class BillingScreen extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
-                MyClass.mainScreen.setVisible(true);
+                mainScreen.setVisible(true);
             }
         });
         viewCustomerBillsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
-                MyClass.viewBill.setVisible(true);
-                MyClass.viewBill.init("customer");
+                viewCustomerBill.setVisible(true);
+                viewCustomerBill.init("customer");
             }
+        });
+        viewBillButton.addActionListener(e -> {
+            viewBackendBill.init();
+            viewBackendBill.setVisible(true);
         });
     }
 }

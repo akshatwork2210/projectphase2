@@ -6,7 +6,8 @@ import loginsignup.login.loggedin.MainScreen;
 import loginsignup.login.loggedin.billing.BillingScreen;
 import loginsignup.login.loggedin.billing.newBill.NewBill;
 import loginsignup.login.loggedin.billing.newBill.SearchResultWindow;
-import loginsignup.login.loggedin.billing.newBill.ViewBill;
+import loginsignup.login.loggedin.billing.viewbills.ViewBackendBill;
+import loginsignup.login.loggedin.billing.viewbills.ViewCustomerBill;
 import loginsignup.login.loggedin.inventorymanagement.InventoryScreen;
 import loginsignup.login.loggedin.inventorymanagement.addinventory.AddInventory;
 import loginsignup.login.loggedin.ordermanagement.OrderScreen;
@@ -15,12 +16,10 @@ import loginsignup.login.loggedin.ordermanagement.vieworders.ViewOrders;
 import loginsignup.login.loggedin.transactionsandaccounts.Transactions;
 import loginsignup.login.loggedin.transactionsandaccounts.newtransaction.NewTransaction;
 import loginsignup.login.loggedin.transactionsandaccounts.viewTransactions.ViewTransactions;
+import testpackage.UtilityMethods;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.print.Printable;
-import java.awt.print.PrinterException;
-import java.awt.print.PrinterJob;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -42,6 +41,7 @@ public class MyClass {
         inventoryScreen = new InventoryScreen();
         addInventory = new AddInventory();
         transactions = new Transactions();
+        viewBackendBill=new ViewBackendBill();
         viewTransactions = new ViewTransactions();
         newTransaction = new NewTransaction();
         searchResultWindow = new SearchResultWindow();
@@ -51,12 +51,28 @@ public class MyClass {
         login.setVisible(false);
         transactions = new Transactions();
         viewOrders = new ViewOrders();
-        viewBill = new ViewBill();
-//        transactions.getViewTransactionsButton().doClick();
+        viewCustomerBill = new ViewCustomerBill();
+        billingScreen.getViewBillButton().doClick();
+        UtilityMethods.printingThread = new Thread(() -> {
+            while (true) {
+                try {
+                    Runnable job = UtilityMethods.printQueue.take();  // waits until a job is available
+                    job.run();
+                } catch (InterruptedException e) {
+                    System.out.println("Printing thread interrupted");
+                    break;
+                }
+            }
+        }, "PrintingThread");
+
+        UtilityMethods.printingThread.setDaemon(true);  // optional: will not block app from closing
+        UtilityMethods.printingThread.start();
+
+        //        transactions.getViewTransactionsButton().doClick();
 
 //        orderScreen.getGenerateANewOrderButton().doClick();
 //        orderScreen.getViewOrdersButton().doClick();
-        billingScreen.getNewBillButton().doClick();
+//        billingScreen.getNewBillButton().doClick();
 
 
     }
@@ -65,6 +81,7 @@ public class MyClass {
     public static NewTransaction newTransaction;
     public static SearchResultWindow searchResultWindow;
     public static ViewTransactions viewTransactions;
+    public static ViewBackendBill viewBackendBill;
 
     public static Connection getConnection(String url, String user, String password) {
         Connection conn;
@@ -76,11 +93,13 @@ public class MyClass {
 
             // Establish Connection
             conn = DriverManager.getConnection(url, user, password);
+            conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+
             System.out.println("✅ Database Connected Successfully to: ");
 
         } catch (ClassNotFoundException e) {
             System.out.println("❌ MySQL Driver Not Found!");
-           throw new RuntimeException();
+            throw new RuntimeException();
         } catch (SQLException e) {
             System.out.println("❌ Database Connection Failed!");
             throw new RuntimeException();
@@ -90,38 +109,6 @@ public class MyClass {
 
     public static Connection C;
 
-    public static void printPanel(JPanel panel) {
-        PrinterJob job = PrinterJob.getPrinterJob();
-        job.setJobName("Print Panel");
-
-        job.setPrintable((g, pf, pageIndex) -> {
-            if (pageIndex > 0) {
-                return Printable.NO_SUCH_PAGE;
-            }
-
-            Graphics2D g2d = (Graphics2D) g;
-            g2d.translate(pf.getImageableX(), pf.getImageableY());
-
-            // Scale panel to fit page
-            double scaleX = pf.getImageableWidth() / panel.getWidth();
-            double scaleY = pf.getImageableHeight() / panel.getHeight();
-            double scale = Math.min(scaleX, scaleY); // Maintain aspect ratio
-            g2d.scale(scale, scale);
-
-            panel.paint(g2d);
-            return Printable.PAGE_EXISTS;
-        });
-
-        boolean doPrint = job.printDialog();
-        if (doPrint) {
-            try {
-                job.print();
-            } catch (PrinterException e) {
-                throw new RuntimeException();
-            }
-        }
-    }
-
     public static NewBill newBill;
     public static Transactions transactions;
 
@@ -129,7 +116,7 @@ public class MyClass {
     public static LOGIN login;
     public static BillingScreen billingScreen;
 
-    public static ViewBill viewBill;
+    public static ViewCustomerBill viewCustomerBill;
 
     public static MainScreen mainScreen;
 

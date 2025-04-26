@@ -2,7 +2,7 @@ package loginsignup.login.loggedin.ordermanagement.vieworders;
 
 import mainpack.MyClass;
 import org.jdesktop.swingx.prompt.PromptSupport;
-import testpackage.TestClass;
+import testpackage.UtilityMethods;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -14,6 +14,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Objects;
+
+import static testpackage.UtilityMethods.*;
 
 public class ViewOrders extends JFrame {
     private int prevCustomerSelected = 0;
@@ -234,8 +236,8 @@ public class ViewOrders extends JFrame {
         printButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                MyClass.printPanel(panel);
-                TestClass.writeTableToExcel(orderSlipTable, "myfile.xlxx");
+                printPanel(panel);
+                writeTableToExcel(orderSlipTable, "myfile.xlxx");
             }
         });
         deleteButton.addActionListener(new ActionListener() {
@@ -318,7 +320,7 @@ public class ViewOrders extends JFrame {
                 customerComboBox.removeActionListener(customer);
             }
             // Query to fetch data based on slip_id
-            String query = "SELECT design_id, item_name, quantity, plating_grams, raw_material_price, other_details, customer_name, slip_id,slip_type FROM order_slips WHERE slip_id = " + id;
+            String query = "SELECT design_id, item_name, quantity, plating_grams, raw_material_price, other_details, customer_name, slip_id,slip_type,billed_quantity FROM order_slips WHERE slip_id = " + id;
             Statement stmt = MyClass.C.createStatement();
             ResultSet rs = stmt.executeQuery(query);
 
@@ -340,7 +342,7 @@ public class ViewOrders extends JFrame {
                 panaType = rs.getString("slip_type");
                 totalPlating = totalPlating.add(BigDecimal.valueOf(Double.parseDouble(rs.getString("plating_grams"))));
                 totalPlatingField.setText("total plating: " + totalPlating.setScale(3, RoundingMode.HALF_UP));
-                model.addRow(new Object[]{rs.getString("design_id"), rs.getString("item_name"), rs.getInt("quantity"), rs.getBigDecimal("plating_grams"), rs.getBigDecimal("raw_material_price"), rs.getString("other_details")});
+                model.addRow(new Object[]{rs.getString("design_id"), rs.getString("item_name"), rs.getInt("billed_quantity")+"/"+rs.getInt("quantity"), rs.getBigDecimal("plating_grams"), rs.getBigDecimal("raw_material_price"), rs.getString("other_details")});
             }
             if (count == 0) {
                 JOptionPane.showMessageDialog(MyClass.viewOrders, "slip not found error", "error", JOptionPane.ERROR_MESSAGE);

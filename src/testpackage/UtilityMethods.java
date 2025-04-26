@@ -8,11 +8,17 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import javax.swing.*;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import java.awt.*;
+import java.awt.Color;
+import java.awt.font.FontRenderContext;
+import java.awt.geom.AffineTransform;
+import java.awt.print.*;
 import java.io.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,13 +28,17 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Vector;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
-public class TestClass {
+public class UtilityMethods {
+    //Thread printingThread;
+    public static Thread printingThread;
+    public static final BlockingQueue<Runnable> printQueue = new LinkedBlockingQueue<>();
 
     public static void writeTableToExcel(JTable table, String filename) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Table Data");
-
         TableModel model = table.getModel();
 
         // Write column headers
@@ -213,7 +223,7 @@ public class TestClass {
         }
     }
 
-    public static void generateAndAddDates(JComboBox<String> comboBox,boolean headerrow) {
+    public static void generateAndAddDates(JComboBox<String> comboBox, boolean headerrow) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yy");
 
         LocalDate today = LocalDate.now();
@@ -224,7 +234,7 @@ public class TestClass {
             comboBox.removeAllItems();
 
             // Add dates from today to 1 year ago
-            if(headerrow)comboBox.addItem("Select date");
+            if (headerrow) comboBox.addItem("Select date");
             for (LocalDate date = today; !date.isBefore(oneYearAgo); date = date.minusDays(1)) {
                 comboBox.addItem(date.format(formatter));
             }
@@ -257,7 +267,7 @@ public class TestClass {
 
     public static DecimalDocumentFilter getDocFilter() {
         return new DecimalDocumentFilter();
-        }
+    }
 
     public static TableModelListener[] removeModelListener(DefaultTableModel tableModel) {
 
@@ -274,6 +284,171 @@ public class TestClass {
         for (TableModelListener listener : listeners) {
             model.addTableModelListener(listener);
         }
+    }
+
+
+    public static void printModelBeautiful(DefaultTableModel model) {
+        PrinterJob job = PrinterJob.getPrinterJob();
+//
+        Printable printable = new Printable() {
+            @Override
+            public int print(Graphics g, PageFormat pageFormat, int pageIndex) throws PrinterException {
+                if (pageIndex > 0) return NO_SUCH_PAGE;
+
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
+
+                int x = 0;
+                int y = 0;
+                int rowHeight = 20;
+                int padding = 5;
+
+                double printableWidth = pageFormat.getImageableWidth();
+                int colCount = model.getColumnCount();
+                int[] colWidths = new int[colCount];
+
+                // Font setup
+                java.awt.Font headerFont = new java.awt.Font("Arial", java.awt.Font.BOLD, 12);
+                java.awt.Font normalFont = new java.awt.Font("Arial", java.awt.Font.PLAIN, 12);
+                g.setFont(normalFont);
+                FontRenderContext frc = new FontRenderContext(new AffineTransform(), true, true);
+
+                // Fixed width for "SNo"
+                colWidths[0] = 50;
+                int usedWidth = colWidths[0];
+
+                // Estimate width for other columns
+                for (int col = 1; col < colCount; col++) {
+                    int maxWidth = (int) headerFont.getStringBounds(model.getColumnName(col), frc).getWidth();
+                    for (int row = 0; row < model.getRowCount(); row++) {
+                        Object val = model.getValueAt(row, col);
+                        if (val != null) {
+                            int width = (int) normalFont.getStringBounds(val.toString(), frc).getWidth();
+                            if (width > maxWidth) maxWidth = width;
+                        }
+                    }
+                    colWidths[col] = maxWidth + padding * 2;
+                    usedWidth += colWidths[col];
+                }
+
+                // Scale down if total width > printable width
+                if (usedWidth > printableWidth) {
+                    double scale = printableWidth / usedWidth;
+                    for (int i = 0; i < colCount; i++) {
+                        colWidths[i] = (int) (colWidths[i] * scale);
+                    }
+                }
+
+                // Draw title
+                g.setColor(Color.BLUE);
+                g.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 18));
+                g.drawString("Gurukripa Jewellers", x + 10, y + 20);
+
+                y += 30;
+                g.setColor(Color.BLACK);
+                g2d.setStroke(new BasicStroke(2));
+                g.drawLine(x, y, x + (int) printableWidth, y);
+                y += 10;
+
+                // Column headers
+                g.setFont(headerFont);
+                int colX = x;
+                for (int col = 0; col < colCount; col++) {
+                    g.drawRect(colX, y, colWidths[col], rowHeight);
+                    g.drawString(model.getColumnName(col), colX + padding, y + 15);
+                    colX += colWidths[col];
+                }
+                y += rowHeight;
+
+                // Table rows
+                g.setFont(normalFont);
+                for (int row = 0; row < model.getRowCount(); row++) {
+                    colX = x;
+                    for (int col = 0; col < colCount; col++) {
+                        g.drawRect(colX, y, colWidths[col], rowHeight);
+                        Object val = model.getValueAt(row, col);
+                        if (val != null) {
+                            g.drawString(val.toString(), colX + padding, y + 15);
+                        }
+                        colX += colWidths[col];
+                    }
+                    y += rowHeight;
+
+                    if (y + rowHeight > pageFormat.getImageableHeight()) {
+                        return NO_SUCH_PAGE; // Page break not handled yet
+                    }
+                }
+
+                return PAGE_EXISTS;
+            }
+        };
+
+        // Define ISO A4 paper
+        PageFormat format = job.defaultPage();
+        Paper paper = new Paper();
+        paper.setSize(595.0, 842.0); // A4 in points
+        paper.setImageableArea(40, 40, 515, 762); // Margins: 40pt
+
+        format.setPaper(paper);
+        job.setPrintable(printable, format);
+
+        if (job.printDialog()) {
+            try {
+                job.print();
+            } catch (PrinterException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void printPanel(JPanel panel) {
+        PrinterJob job = PrinterJob.getPrinterJob();
+        job.setJobName("Print Panel");
+
+        job.setPrintable((g, pf, pageIndex) -> {
+            if (pageIndex > 0) {
+                return Printable.NO_SUCH_PAGE;
+            }
+
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.translate(pf.getImageableX(), pf.getImageableY());
+
+            // Panel size
+            double panelWidth = panel.getWidth();
+            double panelHeight = panel.getHeight();
+
+            // Printable area size (A4 imageable area)
+            double printWidth = pf.getImageableWidth();
+            double printHeight = pf.getImageableHeight();
+
+            // Calculate scale to fit the panel within printable area
+            double scaleX = printWidth / panelWidth;
+            double scaleY = printHeight / panelHeight;
+            double scale = Math.min(scaleX, scaleY); // Maintain aspect ratio
+
+            g2d.scale(scale, scale);
+
+            // Paint the panel into the scaled graphics context
+            panel.printAll(g2d);
+
+            return Printable.PAGE_EXISTS;
+        });
+
+        boolean doPrint = job.printDialog();
+        if (doPrint) {
+            try {
+                job.print();
+            } catch (PrinterException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static TextAreaRenderer getTextAreaRenderer() {
+        return new TextAreaRenderer();
+    }
+    public static TextAreaEditor getTextAreaEditor(){
+        return new TextAreaEditor();
     }
 }
 
@@ -313,5 +488,53 @@ class DecimalDocumentFilter extends DocumentFilter {
     private boolean isValidInput(String text) {
         // Regex to allow only numeric values with optional decimal (max 3 decimal places)
         return text.matches("\\d*(\\.\\d{0,3})?");
+    }
+}
+
+class TextAreaRenderer extends JTextArea implements TableCellRenderer {
+    public TextAreaRenderer() {
+        setLineWrap(true);
+        setWrapStyleWord(true);
+        setOpaque(true);
+    }
+
+    @Override
+    public Component getTableCellRendererComponent(JTable table, Object value,
+                                                   boolean isSelected, boolean hasFocus,
+                                                   int row, int column) {
+        setText(value == null ? "" : value.toString());
+
+        if (isSelected) {
+            setBackground(table.getSelectionBackground());
+            setForeground(table.getSelectionForeground());
+        } else {
+            setBackground(table.getBackground());
+            setForeground(table.getForeground());
+        }
+        return this;
+    }
+}
+class TextAreaEditor extends AbstractCellEditor implements TableCellEditor {
+
+    private final JScrollPane scrollPane;
+    private final JTextArea textArea;
+
+    public TextAreaEditor() {
+        textArea = new JTextArea();
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        scrollPane = new JScrollPane(textArea);
+    }
+
+    @Override
+    public Component getTableCellEditorComponent(JTable table, Object value,
+                                                 boolean isSelected, int row, int column) {
+        textArea.setText(value == null ? "" : value.toString());
+        return scrollPane;
+    }
+
+    @Override
+    public Object getCellEditorValue() {
+        return textArea.getText();
     }
 }

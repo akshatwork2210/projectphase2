@@ -1,21 +1,16 @@
 package loginsignup.login.loggedin.transactionsandaccounts.viewTransactions;
 
 import mainpack.MyClass;
-import testpackage.TestClass;
+import testpackage.UtilityMethods;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.RectangularShape;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.MissingFormatArgumentException;
-import java.util.Objects;
-import java.util.Vector;
 
 public class ViewTransactions extends JFrame {
     private JButton backButton;
@@ -31,8 +26,8 @@ public class ViewTransactions extends JFrame {
     }
 
     public void init() {
-        TestClass.generateAndAddDates(dateComboBox, true);
-        TestClass.generateAndAddNames(partyNameComboBox);
+        UtilityMethods.generateAndAddDates(dateComboBox, true);
+        UtilityMethods.generateAndAddNames(partyNameComboBox);
         dateComboBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

@@ -1,6 +1,7 @@
 package loginsignup.login.loggedin.billing.viewbills;
 
 import mainpack.MyClass;
+import testpackage.UtilityMethods;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -10,9 +11,11 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import static testpackage.UtilityMethods.*;
+import static testpackage.UtilityMethods.printModelBeautiful;
 import static testpackage.UtilityMethods.printPanel;
 
-public class ViewBill extends JFrame {
+public class ViewCustomerBill extends JFrame {
     private int billID;
 
     public int getBillID() {
@@ -36,7 +39,7 @@ public class ViewBill extends JFrame {
     private JLabel customerNameLabel;
     private JLabel totalLabel;
 
-    public ViewBill() {
+    public ViewCustomerBill() {
         setContentPane(panel);
 
 
@@ -47,17 +50,17 @@ public class ViewBill extends JFrame {
         printButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                printPanel(panel);
+                printQueue.offer(() -> printModelBeautiful((DefaultTableModel) billTable.getModel()));
+
             }
         });
     }
 
     public void init(String mode) {
-        pack();
         setListOfCustomer();// sets the list of customers in jcombobox
 
         if (mode.contentEquals("customer")) {
-            String[] model = new String[]{"S.No", "item", "Plus G", "Gold (g)", "TGC", "Total"};
+            String[] model = new String[]{"S.No", "item", "Gold (g)", "Plus G", "TGC", "Total"};
             DefaultTableModel tableModel = new DefaultTableModel(model, 1) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -149,6 +152,7 @@ public class ViewBill extends JFrame {
 
 
         }
+        pack();
     }
 
     private int getMinBillID() {
@@ -188,7 +192,7 @@ public class ViewBill extends JFrame {
 
     public void loadBillData(JTable table, int billID) {
 
-        String sql = "SELECT SNo, ItemName, TotalBaseCosting, GoldPlatingWeight, TotalGoldCost, TotalFinalCost , customer_name " + "FROM billdetails WHERE BillID = ?";
+        String sql = "SELECT SNo,Quantity, ItemName, TotalBaseCosting, GoldPlatingWeight, TotalGoldCost, TotalFinalCost , customer_name " + "FROM billdetails WHERE BillID = ?";
 
 
         try (PreparedStatement pstmt = MyClass.C.prepareStatement(sql)) {
@@ -204,25 +208,21 @@ public class ViewBill extends JFrame {
             while (rs.next()) {
 
 
-                Object[] row = {rs.getInt("SNo"), rs.getString("ItemName"), rs.getDouble("TotalBaseCosting"),  // plusG
+                Object[] row = {rs.getInt("SNo"), rs.getString("ItemName") + "      " + rs.getString("Quantity"), rs.getDouble("TotalBaseCosting"),  // plusG
                         rs.getDouble("GoldPlatingWeight"), // gold (g)
                         rs.getDouble("TotalGoldCost"),     // tgc
                         rs.getDouble("TotalFinalCost")     // total
                 };
-                grandtotal += rs.getDouble(
-                        "TotalFinalCost"
-                );
+                grandtotal += rs.getDouble("TotalFinalCost");
                 model.addRow(row);
                 customername = rs.getString("customer_name");
             }
-            model.setRowCount(model.getRowCount()+1);
-            model.setValueAt("Grand Total",model.getRowCount()-1,model.getColumnCount()-2);
-            model.setValueAt(grandtotal,model.getRowCount()-1,model.getColumnCount()-1);
+            model.setRowCount(model.getRowCount() + 1);
+            model.setValueAt("Grand Total", model.getRowCount() - 1, model.getColumnCount() - 2);
+            model.setValueAt(grandtotal, model.getRowCount() - 1, model.getColumnCount() - 1);
             totalLabel.setText(grandtotal + "");
             customerNameLabel.setText(customername);
-
             idLabel.setText("billID: " + billID);
-
             setBillID(billID);
             table.setModel(model);
             sql = "select *from bills where billid=?;";
@@ -234,6 +234,7 @@ public class ViewBill extends JFrame {
         } catch (SQLException e) {
             throw new RuntimeException();
         }
+        pack();
 
     }
 

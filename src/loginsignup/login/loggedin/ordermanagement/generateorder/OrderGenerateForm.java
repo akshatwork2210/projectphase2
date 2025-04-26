@@ -1,12 +1,13 @@
 package loginsignup.login.loggedin.ordermanagement.generateorder;
 
 import mainpack.MyClass;
-import testpackage.TestClass;
+import testpackage.UtilityMethods;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -16,6 +17,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Vector;
+
+import static testpackage.UtilityMethods.*;
 
 public class OrderGenerateForm extends JFrame {
 
@@ -158,7 +161,7 @@ public class OrderGenerateForm extends JFrame {
         listOfDisabledCells = new Vector<>();
         ar = new ArrayList<>();
 
-        TestClass.generateAndAddDates(dateComboBox, false);
+        generateAndAddDates(dateComboBox, false);
         String[] columnNames = {"design id", "Item Name", "Quantity", "Plating", "Raw Material Cost", "Other Details"};//jtable content
         orderSlip.getTableHeader().setReorderingAllowed(false);
         // Create a DefaultTableModel with columns and no rows initially
@@ -166,7 +169,7 @@ public class OrderGenerateForm extends JFrame {
         modelListener = e -> {
 
             if (e.getType() == TableModelEvent.UPDATE) {
-                TableModelListener[] listeners = TestClass.removeModelListener(model);
+                TableModelListener[] listeners = removeModelListener(model);
                 int row = e.getFirstRow();
                 int column = e.getColumn();
                 model.removeTableModelListener(modelListener);
@@ -192,7 +195,7 @@ public class OrderGenerateForm extends JFrame {
                                 }
 
                             } else {
-                                TableColumnModel columnModel=orderSlip.getColumnModel();
+                                TableColumnModel columnModel = orderSlip.getColumnModel();
                                 model.setValueAt("", row, columnModel.getColumnIndex("design id"));
                                 model.setValueAt("", row, columnModel.getColumnIndex("Item Name"));
                                 model.setValueAt("", row, columnModel.getColumnIndex("Raw Material Cost"));
@@ -213,7 +216,7 @@ public class OrderGenerateForm extends JFrame {
                 if (row == lastRow && !cellContent.isEmpty()) {
                     model.setRowCount(model.getRowCount() + 1);
                 }
-                if (model.getRowCount()!=1) {
+                if (model.getRowCount() != 1) {
                     if (isRowEmpty(row)) {
                         model.removeRow(row);
                         disableName();
@@ -222,7 +225,7 @@ public class OrderGenerateForm extends JFrame {
 
 
                 disableName();
-                TestClass.addModelListeners(listeners, model);
+                addModelListeners(listeners, model);
 
             }
 
@@ -261,7 +264,9 @@ public class OrderGenerateForm extends JFrame {
         DefaultComboBoxModel<String> panaTypeModel = new DefaultComboBoxModel<>(orderSlipType);
         orderSlipTypeComboBox.setModel(panaTypeModel);
         orderSlip.setModel(model);
-
+//        TableColumn otherDetailsColumn = orderSlip.getColumn("Other Details");
+//        otherDetailsColumn.setCellEditor(getTextAreaEditor());
+//        otherDetailsColumn.setCellRenderer(getTextAreaRenderer());
     }
 
     private boolean isRowEmpty(int row) {
@@ -310,5 +315,9 @@ public class OrderGenerateForm extends JFrame {
             }
         };
         orderSlip.setModel(model);
+//
+//        TableColumn otherDetailsColumn = orderSlip.getColumn("Other Details");
+//        otherDetailsColumn.setCellEditor(getTextAreaEditor());
+//        otherDetailsColumn.setCellRenderer(getTextAreaRenderer());
     }
 }

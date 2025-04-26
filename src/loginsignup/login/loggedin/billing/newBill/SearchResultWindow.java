@@ -209,6 +209,7 @@ public class SearchResultWindow extends JFrame {
                 model.setValueAt(rs.getString("slip_id") + "." + itemId + "/" + (rs.getInt("quantity") - rs.getInt("billed_quantity")), lastrow, columnModel.getColumnIndex("OrderSlip/quantity"));
                 model.setValueAt(String.valueOf(quantity), lastrow, columnModel.getColumnIndex("Quantity"));
                 model.setValueAt(rs.getString("item_name"), lastrow, columnModel.getColumnIndex("ItemName"));
+                model.setValueAt(rs.getString("raw_material_price"), lastrow, columnModel.getColumnIndex("Raw"));
                 model.setValueAt(rs.getString("design_id"), lastrow, columnModel.getColumnIndex("DesignID"));
                 model.fireTableDataChanged();
                 setSearchFlag(false);
