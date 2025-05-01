@@ -17,6 +17,8 @@ public class InventoryScreen extends  JFrame {
     private JButton addInventoryButton;
 
     public InventoryScreen() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         setContentPane(panel);
 
 
@@ -40,7 +42,7 @@ public class InventoryScreen extends  JFrame {
         init();
     }
     public void init(){
-
+setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         DefaultTableModel m = new DefaultTableModel(
                 new Object[][]{}, // Empty initial data
                 new String[]{"Design ID", "Total Quantity", "Supplier Name"} // Column names

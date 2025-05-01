@@ -6,20 +6,35 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import static mainpack.MyClass.*;
+
 public class BillingScreen extends JFrame {
     private JPanel panel;
     private JButton newBillButton;
     private JButton backButton;
+    private JButton viewCustomerBillsButton;
 
-    public BillingScreen(){
+    public JButton getViewBillButton() {
+        return viewBillButton;
+    }
+
+    private JButton viewBillButton;
+
+    public JButton getNewBillButton() {
+        return newBillButton;
+    }
+
+    public BillingScreen() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         setContentPane(panel);
         pack();
 
         newBillButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                MyClass.newBill.setVisible(true);
-                MyClass.newBill.initSystemlogin();
+                newBill.setVisible(true);
+                newBill.init();
                 setVisible(false);
 
             }
@@ -28,8 +43,21 @@ public class BillingScreen extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
-                MyClass.mainScreen.setVisible(true);
+                mainScreen.setVisible(true);
             }
+        });
+        viewCustomerBillsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setVisible(false);
+                viewCustomerBill.setVisible(true);
+                viewCustomerBill.init("customer");
+            }
+        });
+        viewBillButton.addActionListener(e -> {
+            viewBackendBill.init();
+            viewBackendBill.setVisible(true);
+            setVisible(false);
         });
     }
 }

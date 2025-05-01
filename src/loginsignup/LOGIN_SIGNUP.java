@@ -15,6 +15,7 @@ public class LOGIN_SIGNUP extends JFrame{
     private JButton QUITButton;
 
     public LOGIN_SIGNUP() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
        setContentPane(panel);
 
         LOGIN login= MyClass.login;

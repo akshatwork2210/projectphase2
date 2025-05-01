@@ -16,9 +16,36 @@ public class LOGIN extends JFrame {
     private JButton QUITButton;
     private JButton BACKButton;
     private JPanel panel;
+    private String loginID;
+    private String password;
+    private String host;
+    private String database;
+    private String port;
+
+    public String getPort() {
+        return port;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public String getDatabase() {
+        return database;
+    }
+
+    private String url;
+    public String getPassword() {
+        return password;
+    }
+
+    public String getLoginID() {
+        return loginID;
+    }
 
     public LOGIN() {
         setContentPane(panel);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         QUITButton.addActionListener(new ActionListener() {
             @Override
@@ -41,8 +68,14 @@ public class LOGIN extends JFrame {
             public void actionPerformed(ActionEvent e) {
 
                 try {
-                    Connection c= MyClass.getConnection("localhost","sample",user.getText(),pass.getText());
+                     host="localhost";
+                     database="sample";
+                    String port="3306";
+                    url = "jdbc:mysql://" + host + ":"+port+"/" + database;
+                    Connection c= MyClass.getConnection(url,user.getText(),pass.getText());
                     MyClass.C=c;
+                    loginID=user.getText();
+                    password=pass.getText();
                   Statement stmt;
                     stmt=c.createStatement();
                 } catch (SQLException ex) {
