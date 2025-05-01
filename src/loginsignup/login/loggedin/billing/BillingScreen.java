@@ -57,6 +57,7 @@ public class BillingScreen extends JFrame {
         viewBillButton.addActionListener(e -> {
             viewBackendBill.init();
             viewBackendBill.setVisible(true);
+            setVisible(false);
         });
     }
 }

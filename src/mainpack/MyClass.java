@@ -64,7 +64,7 @@ public class MyClass {
                 }
             }
         }, "PrintingThread");
-
+        UtilityMethods.printStartUp();
         UtilityMethods.printingThread.setDaemon(true);  // optional: will not block app from closing
         UtilityMethods.printingThread.start();
 

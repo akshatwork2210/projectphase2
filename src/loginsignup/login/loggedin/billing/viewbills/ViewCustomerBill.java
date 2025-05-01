@@ -1,22 +1,148 @@
 package loginsignup.login.loggedin.billing.viewbills;
 
 import mainpack.MyClass;
-import testpackage.UtilityMethods;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumnModel;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.font.FontRenderContext;
+import java.awt.geom.AffineTransform;
+import java.awt.print.*;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Vector;
 
 import static testpackage.UtilityMethods.*;
-import static testpackage.UtilityMethods.printModelBeautiful;
-import static testpackage.UtilityMethods.printPanel;
 
 public class ViewCustomerBill extends JFrame {
     private int billID;
+
+    private static void printCustomerBill(DefaultTableModel model,int billID,Date date, String customerName) {
+        PrinterJob job = PrinterJob.getPrinterJob();
+//
+        Printable printable = new Printable() {
+            @Override
+            public int print(Graphics g, PageFormat pageFormat, int pageIndex) throws PrinterException {
+                if (pageIndex > 0) return NO_SUCH_PAGE;
+
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
+
+                int x = 0;
+                int y = 0;
+                int rowHeight = 20;
+                int padding = 5;
+
+                double printableWidth = pageFormat.getImageableWidth();
+                int colCount = model.getColumnCount();
+                int[] colWidths = new int[colCount];
+
+                // Font setup
+                Font headerFont = new Font("Arial", Font.BOLD, 12);
+                Font normalFont = new Font("Arial", Font.PLAIN, 12);
+                g.setFont(normalFont);
+                FontRenderContext frc = new FontRenderContext(new AffineTransform(), true, true);
+
+                // Fixed width for "SNo"
+                colWidths[0] = 30;
+                int usedWidth = colWidths[0];
+
+                // Estimate width for other columns
+                for (int col = 1; col < colCount; col++) {
+                    int maxWidth = (int) headerFont.getStringBounds(model.getColumnName(col), frc).getWidth();
+                    for (int row = 0; row < model.getRowCount(); row++) {
+                        Object val = model.getValueAt(row, col);
+                        if (val != null) {
+                            int width = (int) normalFont.getStringBounds(val.toString(), frc).getWidth();
+                            if (width > maxWidth) maxWidth = width;
+                        }
+                    }
+                    colWidths[col] = maxWidth + padding * 2;
+                    usedWidth += colWidths[col];
+                }
+
+                // Scale down if total width > printable width
+                if (usedWidth > printableWidth) {
+                    double scale = printableWidth / usedWidth;
+                    for (int i = 0; i < colCount; i++) {
+                        colWidths[i] = (int) (colWidths[i] * scale);
+                    }
+                }
+
+                // Draw title
+                g.setColor(Color.BLUE);
+                g.setFont(new Font("Arial", Font.BOLD, 18));
+                g.drawString("Gurukripa Jewellers", x + 10, y + 20);
+                y += 70;
+                g.setFont(new Font("Arial", Font.PLAIN, 12));
+                g.setColor(Color.BLACK);
+                SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+                int billtruncatedid=billID%100==0?100:billID%100;
+                g.drawString("" + billtruncatedid, x + 10, y);
+                g.drawString("Date: " + sdf.format(date), x + 150, y);
+                g.drawString("Customer: " + customerName, x + 300, y);
+                y += 20;
+
+                g.setColor(Color.BLACK);
+                g2d.setStroke(new BasicStroke(2));
+                g.drawLine(x, y, x + (int) printableWidth, y);
+                y += 10;
+
+                int colX = x;
+                // Column headers
+//                g.setFont(headerFont);
+//                for (int col = 0; col < colCount; col++) {
+//                    g.drawRect(colX, y, colWidths[col], rowHeight);
+//                    g.drawString(model.getColumnName(col), colX + padding, y + 15);
+//                    colX += colWidths[col];
+//                }
+//                y += rowHeight;
+
+                // Table rows
+                g.setFont(normalFont);
+                for (int row = 0; row < model.getRowCount(); row++) {
+                    colX = x;
+                    for (int col = 0; col < colCount; col++) {
+                        g.drawRect(colX, y, colWidths[col], rowHeight);
+                        Object val = model.getValueAt(row, col);
+                        if (val != null) {
+                            g.drawString(val.toString(), colX + padding, y + 15);
+                        }
+                        colX += colWidths[col];
+                    }
+                    y += rowHeight;
+
+                    if (y + rowHeight > pageFormat.getImageableHeight()) {
+                        return NO_SUCH_PAGE; // Page break not handled yet
+                    }
+                }
+
+                return PAGE_EXISTS;
+            }
+        };
+
+        // Define ISO A4 paper
+        PageFormat format = job.defaultPage();
+        Paper paper = new Paper();
+        paper.setSize(595.0, 842.0); // A4 in points
+        paper.setImageableArea(40, 40, 515, 762); // Margins: 40pt
+
+        format.setPaper(paper);
+        job.setPrintable(printable, format);
+
+        if (job.printDialog()) {
+            try {
+                job.print();
+            } catch (PrinterException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     public int getBillID() {
         return billID;
@@ -41,7 +167,7 @@ public class ViewCustomerBill extends JFrame {
 
     public ViewCustomerBill() {
         setContentPane(panel);
-
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         backButton.addActionListener(e -> {
             setVisible(false);
@@ -50,11 +176,30 @@ public class ViewCustomerBill extends JFrame {
         printButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                printQueue.offer(() -> printModelBeautiful((DefaultTableModel) billTable.getModel()));
+                printQueue.offer(() -> printCustomerBill((DefaultTableModel) billTable.getModel(),getBillID(),getDate(),getCustomerName()));
 
             }
         });
     }
+
+    private String getCustomerName() {
+        return customerName;
+    }
+private String customerName;
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+    private Date date;
 
     public void init(String mode) {
         setListOfCustomer();// sets the list of customers in jcombobox
@@ -207,12 +352,20 @@ public class ViewCustomerBill extends JFrame {
             double grandtotal = 0;
             while (rs.next()) {
 
+                Vector<Object> row = new Vector<>();
+                while (row.size() < model.getColumnCount()) {
+                    row.add(null);
+                }
+                TableColumnModel columnModel = table.getColumnModel();
 
-                Object[] row = {rs.getInt("SNo"), rs.getString("ItemName") + "      " + rs.getString("Quantity"), rs.getDouble("TotalBaseCosting"),  // plusG
-                        rs.getDouble("GoldPlatingWeight"), // gold (g)
-                        rs.getDouble("TotalGoldCost"),     // tgc
-                        rs.getDouble("TotalFinalCost")     // total
-                };
+                row.set(columnModel.getColumnIndex("S.No"), rs.getString("SNo"));
+                row.set(columnModel.getColumnIndex("item"), rs.getString("ItemName") + "      " + rs.getString("Quantity"));
+                row.set(columnModel.getColumnIndex("Gold (g)"), rs.getString("GoldPlatingWeight"));
+                row.set(columnModel.getColumnIndex("Plus G"), rs.getString("TotalBaseCosting"));
+                row.set(columnModel.getColumnIndex("TGC"), rs.getString("TotalGoldCost"));
+                row.set(columnModel.getColumnIndex("Total"), rs.getString("TotalFinalCost"));
+
+
                 grandtotal += rs.getDouble("TotalFinalCost");
                 model.addRow(row);
                 customername = rs.getString("customer_name");
@@ -222,6 +375,7 @@ public class ViewCustomerBill extends JFrame {
             model.setValueAt(grandtotal, model.getRowCount() - 1, model.getColumnCount() - 1);
             totalLabel.setText(grandtotal + "");
             customerNameLabel.setText(customername);
+            setCustomerName(customername);
             idLabel.setText("billID: " + billID);
             setBillID(billID);
             table.setModel(model);
@@ -242,6 +396,7 @@ public class ViewCustomerBill extends JFrame {
         LocalDateTime datetime = date.toLocalDateTime();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yy hh:mm a");
         dateLabel.setText(datetime.format(formatter));
+        setDate(Date.valueOf(datetime.toLocalDate()));
     }
 
 }

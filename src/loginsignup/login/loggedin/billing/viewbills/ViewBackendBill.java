@@ -22,6 +22,8 @@ public class ViewBackendBill extends JFrame {
     private JButton nextButton;
     private JPanel panel;
     private JTextField searchID;
+    private JLabel customerNameLabel;
+    private JLabel billIDLabel;
 
     public ViewBackendBill() {
 
@@ -44,6 +46,9 @@ public class ViewBackendBill extends JFrame {
         setContentPane(panel);
         generateAndAddDates(dateComboBox, true);
         generateAndAddNames(customerComboBox);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        System.out.println(0xb55);
+        int m=0b101001+0x545+0b10010111101001;
         billDetails = new Vector<>();
         billDetails.add("SNo");
         billDetails.add("OrderSlip");
@@ -126,7 +131,6 @@ public class ViewBackendBill extends JFrame {
                 ResultSet rs = stmt.executeQuery();
                 if (rs.next()) {
                     int nextID = rs.getInt(1);
-                    System.out.println(nextID + " is th next billid");
                     if (!rs.wasNull()) {
                         loadBillData(nextID);
                         setCurBillID(nextID);
@@ -144,14 +148,13 @@ public class ViewBackendBill extends JFrame {
             }
         };
         billTable.setModel(tableModel);
-        System.out.println(loadBillData(minBillID()));
+        loadBillData(minBillID());
 
         backButton.addActionListener(e -> {
             setVisible(false);
             dispose();
             billingScreen.setVisible(true);
         });
-        pack();
     }
 
     public void setCurBillID(int curBillID) {
@@ -180,18 +183,21 @@ public class ViewBackendBill extends JFrame {
     int curBillID;
 
     int loadBillData(int billid) {
-        String query = "SELECT * FROM billdetails WHERE BillID = ?";
 
+        String query = "SELECT * FROM billdetails WHERE BillID = ?";
         try {
             PreparedStatement stmt = C.prepareStatement(query);
             stmt.setInt(1, billid);
             ResultSet rs = stmt.executeQuery();
-            if(rs.isLast())return 0;
+            if (!rs.next()) {
+                JOptionPane.showMessageDialog(viewBackendBill, "empty resultset returned");
+                return -1;
+            }
             DefaultTableModel model = (DefaultTableModel) billTable.getModel();
             model.setRowCount(0); // Clear existing data
-            System.out.println(billTable.getColumnCount() + "outside column count");
-            int i = 0;
-            while (rs.next()) {
+            String customer_name = "";
+            do {
+
                 Vector<String> row = new Vector<>();
                 row.add(rs.getString("SNo") == null ? "" : rs.getString("SNo")); // SNo
                 row.add(rs.getString("OrderSlipNumber") == null ? "" : rs.getString("OrderSlipNumber")); // OrderSlip/quantity
@@ -210,11 +216,13 @@ public class ViewBackendBill extends JFrame {
                 row.add(rs.getString("GoldPlatingWeight") == null ? "0" : rs.getString("GoldPlatingWeight")); // Gold(g)
                 row.add(rs.getString("GoldRate") == null ? "0" : rs.getString("GoldRate")); // Gold Rate
                 row.add(rs.getString("TotalFinalCost") == null ? "0" : rs.getString("TotalFinalCost")); // Total
-                System.out.println(row.size() + "row size");
+                customer_name = rs.getString("customer_name");
+
                 model.addRow(row);
-            }
+            } while (rs.next());
+            billIDLabel.setText("bill id:" + billid);
+            customerNameLabel.setText(customer_name);
             curBillID = billid;
-            System.out.println("current bill id is " + billid);
         } catch (SQLException e) {
             throw new RuntimeException("Error loading bill data: " + e.getMessage(), e);
         }

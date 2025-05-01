@@ -9,6 +9,9 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
+import javax.swing.text.TableView;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.sql.PreparedStatement;
@@ -16,12 +19,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Vector;
 
 import static testpackage.UtilityMethods.*;
 
 public class OrderGenerateForm extends JFrame {
 
+    HashMap<Integer, String> snoToDetailsMap;
     private JPanel panel;
     DefaultTableModel backupModel;
     private JButton backButton;
@@ -219,6 +225,7 @@ public class OrderGenerateForm extends JFrame {
                 if (model.getRowCount() != 1) {
                     if (isRowEmpty(row)) {
                         model.removeRow(row);
+                        reMapKeys(row + 1);
                         disableName();
                     }
                 }
@@ -231,6 +238,12 @@ public class OrderGenerateForm extends JFrame {
 
         };
         model.addTableModelListener(modelListener);
+        orderSlip.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK), "openPopup");
+        orderSlip.getActionMap().put("openPopup", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            }
+        });
 
         ArrayList<String> customerNames = new ArrayList<>();
         try {
@@ -264,9 +277,25 @@ public class OrderGenerateForm extends JFrame {
         DefaultComboBoxModel<String> panaTypeModel = new DefaultComboBoxModel<>(orderSlipType);
         orderSlipTypeComboBox.setModel(panaTypeModel);
         orderSlip.setModel(model);
-//        TableColumn otherDetailsColumn = orderSlip.getColumn("Other Details");
-//        otherDetailsColumn.setCellEditor(getTextAreaEditor());
-//        otherDetailsColumn.setCellRenderer(getTextAreaRenderer());
+
+    }
+
+    private void reMapKeys(int sno) {
+        HashMap<Integer, String> tempMap = new HashMap<>();
+
+        Iterator<Integer> iterator = snoToDetailsMap.keySet().iterator();
+        while (iterator.hasNext()) {
+            int key = iterator.next();
+            if (key < sno) {
+                tempMap.put(key, snoToDetailsMap.get(key));
+                continue;
+            }
+            if (key == sno) continue;
+            if (key > sno) tempMap.put(key - 1, snoToDetailsMap.get(key));
+
+        }
+        snoToDetailsMap.clear();
+        snoToDetailsMap.putAll(tempMap);
     }
 
     private boolean isRowEmpty(int row) {
@@ -315,7 +344,8 @@ public class OrderGenerateForm extends JFrame {
             }
         };
         orderSlip.setModel(model);
-//
+
+
 //        TableColumn otherDetailsColumn = orderSlip.getColumn("Other Details");
 //        otherDetailsColumn.setCellEditor(getTextAreaEditor());
 //        otherDetailsColumn.setCellRenderer(getTextAreaRenderer());

@@ -16,10 +16,13 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import java.awt.*;
 import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
 import java.awt.print.*;
 import java.io.*;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -240,6 +243,11 @@ public class UtilityMethods {
             }
         } else Thread.dumpStack();
     }
+    public static void printStartUp() {
+        PrinterJob.getPrinterJob(); // triggers internal loading
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        ge.getAllFonts(); // forces font rasterizer to load
+    }
 
     public static void generateAndAddNames(JComboBox<String> comboBox) {
         if (comboBox == null) return;
@@ -285,9 +293,7 @@ public class UtilityMethods {
             model.addTableModelListener(listener);
         }
     }
-
-
-    public static void printModelBeautiful(DefaultTableModel model) {
+    private static void printModel(DefaultTableModel model,String title) {
         PrinterJob job = PrinterJob.getPrinterJob();
 //
         Printable printable = new Printable() {
@@ -342,7 +348,7 @@ public class UtilityMethods {
                 // Draw title
                 g.setColor(Color.BLUE);
                 g.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 18));
-                g.drawString("Gurukripa Jewellers", x + 10, y + 20);
+                g.drawString(title, x + 10, y + 20);
 
                 y += 30;
                 g.setColor(Color.BLACK);
@@ -400,6 +406,7 @@ public class UtilityMethods {
             }
         }
     }
+
 
     public static void printPanel(JPanel panel) {
         PrinterJob job = PrinterJob.getPrinterJob();
@@ -490,8 +497,31 @@ class DecimalDocumentFilter extends DocumentFilter {
         return text.matches("\\d*(\\.\\d{0,3})?");
     }
 }
-
-class TextAreaRenderer extends JTextArea implements TableCellRenderer {
+//
+//class TextAreaRenderer extends JTextArea implements TableCellRenderer {
+//    public TextAreaRenderer() {
+//        setLineWrap(true);
+//        setWrapStyleWord(true);
+//        setOpaque(true);
+//    }
+//
+//    @Override
+//    public Component getTableCellRendererComponent(JTable table, Object value,
+//                                                   boolean isSelected, boolean hasFocus,
+//                                                   int row, int column) {
+//        setText(value == null ? "" : value.toString());
+//
+//        if (isSelected) {
+//            setBackground(table.getSelectionBackground());
+//            setForeground(table.getSelectionForeground());
+//        } else {
+//            setBackground(table.getBackground());
+//            setForeground(table.getForeground());
+//        }
+//        return this;
+//    }
+//}
+ class TextAreaRenderer extends JTextArea implements TableCellRenderer {
     public TextAreaRenderer() {
         setLineWrap(true);
         setWrapStyleWord(true);
@@ -511,9 +541,35 @@ class TextAreaRenderer extends JTextArea implements TableCellRenderer {
             setBackground(table.getBackground());
             setForeground(table.getForeground());
         }
+
+        // Dynamically adjust row height based on renderer content
+        adjustRowHeight(table, row);
+
         return this;
     }
+
+    // Adjust the row height based on content
+//    private void adjustRowHeight(JTable table, int row) {
+//        TableCellRenderer renderer = table.getCellRenderer(row, 1); // Column 1
+//        Component comp = renderer.getTableCellRendererComponent(table, table.getValueAt(row, 1), false, false, row, 1);
+//        int preferredHeight = comp.getPreferredSize().height + table.getRowMargin();
+//        table.setRowHeight(row, preferredHeight);
+//    }
+    private void adjustRowHeight(JTable table, int row) {
+        int defaultHeight = 40; // or table.getRowHeight() if you want dynamic default
+
+        TableCellRenderer renderer = table.getCellRenderer(row, 1); // Column 1
+        Component comp = renderer.getTableCellRendererComponent(table, table.getValueAt(row, 1), false, false, row, 1);
+
+        int preferredHeight = comp.getPreferredSize().height + table.getRowMargin();
+
+        // Set to max of defaultHeight or preferredHeight
+        int finalHeight = Math.max(defaultHeight, preferredHeight);
+
+        table.setRowHeight(row, finalHeight);
+    }
 }
+
 class TextAreaEditor extends AbstractCellEditor implements TableCellEditor {
 
     private final JScrollPane scrollPane;
@@ -524,6 +580,17 @@ class TextAreaEditor extends AbstractCellEditor implements TableCellEditor {
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
         scrollPane = new JScrollPane(textArea);
+        InputMap inputMap = textArea.getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap actionMap = textArea.getActionMap();
+
+// Bind SHIFT+ENTER to inserting a newline
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.SHIFT_DOWN_MASK), "insert-break");
+        actionMap.put("insert-break", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                textArea.append("\n");
+            }
+        });
     }
 
     @Override
