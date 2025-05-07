@@ -101,6 +101,7 @@ public class NewTransaction extends JFrame {
         UtilityMethods.generateAndAddDates(dateComboBox,false);
         inRadioButton.setSelected(true);
         AddedTransactions addedTransactions = new AddedTransactions();
+        
         addedTransactions.setVisible(true);
         
 
