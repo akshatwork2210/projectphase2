@@ -1,5 +1,7 @@
 package loginsignup.login.loggedin;
+
 import java.io.*;
+
 import mainpack.MyClass;
 
 import javax.swing.*;
@@ -9,7 +11,7 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class MainScreen extends JFrame{
+public class MainScreen extends JFrame {
     public void createBackup() {
         try {
             // Path to the batch file
@@ -50,12 +52,13 @@ public class MainScreen extends JFrame{
                 .replace(">", "^>")  // Escape >
                 .replace("!", "^!"); // Escape !
     }
+
     public void createFile(String dbUser, String dbPassword, String dbName) {
         String filePath = "tempBack.bat";
         SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yy___HH_mm_ss");
         String timestamp = sdf.format(new Date());
-        timestamp+="_backup.sql";
-        String backupFile = System.getProperty("user.dir") + "\\src\\resources\\"+timestamp;
+        timestamp += "_backup.sql";
+        String backupFile = System.getProperty("user.dir") + "\\src\\resources\\" + timestamp;
 
         try {
 //            dbPassword=escapeForBatch(dbPassword)
@@ -80,9 +83,9 @@ public class MainScreen extends JFrame{
             // Wait for process to complete
             int exitCode = process.waitFor();
             if (exitCode == 0) {
-                JOptionPane.showMessageDialog(this,"Backup completed successfully.");
+                JOptionPane.showMessageDialog(this, "Backup completed successfully.");
             } else {
-                JOptionPane.showMessageDialog(this,"Backup failed with exit code: " + exitCode,"eror",JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Backup failed with exit code: " + exitCode, "eror", JOptionPane.ERROR_MESSAGE);
             }
 
             // Delete the batch file after execution
@@ -98,7 +101,7 @@ public class MainScreen extends JFrame{
         }
     }
 
-    public MainScreen(){
+    public MainScreen() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         this.setContentPane(panel);
@@ -132,8 +135,7 @@ public class MainScreen extends JFrame{
                 setVisible(false);
             }
         });
-        inventoryManagementButton.addActionListener(new ActionListener()
-        {
+        inventoryManagementButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
@@ -144,7 +146,7 @@ public class MainScreen extends JFrame{
         backUpDataButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-createFile(MyClass.login.getLoginID(),MyClass.login.getPassword(),"sample");
+                createFile(MyClass.login.getLoginID(), MyClass.login.getPassword(), "sample");
             }
         });
         transactionManagementButton.addActionListener(new ActionListener() {
@@ -156,13 +158,21 @@ createFile(MyClass.login.getLoginID(),MyClass.login.getPassword(),"sample");
                 MyClass.transactions.setVisible(true);
             }
         });
+        addPartyButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                MyClass.addParty.setVisible(true);
+                MyClass.addParty.init();
+            }
+        });
     }
+
     private JButton billingButton;
     private JPanel panel;
     private JButton backButton;
     private JButton orderManagementButton;
     private JButton backUpDataButton;
     private JButton transactionManagementButton;
-    private JButton button3;
+    private JButton addPartyButton;
     private JButton inventoryManagementButton;
 }

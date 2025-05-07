@@ -225,7 +225,7 @@ public class OrderGenerateForm extends JFrame {
                 if (model.getRowCount() != 1) {
                     if (isRowEmpty(row)) {
                         model.removeRow(row);
-                        reMapKeys(row + 1);
+//                       reMapKeys(row + 1);
                         disableName();
                     }
                 }
@@ -283,8 +283,8 @@ public class OrderGenerateForm extends JFrame {
     private void reMapKeys(int sno) {
         HashMap<Integer, String> tempMap = new HashMap<>();
 
-        Iterator<Integer> iterator = snoToDetailsMap.keySet().iterator();
-        while (iterator.hasNext()) {
+        Iterator<Integer> iterator = snoToDetailsMap==null?null:snoToDetailsMap.keySet().iterator();
+        while (iterator!=null && iterator.hasNext()) {
             int key = iterator.next();
             if (key < sno) {
                 tempMap.put(key, snoToDetailsMap.get(key));
