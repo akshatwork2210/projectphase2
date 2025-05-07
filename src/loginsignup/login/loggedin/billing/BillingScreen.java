@@ -15,10 +15,11 @@ public class BillingScreen extends JFrame {
     private JButton viewCustomerBillsButton;
 
     public JButton getViewBillButton() {
-        return viewBillButton;
+        return viewCustomerBillsButton;
     }
 
     private JButton viewBillButton;
+    private JButton newPurchaseButton;
 
     public JButton getNewBillButton() {
         return newBillButton;
@@ -59,5 +60,17 @@ public class BillingScreen extends JFrame {
             viewBackendBill.setVisible(true);
             setVisible(false);
         });
+        newPurchaseButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                purchaseBill.init();
+                purchaseBill.setVisible(true);
+                setVisible(false);
+            }
+        });
+    }
+
+    public JButton getPurchaseBillButton() {
+    return newPurchaseButton;
     }
 }

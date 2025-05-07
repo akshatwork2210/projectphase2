@@ -22,10 +22,7 @@ import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
 import java.awt.print.*;
 import java.io.*;
-import java.sql.Date;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -37,7 +34,142 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class UtilityMethods {
     //Thread printingThread;
     public static Thread printingThread;
+
     public static final BlockingQueue<Runnable> printQueue = new LinkedBlockingQueue<>();
+//    public static int[] balance(int billId) {
+//        int[] balances = new int[2]; // [0] = previous balance, [1] = next balance
+//
+//        try {
+//            Connection con =MyClass.C;
+//            // Step 1: Get bill date and customer
+//            PreparedStatement ps1 = con.prepareStatement("SELECT date, customer_name FROM bills WHERE BillID = ?");
+//            ps1.setInt(1, billId);
+//            ResultSet rs1 = ps1.executeQuery();
+//
+//            if (!rs1.next()) return balances; // Bill not found
+//
+//            java.sql.Timestamp billDate = rs1.getTimestamp("date");
+//            String customer = rs1.getString("customer_name");
+//
+//            // Step 2: Calculate total payments and bills before this bill
+//            PreparedStatement ps2 = con.prepareStatement("SELECT IFNULL(SUM(amount), 0) AS total FROM transactions WHERE customer_name = ? AND date < ?");
+//            ps2.setString(1, customer);
+//            ps2.setTimestamp(2, billDate);
+//            ResultSet rs2 = ps2.executeQuery();
+//            rs2.next();
+//            double paymentsBefore = rs2.getDouble("total");
+//
+//            PreparedStatement ps3 = con.prepareStatement("SELECT IFNULL(SUM(amount), 0) AS total FROM bills WHERE customer_name = ? AND date < ?");
+//            ps3.setString(1, customer);
+//            ps3.setTimestamp(2, billDate);
+//            ResultSet rs3 = ps3.executeQuery();
+//            rs3.next();
+//            double billsBefore = rs3.getDouble("total");
+//
+//            // Step 3: Calculate total payments and bills up to and including this bill
+//            PreparedStatement ps4 = con.prepareStatement("SELECT IFNULL(SUM(amount), 0) AS total FROM transactions WHERE customer_name = ? AND date <= ?");
+//            ps4.setString(1, customer);
+//            ps4.setTimestamp(2, billDate);
+//            ResultSet rs4 = ps4.executeQuery();
+//            rs4.next();
+//            double paymentsUpto = rs4.getDouble("total");
+//
+//            PreparedStatement ps5 = con.prepareStatement("SELECT IFNULL(SUM(amount), 0) AS total FROM bills WHERE customer_name = ? AND date <= ?");
+//            ps5.setString(1, customer);
+//            ps5.setTimestamp(2, billDate);
+//            ResultSet rs5 = ps5.executeQuery();
+//            rs5.next();
+//            double billsUpto = rs5.getDouble("total");
+//
+//            // Step 4: Compute balances
+//            balances[0] = (int) Math.round(paymentsBefore - billsBefore); // Previous Balance
+//            balances[1] = (int) Math.round(paymentsUpto - billsUpto);     // Next Balance
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        return balances;
+//    }
+public static  double[] balance(int billID) {
+    double[] result = new double[2]; // [previous_balance, next_balance]
+
+    try {
+        Connection con = MyClass.C;
+        // 1. Get bill date and customer name
+        String customerName = null;
+        Timestamp billDate = null;
+
+        PreparedStatement ps1 = con.prepareStatement("SELECT customer_name, date FROM bills WHERE BillID = ?");
+        ps1.setInt(1, billID);
+        ResultSet rs1 = ps1.executeQuery();
+        if (rs1.next()) {
+            customerName = rs1.getString("customer_name");
+            billDate = rs1.getTimestamp("date");
+        } else {
+            System.out.println("Bill not found.");
+            return result;
+        }
+
+        // 2. Calculate total transactions BEFORE this bill
+        PreparedStatement ps2 = con.prepareStatement(
+                "SELECT IFNULL(SUM(amount), 0) AS total FROM transactions " +
+                        "WHERE customer_name = ? AND date <= ? AND billid < ?"
+        );
+        ps2.setString(1, customerName);
+        ps2.setTimestamp(2, billDate);
+        ps2.setInt(3, billID);
+
+        ResultSet rs2 = ps2.executeQuery();
+        double totalTransactionsBefore = rs2.next() ? rs2.getDouble("total") : 0;
+        System.out.println("totaltransactions before"+totalTransactionsBefore);
+        // 3. Calculate total bills BEFORE this bill
+        PreparedStatement ps3 = con.prepareStatement(
+                "SELECT IFNULL(SUM(TotalFinalCost), 0) AS total FROM billdetails " +
+                        "WHERE customer_name = ? AND BillID IN (" +
+                        "SELECT BillID FROM bills WHERE customer_name = ? AND " +
+                        "((date < ?) OR (date = ? AND BillID < ?)))"
+        );
+        ps3.setString(1, customerName);
+        ps3.setString(2, customerName);
+        ps3.setTimestamp(3, billDate);
+        ps3.setTimestamp(4, billDate);
+        ps3.setInt(5, billID);
+
+        ResultSet rs3 = ps3.executeQuery();
+        int totalBillsBefore = rs3.next() ? rs3.getInt("total") : 0;
+
+        double   prevBalance = totalTransactionsBefore - totalBillsBefore;
+        result[0] = prevBalance;
+
+        // 4. Get current bill amount
+        PreparedStatement ps4 = con.prepareStatement(
+                "SELECT IFNULL(SUM(TotalFinalCost), 0) AS total FROM billdetails WHERE BillID = ?"
+        );
+        ps4.setInt(1, billID);
+        ResultSet rs4 = ps4.executeQuery();
+        double currentBillAmount = rs4.next() ? rs4.getDouble("total") : 0;
+
+        // 5. Get all transactions linked to this bill
+        PreparedStatement ps5 = con.prepareStatement(
+                "SELECT IFNULL(SUM(amount), 0) AS total FROM transactions WHERE billid = ?"
+        );
+        ps5.setInt(1, billID);
+        ResultSet rs5 = ps5.executeQuery();
+        double transactionsForBill = rs5.next() ? rs5.getDouble("total") : 0;
+
+        // 6. Calculate next balance after applying this bill and its payments
+        double nextBalance = prevBalance + transactionsForBill - currentBillAmount;
+        result[1] = nextBalance;
+
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    return result;
+}
+
 
     public static void writeTableToExcel(JTable table, String filename) {
         Workbook workbook = new XSSFWorkbook();

@@ -100,6 +100,11 @@ public class NewTransaction extends JFrame {
         appendListOfCustomers(partyNameComboBox);
         UtilityMethods.generateAndAddDates(dateComboBox,false);
         inRadioButton.setSelected(true);
+        AddedTransactions addedTransactions = new AddedTransactions();
+        
+        addedTransactions.setVisible(true);
+        
+
         pack();
     }
 

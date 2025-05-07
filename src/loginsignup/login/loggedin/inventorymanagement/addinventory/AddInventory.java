@@ -15,7 +15,7 @@ public class AddInventory extends JFrame
     public AddInventory(){
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        setContentPane(panel);
+            setContentPane(panel);
 
         submitQueryButton.addActionListener(new ActionListener() {
             @Override
@@ -73,4 +73,5 @@ public class AddInventory extends JFrame
     private JTextField designID;
     private JTextField openingStock;
     private JPanel panel;
+    private JComboBox comboBox1;
 }

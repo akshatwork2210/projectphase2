@@ -45,7 +45,7 @@ public class InventoryScreen extends  JFrame {
 setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         DefaultTableModel m = new DefaultTableModel(
                 new Object[][]{}, // Empty initial data
-                new String[]{"Design ID", "Total Quantity", "Supplier Name"} // Column names
+                new String[]{"Design ID", "Total Quantity"} // Column names
         ){
             public boolean isCellEditable(int row, int column) {
                 return false; // Prevent all cells from being editable
@@ -53,16 +53,15 @@ setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         };
         inventoryTable.setModel(m);
        try {
-            String query = "SELECT `DesignID`, `TotalQuantity`, `SupplierName` FROM inventory";
+            String query = "SELECT `DesignID`, `TotalQuantity` FROM inventory";
            Statement stmt = MyClass.C.createStatement();
             ResultSet resultSet=stmt.executeQuery(query);
 
             while (resultSet.next()) {
                 String designId = resultSet.getString("DesignID");
                 int totalQuantity = resultSet.getInt("TotalQuantity");
-                String supplierName = resultSet.getString("SupplierName");
 
-                m.addRow(new Object[]{designId, totalQuantity, supplierName});
+                m.addRow(new Object[]{designId, totalQuantity});
             }
 
         } catch (SQLException e) {

@@ -1,17 +1,22 @@
 package loginsignup.login.loggedin.billing.viewbills;
 
 import mainpack.MyClass;
+import testpackage.UtilityMethods;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
+import javax.swing.text.DateFormatter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
 import java.awt.print.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.*;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -22,7 +27,7 @@ import static testpackage.UtilityMethods.*;
 public class ViewCustomerBill extends JFrame {
     private int billID;
 
-    private static void printCustomerBill(DefaultTableModel model,int billID,Date date, String customerName) {
+    private static void printCustomerBill(DefaultTableModel model, int billID, Date date, String customerName) {
         PrinterJob job = PrinterJob.getPrinterJob();
 //
         Printable printable = new Printable() {
@@ -82,10 +87,10 @@ public class ViewCustomerBill extends JFrame {
                 g.setFont(new Font("Arial", Font.PLAIN, 12));
                 g.setColor(Color.BLACK);
                 SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
-                int billtruncatedid=billID%100==0?100:billID%100;
+                int billtruncatedid = billID % 100 == 0 ? 100 : billID % 100;
                 g.drawString("" + billtruncatedid, x + 10, y);
-                g.drawString("Date: " + sdf.format(date), x + 150, y);
-                g.drawString("Customer: " + customerName, x + 300, y);
+                g.drawString(customerName, x + 300, y);
+                g.drawString(sdf.format(date), x + 150, y);
                 y += 20;
 
                 g.setColor(Color.BLACK);
@@ -176,7 +181,7 @@ public class ViewCustomerBill extends JFrame {
         printButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                printQueue.offer(() -> printCustomerBill((DefaultTableModel) billTable.getModel(),getBillID(),getDate(),getCustomerName()));
+                printQueue.offer(() -> printCustomerBill((DefaultTableModel) billTable.getModel(), getBillID(), getDate(), getCustomerName()));
 
             }
         });
@@ -185,7 +190,8 @@ public class ViewCustomerBill extends JFrame {
     private String getCustomerName() {
         return customerName;
     }
-private String customerName;
+
+    private String customerName;
 
     public void setCustomerName(String customerName) {
         this.customerName = customerName;
@@ -203,7 +209,7 @@ private String customerName;
 
     public void init(String mode) {
         setListOfCustomer();// sets the list of customers in jcombobox
-
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         if (mode.contentEquals("customer")) {
             String[] model = new String[]{"S.No", "item", "Gold (g)", "Plus G", "TGC", "Total"};
             DefaultTableModel tableModel = new DefaultTableModel(model, 1) {
@@ -223,15 +229,14 @@ private String customerName;
             nextButton.addActionListener(e -> {
                 int currentBillID = getBillID();  // Function to get the current BillID
                 String query;
-
+                System.out.println("current bill id is "+currentBillID);
                 if (customerNameComboBox.getSelectedIndex() == 0) {
                     // No customer filter
                     query = "SELECT BillID FROM billdetails WHERE BillID > " + currentBillID + " ORDER BY BillID ASC LIMIT 1";
                 } else {
                     // Get selected customer
                     String selectedCustomer = customerNameComboBox.getSelectedItem() == null ? "" : customerNameComboBox.getSelectedItem().toString();
-                    query = "SELECT BillID FROM billdetails WHERE BillID > " + currentBillID +
-                            " AND customer_name = '" + selectedCustomer + "' ORDER BY BillID ASC LIMIT 1";
+                    query = "SELECT BillID FROM billdetails WHERE BillID > " + currentBillID + " AND customer_name = '" + selectedCustomer + "' ORDER BY BillID ASC LIMIT 1";
                 }
                 try {
                     Statement stmt = MyClass.C.createStatement();
@@ -253,8 +258,7 @@ private String customerName;
                 } else {
                     // Get selected customer
                     String selectedCustomer = customerNameComboBox.getSelectedItem() == null ? "" : customerNameComboBox.getSelectedItem().toString();
-                    query = "SELECT BillID FROM billdetails WHERE BillID < " + currentBillID +
-                            " AND customer_name = '" + selectedCustomer + "' ORDER BY BillID DESC LIMIT 1";
+                    query = "SELECT BillID FROM billdetails WHERE BillID < " + currentBillID + " AND customer_name = '" + selectedCustomer + "' ORDER BY BillID DESC LIMIT 1";
                 }
 
                 try {
@@ -270,6 +274,7 @@ private String customerName;
             });
             billIDTextField.addActionListener(e -> {
                 try {
+                    if (billIDTextField.getText().trim().isEmpty()) return;
                     int inputBillID = Integer.parseInt(billIDTextField.getText().trim()); // Get and parse BillID
                     String query = "SELECT BillID FROM billdetails WHERE BillID = " + inputBillID;
 
@@ -286,6 +291,7 @@ private String customerName;
                         billIDTextField.setText("");
                         JOptionPane.showMessageDialog(null, "Bill ID not found!", "Error", JOptionPane.ERROR_MESSAGE);
                     }
+
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(null, "Invalid Bill ID!", "Error", JOptionPane.ERROR_MESSAGE);
                     billIDTextField.setText("");
@@ -297,7 +303,6 @@ private String customerName;
 
 
         }
-        pack();
     }
 
     private int getMinBillID() {
@@ -337,10 +342,10 @@ private String customerName;
 
     public void loadBillData(JTable table, int billID) {
 
-        String sql = "SELECT SNo,Quantity, ItemName, TotalBaseCosting, GoldPlatingWeight, TotalGoldCost, TotalFinalCost , customer_name " + "FROM billdetails WHERE BillID = ?";
+        String sql1 = "SELECT SNo,Quantity, ItemName, TotalBaseCosting, GoldPlatingWeight, TotalGoldCost, TotalFinalCost , customer_name " + "FROM billdetails WHERE BillID = ?";
+        String sql2 = "select billid,amount , date from transactions where billid=?";
 
-
-        try (PreparedStatement pstmt = MyClass.C.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = MyClass.C.prepareStatement(sql1)) {
             pstmt.setInt(1, billID);
             ResultSet rs = pstmt.executeQuery();
 
@@ -367,28 +372,69 @@ private String customerName;
 
 
                 grandtotal += rs.getDouble("TotalFinalCost");
+                double value = grandtotal;
+                BigDecimal rounded = new BigDecimal(value).setScale(2, RoundingMode.HALF_UP);
+                grandtotal = rounded.doubleValue();
                 model.addRow(row);
                 customername = rs.getString("customer_name");
             }
             model.setRowCount(model.getRowCount() + 1);
             model.setValueAt("Grand Total", model.getRowCount() - 1, model.getColumnCount() - 2);
             model.setValueAt(grandtotal, model.getRowCount() - 1, model.getColumnCount() - 1);
+
+
             totalLabel.setText(grandtotal + "");
             customerNameLabel.setText(customername);
             setCustomerName(customername);
             idLabel.setText("billID: " + billID);
             setBillID(billID);
             table.setModel(model);
-            sql = "select *from bills where billid=?;";
-            PreparedStatement pstmt2 = MyClass.C.prepareStatement(sql);
-            pstmt2.setInt(1, billID);
-            rs = pstmt2.executeQuery();
-            if (rs.next()) setDateTime(rs.getTimestamp("date"));
+            double[] balance;
+
+            {
+                balance=UtilityMethods.balance(billID);
+                System.out.println(balance[0]+"\t"+balance[1 ]);
+                model.setRowCount(model.getRowCount() + 1);
+                model.setValueAt("prev:",model.getRowCount()-1,model.getColumnCount()-2);
+                model.setValueAt(balance[0],model.getRowCount()-1,model.getColumnCount()-1);
+
+            }//showing previous balance code
+            {
+                sql1 = "select *from bills where billid=?;";
+                PreparedStatement pstmt2 = MyClass.C.prepareStatement(sql1);
+                pstmt2.setInt(1, billID);
+                rs = pstmt2.executeQuery();
+                if (rs.next()) setDateTime(rs.getTimestamp("date"));
+            }// showing the date
+            {
+                PreparedStatement preparedStatement = MyClass.C.prepareStatement(sql2);
+                preparedStatement.setInt(1, billID);
+                ResultSet rs2 = preparedStatement.executeQuery();
+                double totalRecieved = 0;
+                while (rs2.next()) {
+
+                    model.setRowCount(model.getRowCount() + 1);
+                    java.util.Date date = new SimpleDateFormat("yyyy-MM-dd").parse(rs2.getString("date"));
+                    String dateformatted = new SimpleDateFormat("dd-MM-yy").format(date);
+                    model.setValueAt(rs2.getString("billid") + "/" + dateformatted, model.getRowCount() - 1, model.getColumnCount() - 2);
+                    model.setValueAt(rs2.getString("amount"), model.getRowCount() - 1, model.getColumnCount() - 1);
+                    totalRecieved += rs2.getDouble("amount");
+                }
+                model.setRowCount(model.getRowCount() + 1);
+                model.setValueAt("totalRecieved", model.getRowCount() - 1, model.getColumnCount() - 2);
+                model.setValueAt(totalRecieved, model.getRowCount() - 1, model.getColumnCount() - 1);
+            }// showing the transactions linked
+            {
+                model.setRowCount(model.getRowCount()+1);
+                model.setValueAt("baki",model.getRowCount()-1,model.getColumnCount()-2);
+                model.setValueAt(balance[1],model.getRowCount()-1,model.getColumnCount()-1);
+            }
             System.out.println("Table updated successfully!");
         } catch (SQLException e) {
             throw new RuntimeException();
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
         }
-        pack();
 
     }
 

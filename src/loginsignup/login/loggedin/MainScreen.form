@@ -53,12 +53,12 @@
           <text value="Transaction management"/>
         </properties>
       </component>
-      <component id="58180" class="javax.swing.JButton" binding="button3" default-binding="true">
+      <component id="58180" class="javax.swing.JButton" binding="addPartyButton" default-binding="true">
         <constraints>
           <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="Button"/>
+          <text value="Add  party"/>
         </properties>
       </component>
       <component id="3eed7" class="javax.swing.JButton" binding="inventoryManagementButton" default-binding="true">

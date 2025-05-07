@@ -1,5 +1,6 @@
 package loginsignup.login.loggedin.billing.newBill;
 
+import loginsignup.login.loggedin.transactionsandaccounts.newtransaction.AddedTransactions;
 import org.jdesktop.swingx.prompt.PromptSupport;
 import testpackage.UtilityMethods;
 
@@ -9,12 +10,17 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.AbstractDocument;
+import javax.swing.text.DateFormatter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
+import java.text.DateFormat;
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 import java.util.*;
 
@@ -104,6 +110,11 @@ public class NewBill extends JFrame {
         snoToItemIdMap = new HashMap<>();
         backButton.addActionListener(e -> {
             setVisible(false);
+            try {
+                getTransacTemp().close();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
             billingScreen.setVisible(true);
             searchResultWindow.dispose();
         });
@@ -226,6 +237,7 @@ public class NewBill extends JFrame {
         int billID = -1;
         Connection conn = getTransacTemp();
         PreparedStatement stmt1 = null;
+        PreparedStatement inventoryStatement = null;
 
         String customerName = customerComboBox.getSelectedItem() == null ? "" : customerComboBox.getSelectedItem().toString();
 
@@ -254,7 +266,8 @@ public class NewBill extends JFrame {
             }
             sql1 = "INSERT INTO billdetails (BillID, SNo, ItemName, DesignID, OrderType, RawCost, LabourCost, DullChillaiCost, " + "MeenaColorMeenaCost, RhodiumCost, NagSettingCost, OtherBaseCosts, TotalBaseCosting, GoldRate, " + "GoldPlatingWeight, TotalGoldCost, TotalFinalCost, OrderSlipNumber,OtherBaseCostNotes,quantity,customer_name) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)";
             stmt1 = conn.prepareStatement(sql1);
-
+            String inventoryQuery = "update inventory set TotalQuantity=TotalQuantity-? where DesignID=?";
+            inventoryStatement = conn.prepareStatement(inventoryQuery);
             for (int i = 0; i < rowCount - 1; i++) {
                 int serialNo = Integer.parseInt(getStringValue(model, i, billDetails.indexOf("SNo"), "0"));
                 String itemName = getStringValue(model, i, billDetails.indexOf("ItemName"), "Unknown");
@@ -304,7 +317,12 @@ public class NewBill extends JFrame {
                 double totalFinalCost = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("total"), "0"));
                 String otherDetails = getStringValue(model, i, billDetails.indexOf("OtherDetails"), "");
                 int orderSlipNumber = snoToItemIdMap.getOrDefault(serialNo, 0);
-
+                if ((model.getValueAt(i, billDetails.indexOf("OrderSlip/quantity")) == null || model.getValueAt(i, billDetails.indexOf("OrderSlip/quantity")).toString().trim().isEmpty()) && !designID.contentEquals("NoID")) {
+                    inventoryStatement.setInt(1, quantity);
+                    inventoryStatement.setString(2, designID);
+                    System.out.println("batch added");
+                    inventoryStatement.addBatch();
+                }
                 stmt1.setInt(1, getCurBillID()); // Replace with actual BillID
                 stmt1.setInt(2, serialNo);
                 stmt1.setString(3, itemName);
@@ -332,7 +350,7 @@ public class NewBill extends JFrame {
 
 
             stmt1.executeBatch();
-
+            inventoryStatement.executeBatch();
             conn.commit(); // Commit transaction
 
 
@@ -459,6 +477,7 @@ public class NewBill extends JFrame {
     Vector<String> billDetails = new Vector<>();
 
     public void init() {
+
         if (!customerComboBox.isEnabled()) customerComboBox.setEnabled(true);
         billTable.getInputMap(JTable.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("DELETE"), "deleteRow");
         billTable.getActionMap().put("deleteRow", new AbstractAction() {
@@ -741,10 +760,12 @@ public class NewBill extends JFrame {
             setExtendedState(JFrame.MAXIMIZED_BOTH);
 
         } catch (SQLException e) {
-            throw new RuntimeException();
+            e.printStackTrace();
+            return;
         }
         UtilityMethods.generateAndAddNames(customerComboBox);
         UtilityMethods.generateAndAddDates(dateComboBox, false);
+
     }
 
     int i = 0;
