@@ -23,20 +23,28 @@ import java.awt.geom.AffineTransform;
 import java.awt.print.*;
 import java.io.*;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.Vector;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class UtilityMethods {
+    public static final int VERTI_SPLIT = 0;
+    public static final int HORIZONTAL_SPLIT = 1;
     //Thread printingThread;
     public static Thread printingThread;
+    public final static int ORDER_SLIP = 0;
+    public static final int CUSTOMER_BILL = 1;
 
     public static final BlockingQueue<Runnable> printQueue = new LinkedBlockingQueue<>();
-//    public static int[] balance(int billId) {
+
+    //    public static int[] balance(int billId) {
 //        int[] balances = new int[2]; // [0] = previous balance, [1] = next balance
 //
 //        try {
@@ -91,85 +99,81 @@ public class UtilityMethods {
 //
 //        return balances;
 //    }
-public static  double[] balance(int billID) {
-    double[] result = new double[2]; // [previous_balance, next_balance]
+    public static double[] balance(int billID) {
+        double lastbillTotal = 0;
 
-    try {
-        Connection con = MyClass.C;
-        // 1. Get bill date and customer name
-        String customerName = null;
-        Timestamp billDate = null;
+        String billQuery = "select billid from bills where customer_name=(select customer_name from bills where billid=?) and date <= (select date from bills where billid=?) and billid<?";
+//        String transactionQuery="Select *from transactions where date<=()"
+        String transactionQuery = "SELECT sum(amount) FROM transactions " +
+                "WHERE customer_name = (SELECT customer_name FROM bills WHERE billid = ?) " +
+                "AND (date <=(SELECT date FROM bills WHERE billid = ?) and (billid<?))";
+        double grandTotalBill = 0;//contains total till previous bills
+        try {
+            PreparedStatement statement = MyClass.C.prepareStatement(billQuery);
+            ArrayList<Integer> billIDList = new ArrayList<>();
+            statement.setInt(1, billID);
+            statement.setInt(2, billID);
+            statement.setInt(3, billID);
+            ResultSet rs = statement.executeQuery();
+            StringBuilder placeholders = new StringBuilder();
+            while (rs.next()) {
+                billIDList.add(rs.getInt(1));
+                placeholders.append(rs.getInt(1)).append(",");
+            }
+            placeholders.append(billID);
 
-        PreparedStatement ps1 = con.prepareStatement("SELECT customer_name, date FROM bills WHERE BillID = ?");
-        ps1.setInt(1, billID);
-        ResultSet rs1 = ps1.executeQuery();
-        if (rs1.next()) {
-            customerName = rs1.getString("customer_name");
-            billDate = rs1.getTimestamp("date");
-        } else {
-            System.out.println("Bill not found.");
+            billQuery = "SELECT " +
+                    "SUM((" +
+                    "(IFNULL(LabourCost, 0) + " +
+                    "IFNULL(DullChillaiCost, 0) + " +
+                    "IFNULL(MeenaColorMeenaCost, 0) + " +
+                    "IFNULL(RhodiumCost, 0) + " +
+                    "IFNULL(NagSettingCost, 0) + " +
+                    "IFNULL(OtherBaseCosts, 0) + " +
+                    "IFNULL(RawCost, 0)) * IFNULL(quantity, 0)" +
+                    ") + (IFNULL(GoldRate, 0) * IFNULL(GoldPlatingWeight, 0))) AS total, " +
+                    "SUM(TotalFinalCost),billid " +
+                    "FROM billdetails " +
+                    "WHERE billid in ( " + placeholders + ")" +
+                    "GROUP BY billid;";
+            System.out.println("placeholders are" + placeholders);
+            statement.close();
+            if (!placeholders.isEmpty()) {
+                statement = MyClass.C.prepareStatement(billQuery);
+//            statement.setInt(1, billID);
+                rs.close();
+                rs = statement.executeQuery();
+                lastbillTotal = 0;
+                while (rs.next()) {
+                    if (rs.getInt(3) == billID) lastbillTotal += rs.getDouble(1);
+                    grandTotalBill += rs.getDouble(1);
+                    System.out.println(rs.getDouble(1) + "   from sql" + rs.getDouble(2));
+                }
+            }
+            statement.close();
+            statement = MyClass.C.prepareStatement(transactionQuery);
+            statement.setInt(1, billID);
+            statement.setInt(2, billID);
+            statement.setInt(3, billID);
+            rs.close();
+            rs = statement.executeQuery();
+            double transactionSum = 0;
+            if (rs.next()) {
+                transactionSum = rs.getDouble(1);
+                System.out.println("transaction sum is " + rs.getInt(1));
+            }
+            System.out.println("\n\n\ntotal is " + grandTotalBill);
+            double[] result = new double[2];
+            result[0] = grandTotalBill - lastbillTotal - transactionSum;
+            result[1] = grandTotalBill - transactionSum;
+
             return result;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-
-        // 2. Calculate total transactions BEFORE this bill
-        PreparedStatement ps2 = con.prepareStatement(
-                "SELECT IFNULL(SUM(amount), 0) AS total FROM transactions " +
-                        "WHERE customer_name = ? AND date <= ? AND billid < ?"
-        );
-        ps2.setString(1, customerName);
-        ps2.setTimestamp(2, billDate);
-        ps2.setInt(3, billID);
-
-        ResultSet rs2 = ps2.executeQuery();
-        double totalTransactionsBefore = rs2.next() ? rs2.getDouble("total") : 0;
-        System.out.println("totaltransactions before"+totalTransactionsBefore);
-        // 3. Calculate total bills BEFORE this bill
-        PreparedStatement ps3 = con.prepareStatement(
-                "SELECT IFNULL(SUM(TotalFinalCost), 0) AS total FROM billdetails " +
-                        "WHERE customer_name = ? AND BillID IN (" +
-                        "SELECT BillID FROM bills WHERE customer_name = ? AND " +
-                        "((date < ?) OR (date = ? AND BillID < ?)))"
-        );
-        ps3.setString(1, customerName);
-        ps3.setString(2, customerName);
-        ps3.setTimestamp(3, billDate);
-        ps3.setTimestamp(4, billDate);
-        ps3.setInt(5, billID);
-
-        ResultSet rs3 = ps3.executeQuery();
-        int totalBillsBefore = rs3.next() ? rs3.getInt("total") : 0;
-
-        double   prevBalance = totalTransactionsBefore - totalBillsBefore;
-        result[0] = prevBalance;
-
-        // 4. Get current bill amount
-        PreparedStatement ps4 = con.prepareStatement(
-                "SELECT IFNULL(SUM(TotalFinalCost), 0) AS total FROM billdetails WHERE BillID = ?"
-        );
-        ps4.setInt(1, billID);
-        ResultSet rs4 = ps4.executeQuery();
-        double currentBillAmount = rs4.next() ? rs4.getDouble("total") : 0;
-
-        // 5. Get all transactions linked to this bill
-        PreparedStatement ps5 = con.prepareStatement(
-                "SELECT IFNULL(SUM(amount), 0) AS total FROM transactions WHERE billid = ?"
-        );
-        ps5.setInt(1, billID);
-        ResultSet rs5 = ps5.executeQuery();
-        double transactionsForBill = rs5.next() ? rs5.getDouble("total") : 0;
-
-        // 6. Calculate next balance after applying this bill and its payments
-        double nextBalance = prevBalance + transactionsForBill - currentBillAmount;
-        result[1] = nextBalance;
-
-
-    } catch (Exception e) {
-        e.printStackTrace();
     }
-
-    return result;
-}
-
 
     public static void writeTableToExcel(JTable table, String filename) {
         Workbook workbook = new XSSFWorkbook();
@@ -375,6 +379,7 @@ public static  double[] balance(int billID) {
             }
         } else Thread.dumpStack();
     }
+
     public static void printStartUp() {
         PrinterJob.getPrinterJob(); // triggers internal loading
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -425,7 +430,8 @@ public static  double[] balance(int billID) {
             model.addTableModelListener(listener);
         }
     }
-    private static void printModel(DefaultTableModel model,String title) {
+
+    private static void printModel(DefaultTableModel model, String title) {
         PrinterJob job = PrinterJob.getPrinterJob();
 //
         Printable printable = new Printable() {
@@ -586,8 +592,182 @@ public static  double[] balance(int billID) {
     public static TextAreaRenderer getTextAreaRenderer() {
         return new TextAreaRenderer();
     }
-    public static TextAreaEditor getTextAreaEditor(){
+
+    public static TextAreaEditor getTextAreaEditor() {
         return new TextAreaEditor();
+    }
+
+    public static void printWithDefaultSettings(DefaultTableModel model, int billID, Date date, String customerName, int type) {
+        PrinterJob job = PrinterJob.getPrinterJob();
+//
+        Printable printable = new Printable() {
+            @Override
+            public int print(Graphics g, PageFormat pageFormat, int pageIndex) throws PrinterException {
+                if (pageIndex > 0) return NO_SUCH_PAGE;
+
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
+
+                int x = 0;
+                int y = 0;
+                int rowHeight = 20;
+                int padding = 5;
+
+                double printableWidth = pageFormat.getImageableWidth();
+                int colCount = model.getColumnCount();
+                int[] colWidths = new int[colCount];
+
+                // Font setup
+                java.awt.Font headerFont = new java.awt.Font("Arial", java.awt.Font.BOLD, 12);
+                java.awt.Font normalFont = new java.awt.Font("Arial", java.awt.Font.PLAIN, 12);
+                g.setFont(normalFont);
+                FontRenderContext frc = new FontRenderContext(new AffineTransform(), true, true);
+
+                // Fixed width for "SNo"
+                int init;
+                if (type == CUSTOMER_BILL) {
+                    colWidths[0] = 30;
+                    init = 1;
+                } else {
+                    init = 0;
+                }
+                int usedWidth = colWidths[0];
+
+                // Estimate width for other columns
+                for (int col = init; col < colCount; col++) {
+                    int maxWidth = (int) headerFont.getStringBounds(model.getColumnName(col), frc).getWidth();
+                    for (int row = 0; row < model.getRowCount(); row++) {
+                        Object val = model.getValueAt(row, col);
+                        if (val != null) {
+                            int width = (int) normalFont.getStringBounds(val.toString(), frc).getWidth();
+                            if (width > maxWidth) maxWidth = width;
+                        }
+                    }
+                    colWidths[col] = maxWidth + padding * 2;
+                    usedWidth += colWidths[col];
+                }
+
+                // Scale down if total width > printable width
+                if (usedWidth > printableWidth) {
+                    double scale = printableWidth / usedWidth;
+                    for (int i = 0; i < colCount; i++) {
+                        colWidths[i] = (int) (colWidths[i] * scale);
+                    }
+                }
+
+                // Draw title
+                g.setColor(Color.BLUE);
+                g.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 18));
+                g.drawString("Gurukripa Jewellers", x + 10, y + 20);
+                y += 70;
+                g.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 12));
+                g.setColor(Color.BLACK);
+                SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+                int billtruncatedid = billID % 100 == 0 ? 100 : billID % 100;
+                g.drawString("" + billtruncatedid, x + 10, y);
+                g.drawString(customerName, x + 300, y);
+                g.drawString(sdf.format(date), x + 150, y);
+                y += 20;
+
+                g.setColor(Color.BLACK);
+                g2d.setStroke(new BasicStroke(2));
+                g.drawLine(x, y, x + (int) printableWidth, y);
+                y += 10;
+
+                int colX = x;
+                // Column headers
+//                g.setFont(headerFont);
+//                for (int col = 0; col < colCount; col++) {
+//                    g.drawRect(colX, y, colWidths[col], rowHeight);
+//                    g.drawString(model.getColumnName(col), colX + padding, y + 15);
+//                    colX += colWidths[col];
+//                }
+//                y += rowHeight;
+
+                // Table rows
+                g.setFont(normalFont);
+                for (int row = 0; row < model.getRowCount(); row++) {
+                    colX = x;
+                    for (int col = 0; col < colCount; col++) {
+                        g.drawRect(colX, y, colWidths[col], rowHeight);
+                        Object val = model.getValueAt(row, col);
+                        if (val != null) {
+                            g.drawString(val.toString(), colX + padding, y + 15);
+                        }
+                        colX += colWidths[col];
+                    }
+                    y += rowHeight;
+
+                    if (y + rowHeight > pageFormat.getImageableHeight()) {
+                        return NO_SUCH_PAGE; // Page break not handled yet
+                    }
+                }
+
+                return PAGE_EXISTS;
+            }
+        };
+
+        // Define ISO A4 paper
+        PageFormat format = job.defaultPage();
+        Paper paper = new Paper();
+        paper.setSize(595.0, 842.0); // A4 in points
+//        paper.setImageableArea(40, 40, 515, 762); // Margins: 40pt
+        paper.setImageableArea(20, 40, 555, 762);
+
+        format.setPaper(paper);
+        job.setPrintable(printable, format);
+
+        if (job.printDialog()) {
+            try {
+                job.print();
+            } catch (PrinterException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void splitFrame(JFrame topLeft, JFrame bottomRight, int splitType) {
+        // Screen dimensions
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int screenWidth = screenSize.width;
+        int screenHeight = screenSize.height;
+
+        // Position and size the frames
+        if (splitType == HORIZONTAL_SPLIT) {
+            topLeft.setBounds(0, 0, screenWidth, screenHeight / 2);
+            bottomRight.setBounds(0, screenHeight / 2, screenWidth, screenHeight / 2);
+            return;
+        }
+        if (splitType == VERTI_SPLIT) {
+            topLeft.setBounds(0, 0, screenWidth / 2, screenHeight);
+            bottomRight.setBounds(screenWidth / 2, 0, screenWidth / 2, screenHeight);
+        }
+
+    }
+
+    public static String parseDateString(Date date) {
+        return date.toLocalDate().format( DateTimeFormatter.ofPattern("dd-MM-yy"));
+    }
+
+    public static LocalDateTime getDate(Object selectedItem) {
+        if (selectedItem == null || selectedItem.toString().trim().isEmpty()) {
+            throw new IllegalArgumentException("Date value is missing or invalid.");
+        }
+
+        String dateString = selectedItem.toString().trim();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yy HH:mm:ss");
+
+        try {
+            LocalDateTime dateTime = LocalDateTime.parse(dateString + " 00:00:00", formatter);
+
+            if (dateTime.toLocalDate().equals(LocalDate.now())) {
+                return LocalDateTime.now(); // current system date & time
+            } else {
+                return dateTime; // parsed date with 00:00:00 time
+            }
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Date format should be dd-MM-yy", e);
+        }
     }
 }
 
@@ -629,6 +809,7 @@ class DecimalDocumentFilter extends DocumentFilter {
         return text.matches("\\d*(\\.\\d{0,3})?");
     }
 }
+
 //
 //class TextAreaRenderer extends JTextArea implements TableCellRenderer {
 //    public TextAreaRenderer() {
@@ -653,7 +834,7 @@ class DecimalDocumentFilter extends DocumentFilter {
 //        return this;
 //    }
 //}
- class TextAreaRenderer extends JTextArea implements TableCellRenderer {
+class TextAreaRenderer extends JTextArea implements TableCellRenderer {
     public TextAreaRenderer() {
         setLineWrap(true);
         setWrapStyleWord(true);

@@ -4,6 +4,8 @@ import loginsignup.LOGIN_SIGNUP;
 import loginsignup.login.LOGIN;
 import loginsignup.login.loggedin.AddParty;
 import loginsignup.login.loggedin.MainScreen;
+import loginsignup.login.loggedin.accountingandledger.AALScreen;
+import loginsignup.login.loggedin.accountingandledger.ledgerwindows.ItemLedger;
 import loginsignup.login.loggedin.billing.BillingScreen;
 import loginsignup.login.loggedin.billing.newBill.NewBill;
 import loginsignup.login.loggedin.billing.newBill.SearchResultWindow;
@@ -20,21 +22,49 @@ import loginsignup.login.loggedin.transactionsandaccounts.newtransaction.NewTran
 import loginsignup.login.loggedin.transactionsandaccounts.viewTransactions.ViewTransactions;
 import testpackage.UtilityMethods;
 
-import javax.swing.*;
-import java.awt.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class MyClass {
+    // 1. Create the mapping once (you can do this statically or in constructor)
+   public static Map<String, String> codeToItemName ;
+
+    public static final String PORT="jdbc:mysql://localhost:3306/";
+
     public static void main(String[] args) {
 
+        {
+            codeToItemName = new HashMap<>();
+            codeToItemName.put("RH", "Rani Har");
+            codeToItemName.put("RHS", "Rani Har Set");
+            codeToItemName.put("MIDH", "Midium Har Nag");
+            codeToItemName.put("MIDHS", "Midium Har Set");
+            codeToItemName.put("MINH", "Mini Har Nag");
+            codeToItemName.put("MINHS", "Mini Har Set");
+            codeToItemName.put("R", "Ring");
+            codeToItemName.put("TH", "Thegda");
+            codeToItemName.put("KT", "Kandora Plus Thegda");
+            codeToItemName.put("L", "Latkan");
+            codeToItemName.put("TO", "Tops");
+            codeToItemName.put("J", "Jhumki");
+            codeToItemName.put("PC", "Patli Chain");
+            codeToItemName.put("MOC", "Moti Chain");
+            codeToItemName.put("MIDC", "Midium Chain");
+            codeToItemName.put("MINP", "Mini Pandal");
+            codeToItemName.put("MIDP", "Midium Pandal");
+            codeToItemName.put("BP", "Big Pandal");
 
+
+        }
         {
             purchaseBill = new PurchaseBill();
             login = new LOGIN();
+            itemLedger=new ItemLedger();
             login_signup = new LOGIN_SIGNUP();
             billingScreen = new BillingScreen();
             mainScreen = new MainScreen();
@@ -47,12 +77,14 @@ public class MyClass {
             transactions = new Transactions();
             viewBackendBill = new ViewBackendBill();
             addParty = new AddParty();
+            aalScreen=new AALScreen();
             viewTransactions = new ViewTransactions();
             newTransaction = new NewTransaction();
             searchResultWindow = new SearchResultWindow();
             transactions = new Transactions();
             viewOrders = new ViewOrders();
             viewCustomerBill = new ViewCustomerBill();
+
             UtilityMethods.printingThread = new Thread(() -> {
                 while (true) {
                     try {
@@ -86,12 +118,14 @@ public class MyClass {
     }
 
     public static PurchaseBill purchaseBill;
+    public static AALScreen aalScreen;
     public static ViewOrders viewOrders;
     public static NewTransaction newTransaction;
     public static SearchResultWindow searchResultWindow;
     public static ViewTransactions viewTransactions;
     public static AddParty addParty;
     public static ViewBackendBill viewBackendBill;
+    public static ItemLedger itemLedger;
 
     public static Connection getConnection(String url, String user, String password) {
         Connection conn;
@@ -136,14 +170,4 @@ public class MyClass {
     public static InventoryScreen inventoryScreen;
     public static AddInventory addInventory;
 
-    public static void positionFrames(JFrame topFrame, JFrame bottomFrame) {
-        // Screen dimensions
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int screenWidth = screenSize.width;
-        int screenHeight = screenSize.height;
-
-        // Position and size the frames
-        topFrame.setBounds(0, 0, screenWidth, screenHeight / 2);
-        bottomFrame.setBounds(0, screenHeight / 2, screenWidth, screenHeight / 2);
-    }
 }

@@ -62,7 +62,7 @@ public class ViewTransactions extends JFrame {
         transactionsTable.setModel(tableModel);
         getData();
 
-        pack();
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
 
     private void getData() {

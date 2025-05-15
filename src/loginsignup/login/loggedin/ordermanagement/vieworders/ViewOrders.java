@@ -10,6 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -236,7 +237,10 @@ public class ViewOrders extends JFrame {
         printButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                printPanel(panel);
+
+                //                printPanel(panel);
+                printQueue.offer(() -> printWithDefaultSettings((DefaultTableModel) orderSlipTable.getModel(),getCurrentBillID() , new Date(1000000), customerName,UtilityMethods.ORDER_SLIP));
+
                 writeTableToExcel(orderSlipTable, "myfile.xlxx");
             }
         });
@@ -304,6 +308,7 @@ public class ViewOrders extends JFrame {
             dateLabel.setText("");
             billIDLabel.setText("");
             nameLabel.setText("");
+
             this.id=id;
             model.setRowCount(0);
             return;
@@ -351,6 +356,7 @@ public class ViewOrders extends JFrame {
             }
             orderSlipTable.setModel(model);
             nameLabel.setText(customerName + "-> " + panaType);
+
             billIDLabel.setText(String.valueOf(slipId));
             this.id = slipId;
             query = "SELECT DATE_FORMAT(created_at, '%d-%m-%y') AS formatted_date FROM order_slips WHERE slip_id = " + id + ";";

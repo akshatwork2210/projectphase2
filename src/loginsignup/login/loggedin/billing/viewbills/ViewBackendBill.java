@@ -1,5 +1,7 @@
 package loginsignup.login.loggedin.billing.viewbills;
 
+import testpackage.UtilityMethods;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
@@ -24,6 +26,7 @@ public class ViewBackendBill extends JFrame {
     private JTextField searchID;
     private JLabel customerNameLabel;
     private JLabel billIDLabel;
+    private JLabel dateLabel;
 
     public ViewBackendBill() {
 
@@ -48,7 +51,7 @@ public class ViewBackendBill extends JFrame {
         generateAndAddNames(customerComboBox);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         System.out.println(0xb55);
-        int m=0b101001+0x545+0b10010111101001;
+        int m = 0b101001 + 0x545 + 0b10010111101001;
         billDetails = new Vector<>();
         billDetails.add("SNo");
         billDetails.add("OrderSlip");
@@ -69,14 +72,14 @@ public class ViewBackendBill extends JFrame {
         billDetails.add("total");
         prevButton.addActionListener(e -> {
             try {
-                String query = "SELECT MAX(BillID) FROM BILLDETAILS WHERE BillID < ?";
+                String query = "SELECT MAX(BillID) FROM bills WHERE BillID < ?";
 
                 if (customerComboBox.getSelectedIndex() != 0) {
                     query += " AND customer_name = ?";
                 }
 
                 if (dateComboBox.getSelectedIndex() != 0) {
-                    query += " AND DATE(bill_date) = ?";
+                    query += " AND DATE(date) = ?";
                 }
 
                 PreparedStatement stmt = C.prepareStatement(query);
@@ -106,14 +109,14 @@ public class ViewBackendBill extends JFrame {
 
         nextButton.addActionListener(e -> {
             try {
-                String query = "SELECT MIN(BillID) FROM billdetails WHERE BillID > ?";
+                String query = "SELECT MIN(BillID) FROM bills WHERE BillID > ?";
 
                 if (customerComboBox.getSelectedIndex() != 0) {
                     query += " AND customer_name = ?";
                 }
 
                 if (dateComboBox.getSelectedIndex() != 0) {
-                    query += " AND DATE(bill_date) = ?";
+                    query += " AND DATE(date) = ?";
                 }
 
                 PreparedStatement stmt = C.prepareStatement(query);
@@ -216,14 +219,24 @@ public class ViewBackendBill extends JFrame {
                 row.add(rs.getString("GoldPlatingWeight") == null ? "0" : rs.getString("GoldPlatingWeight")); // Gold(g)
                 row.add(rs.getString("GoldRate") == null ? "0" : rs.getString("GoldRate")); // Gold Rate
                 row.add(rs.getString("TotalFinalCost") == null ? "0" : rs.getString("TotalFinalCost")); // Total
-                customer_name = rs.getString("customer_name");
 
                 model.addRow(row);
             } while (rs.next());
+            query = "select customer_name,date from bills where billid =?";
+            stmt.close();
+            stmt = C.prepareStatement(query);
+            stmt.setInt(1, billid);
+            rs.close();
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                customer_name = rs.getString(1);
+                dateLabel.setText(UtilityMethods.parseDateString(rs.getDate(2)));
+            }
             billIDLabel.setText("bill id:" + billid);
             customerNameLabel.setText(customer_name);
             curBillID = billid;
         } catch (SQLException e) {
+            e.printStackTrace();
             throw new RuntimeException("Error loading bill data: " + e.getMessage(), e);
         }
         return 0;//success

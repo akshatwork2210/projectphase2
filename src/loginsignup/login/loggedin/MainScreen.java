@@ -2,6 +2,7 @@ package loginsignup.login.loggedin;
 
 import java.io.*;
 
+import loginsignup.login.loggedin.accountingandledger.AALScreen;
 import mainpack.MyClass;
 
 import javax.swing.*;
@@ -165,6 +166,15 @@ public class MainScreen extends JFrame {
                 MyClass.addParty.init();
             }
         });
+        accountingAndLedgerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                MyClass.aalScreen=new AALScreen();
+                MyClass.aalScreen.setVisible(true);
+                MyClass.aalScreen.init();
+                setVisible(false);
+            }
+        });
     }
 
     private JButton billingButton;
@@ -175,4 +185,5 @@ public class MainScreen extends JFrame {
     private JButton transactionManagementButton;
     private JButton addPartyButton;
     private JButton inventoryManagementButton;
+    private JButton accountingAndLedgerButton;
 }

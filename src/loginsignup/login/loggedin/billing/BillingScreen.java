@@ -1,5 +1,6 @@
 package loginsignup.login.loggedin.billing;
 
+import loginsignup.login.loggedin.billing.newBill.NewBill;
 import mainpack.MyClass;
 
 import javax.swing.*;
@@ -34,8 +35,10 @@ public class BillingScreen extends JFrame {
         newBillButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                newBill=new NewBill();
                 newBill.setVisible(true);
                 newBill.init();
+
                 setVisible(false);
 
             }

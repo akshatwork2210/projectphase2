@@ -34,5 +34,11 @@ public class LOGIN_SIGNUP extends JFrame{
             }
         });
 pack();
+        SIGNUPButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
     }
 }
