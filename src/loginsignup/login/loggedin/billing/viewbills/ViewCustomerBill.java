@@ -106,11 +106,11 @@ public class ViewCustomerBill extends JFrame {
                 System.out.println("current bill id is " + currentBillID);
                 if (customerNameComboBox.getSelectedIndex() == 0) {
                     // No customer filter
-                    query = "SELECT BillID FROM billdetails WHERE BillID > " + currentBillID + " ORDER BY BillID ASC LIMIT 1";
+                    query = "SELECT BillID FROM bills WHERE BillID > " + currentBillID + " ORDER BY BillID ASC LIMIT 1";
                 } else {
                     // Get selected customer
                     String selectedCustomer = customerNameComboBox.getSelectedItem() == null ? "" : customerNameComboBox.getSelectedItem().toString();
-                    query = "SELECT BillID FROM billdetails WHERE BillID > " + currentBillID + " AND customer_name = '" + selectedCustomer + "' ORDER BY BillID ASC LIMIT 1";
+                    query = "SELECT BillID FROM bills WHERE BillID > " + currentBillID + " AND customer_name = '" + selectedCustomer + "' ORDER BY BillID ASC LIMIT 1";
                 }
                 try {
                     Statement stmt = MyClass.C.createStatement();

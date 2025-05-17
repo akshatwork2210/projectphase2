@@ -84,7 +84,7 @@ public class PurchaseBill extends JFrame {
 
         try {
             String customerName = customerComboBox.getSelectedItem() == null ? "" : customerComboBox.getSelectedItem().toString();
-            String billQuery = "INSERT INTO billdetails (BillID, SNo, DesignID, ItemName, Quantity, RawCost, TotalFinalCost, " + "OrderType, LabourCost, TotalBaseCosting, GoldRate, GoldPlatingWeight, TotalGoldCost) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String billDetailQuery = "INSERT INTO billdetails (BillID, SNo, DesignID, ItemName, Quantity, RawCost, TotalFinalCost, " + "OrderType, LabourCost, TotalBaseCosting, GoldRate, GoldPlatingWeight, TotalGoldCost) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             String billsTableQuery = "update bills set date = ?,customer_name=? where billid=?";
             String updateInventoryQuery = "UPDATE inventory SET TotalQuantity = TotalQuantity + ? WHERE DesignID = ?";
             String insertInventoryQuery = "INSERT INTO inventory(DesignID, TotalQuantity, itemname, price) VALUES (?, ?, ?, ?)";
@@ -96,7 +96,7 @@ public class PurchaseBill extends JFrame {
             PreparedStatement customersTableStatement = getCon().prepareStatement(customerTableQuery);
             PreparedStatement updateStmt = getCon().prepareStatement(updateInventoryQuery);
             PreparedStatement insertStmt = getCon().prepareStatement(insertInventoryQuery);
-            PreparedStatement billStmt = getCon().prepareStatement(billQuery);
+            PreparedStatement billStmt = getCon().prepareStatement(billDetailQuery);
             PreparedStatement updateRawPriceStatement = getCon().prepareStatement(updateOtherQuery);
 
             System.out.println("called");
@@ -130,6 +130,7 @@ public class PurchaseBill extends JFrame {
                         return ROLLBACKDONE;
                     } catch (SQLException ex) {
                         ex.printStackTrace();
+                        return ERROR_DONE;
                     }
 
 
@@ -253,7 +254,7 @@ public class PurchaseBill extends JFrame {
                             getCon().commit();
                             getCon().close();
                             dispose();
-                            MyClass.purchaseBill = new PurchaseBill();
+                                MyClass.purchaseBill = new PurchaseBill();
 
                             MyClass.purchaseBill.init();
                             MyClass.purchaseBill.setVisible(true);
@@ -268,7 +269,7 @@ public class PurchaseBill extends JFrame {
 //                                : customerComboBox.getSelectedItem().toString(), billTable);
                     } else {
                         JOptionPane.showMessageDialog(MyClass.purchaseBill, "select a customer");
-                        return;
+
                     }
 
 

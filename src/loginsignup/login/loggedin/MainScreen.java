@@ -4,12 +4,17 @@ import java.io.*;
 
 import loginsignup.login.loggedin.accountingandledger.AALScreen;
 import mainpack.MyClass;
+import org.w3c.dom.html.HTMLDivElement;
 
 import javax.swing.*;
+import javax.swing.plaf.nimbus.State;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.SQLException;
+import java.sql.*;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
 
 public class MainScreen extends JFrame {
@@ -169,12 +174,92 @@ public class MainScreen extends JFrame {
         accountingAndLedgerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                MyClass.aalScreen=new AALScreen();
+                MyClass.aalScreen = new AALScreen();
                 MyClass.aalScreen.setVisible(true);
                 MyClass.aalScreen.init();
                 setVisible(false);
             }
         });
+        textField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String text = textField.getText();
+                if (text.startsWith("delete ")) {
+                    String date = text.substring(7);
+                    try {
+                        LocalDate localDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MM-yy"));
+                        deleteAndForwardBalance(localDate);
+                    } catch (DateTimeParseException ex) {
+                        return;
+                    }
+
+                }
+            }
+        });
+    }
+
+    private void deleteAndForwardBalance(LocalDate localDate) {
+                System.out.println(localDate.toString() + " deleting data");
+//        String updateQuery = "update customers c join billdetails bd on bd.customer_name=c.customer_name set openingAccount=openingAccount + (select sum(totalfinalcost) from billdetails bd2 where bd2.customer_name=c.customer_name and bd2.date<?));";
+        String updateQuery =
+                "UPDATE customers c " +
+                        "LEFT JOIN ( " +
+                        "    SELECT b.customer_name, SUM(bd.totalfinalcost) AS total_bills " +
+                        "    FROM billdetails bd " +
+                        "    JOIN bills b ON bd.billid = b.billid " +
+                        "    WHERE b.date < ? " +
+                        "    GROUP BY b.customer_name " +
+                        ") AS bill_sum ON c.customer_name = bill_sum.customer_name " +
+                        "LEFT JOIN ( " +
+                        "    SELECT t.customer_name, SUM(t.amount) AS total_transactions " +
+                        "    FROM transactions t " +
+                        "    WHERE t.date < ? " +
+                        "    GROUP BY t.customer_name " +
+                        ") AS txn_sum ON c.customer_name = txn_sum.customer_name " +
+                        "SET " +
+                        "    c.openingAccount = c.openingAccount + IFNULL(bill_sum.total_bills, 0) - IFNULL(txn_sum.total_transactions, 0), " +
+                        "    c.balance = c.balance - IFNULL(bill_sum.total_bills, 0) + IFNULL(txn_sum.total_transactions, 0)";
+
+
+        String deleteBillsQuery = "delete from bills where date<?";
+        String deleteTransactionsQuery = "delete from transactions where date<?";
+        Connection con = null;
+        try {
+            con = DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
+            con.setAutoCommit(false);
+            PreparedStatement statement = con.prepareStatement(updateQuery);
+            statement.setDate(1, java.sql.Date.valueOf(localDate));
+            statement.setDate(2, java.sql.Date.valueOf(localDate));
+            statement.executeUpdate();
+            statement.close();
+            statement = con.prepareStatement(deleteBillsQuery);
+            statement.setDate(1, java.sql.Date.valueOf(localDate));
+            statement.executeUpdate();
+            statement.close();
+            statement = con.prepareStatement(deleteTransactionsQuery);
+            statement.setDate(1, java.sql.Date.valueOf(localDate));
+            statement.executeUpdate();
+            statement.close();
+            con.commit();
+        } catch (SQLException e) {
+            if(con!=null) {
+                try {
+                    con.rollback();
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }finally {
+            try {
+               if(con!=null) con.close();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
     }
 
     private JButton billingButton;
@@ -186,4 +271,5 @@ public class MainScreen extends JFrame {
     private JButton addPartyButton;
     private JButton inventoryManagementButton;
     private JButton accountingAndLedgerButton;
+    private JTextField textField;
 }

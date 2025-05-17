@@ -101,7 +101,7 @@ public class UtilityMethods {
 //    }
     public static double[] balance(int billID) {
         double lastbillTotal = 0;
-
+        String openingBalanceStatement="select openingaccount from customers where customer_name=(select customer_name from bills where billid=?)";
         String billQuery = "select billid from bills where customer_name=(select customer_name from bills where billid=?) and date <= (select date from bills where billid=?) and billid<?";
 //        String transactionQuery="Select *from transactions where date<=()"
         String transactionQuery = "SELECT sum(amount) FROM transactions " +
@@ -164,8 +164,17 @@ public class UtilityMethods {
             }
             System.out.println("\n\n\ntotal is " + grandTotalBill);
             double[] result = new double[2];
-            result[0] = grandTotalBill - lastbillTotal - transactionSum;
-            result[1] = grandTotalBill - transactionSum;
+            rs.close();
+            statement.close();
+            statement=MyClass.C.prepareStatement(openingBalanceStatement);
+            statement.setInt(1,billID);
+
+            rs=statement.executeQuery();
+            double openingBalance=0;
+            if(rs.next())openingBalance=rs.getDouble(1);
+
+            result[0] =openingBalance+ grandTotalBill - lastbillTotal - transactionSum;
+            result[1] = openingBalance+  grandTotalBill - transactionSum;
 
             return result;
 

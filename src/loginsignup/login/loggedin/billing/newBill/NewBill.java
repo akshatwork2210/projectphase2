@@ -134,6 +134,7 @@ public class NewBill extends JFrame {
         PreparedStatement billDetailsStatement = null;
         PreparedStatement inventoryStatement = null;
         PreparedStatement customerTableStatement = null;
+
         String customerName = customerComboBox.getSelectedItem() == null ? "" : customerComboBox.getSelectedItem().toString();
 
         if (customerComboBox.getSelectedIndex() == 0) {
@@ -200,18 +201,18 @@ public class NewBill extends JFrame {
                     return false;
                 }
                 double raw = Double.parseDouble(getStringValue(model, i, RAW_INDEX, "0"));
-                double labour = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("L"), "0"));
+                double labour = Double.parseDouble(getStringValue(model, i, LABOUR_INDEX, "0"));
                 double dullChillai = Double.parseDouble(getStringValue(model, i, DULL_CHILLAI_INDEX, "0"));
-                double mcm = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("M/CM"), "0"));
-                double rh = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Rh"), "0"));
-                double nag = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Nag"), "0"));
-                double other = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Other"), "0"));
+                double mcm = Double.parseDouble(getStringValue(model, i, MEENA_INDEX, "0"));
+                double rh = Double.parseDouble(getStringValue(model, i, RHODIUM_INDEX, "0"));
+                double nag = Double.parseDouble(getStringValue(model, i, NAG_SETTING_INDEX, "0"));
+                double other = Double.parseDouble(getStringValue(model, i, OTHER_BASE_INDEX, "0"));
                 double totalBaseCost = Double.parseDouble(getStringValue(model, i, PLUSGOLD, "0"));
                 double goldRate = newBill.goldrate;
-                double goldPlatingWeight = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Gold(ing g)"), "0"));
+                double goldPlatingWeight = Double.parseDouble(getStringValue(model, i, GOLD_WEIGHT_INDEX, "0"));
                 double totalGoldCost = Double.parseDouble(getStringValue(model, i, GOLD_COST_INDEX, "0"));
                 double totalFinalCost = Double.parseDouble(getStringValue(model, i, TOTAL_COST_INDEX, "0"));
-                String otherDetails = getStringValue(model, i, billDetails.indexOf("OtherDetails"), "");
+                String otherDetails = getStringValue(model, i, OTHER_DETAILS_INDEX, "");
                 int orderSlipNumber = snoToItemIdMap.getOrDefault(serialNo, 0);
                 if ((model.getValueAt(i, ORDER_SLIP_QUANTITY_INDEX) == null || model.getValueAt(i, ORDER_SLIP_QUANTITY_INDEX).toString().trim().isEmpty()) && !designID.contentEquals("NoID")) {
                     inventoryStatement.setInt(1, quantity);
@@ -306,7 +307,7 @@ public class NewBill extends JFrame {
     }
 
     private void reCalculateValuesAndAppend() {
-        List<Integer> mathColumns = Arrays.asList(billDetails.indexOf("L"), RAW_INDEX, DULL_CHILLAI_INDEX, billDetails.indexOf("M/CM"), billDetails.indexOf("Rh"), billDetails.indexOf("Nag"), billDetails.indexOf("Other"), PLUSGOLD, billDetails.indexOf("Gold(ing g)"), GOLD_COST_INDEX, TOTAL_COST_INDEX);
+        List<Integer> mathColumns = Arrays.asList(LABOUR_INDEX, RAW_INDEX, DULL_CHILLAI_INDEX, MEENA_INDEX, RHODIUM_INDEX, NAG_SETTING_INDEX, OTHER_BASE_INDEX, PLUSGOLD, GOLD_WEIGHT_INDEX, GOLD_COST_INDEX, TOTAL_COST_INDEX);
         double plusG = 0;
 //        TableModelListener[] listeners = removeModelListener(tableModel);
         int i = 0;
@@ -765,26 +766,25 @@ public class NewBill extends JFrame {
 
             }
 
-            double labour = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("L")));
-            tableModel.setValueAt(labour == 0 ? "" : labour, row, billDetails.indexOf("L"));
+            double labour = getDoubleValue(tableModel.getValueAt(row, LABOUR_INDEX));
+            tableModel.setValueAt(labour == 0 ? "" : labour, row, LABOUR_INDEX);
             double raw = getDoubleValue(tableModel.getValueAt(row, RAW_INDEX));
             tableModel.setValueAt(raw == 0 ? "" : raw, row, RAW_INDEX);
             double dullChillai = getDoubleValue(tableModel.getValueAt(row, DULL_CHILLAI_INDEX));
             tableModel.setValueAt(dullChillai == 0 ? "" : dullChillai, row, DULL_CHILLAI_INDEX);
-            double mCm = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("M/CM")));
-            tableModel.setValueAt(mCm == 0 ? "" : mCm, row, billDetails.indexOf("M/CM"));
-            double rh = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Rh")));
-            tableModel.setValueAt(rh == 0 ? "" : rh, row, billDetails.indexOf("Rh"));
-            double nag = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Nag")));
-            tableModel.setValueAt(nag == 0 ? "" : nag, row, billDetails.indexOf("Nag"));
-            double other = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Other")));
-            tableModel.setValueAt(other == 0 ? "" : other, row, billDetails.indexOf("Other"));
+            double mCm = getDoubleValue(tableModel.getValueAt(row, MEENA_INDEX));
+            tableModel.setValueAt(mCm == 0 ? "" : mCm, row, MEENA_INDEX);
+            double rh = getDoubleValue(tableModel.getValueAt(row, RHODIUM_INDEX));
+            tableModel.setValueAt(rh == 0 ? "" : rh, row, RHODIUM_INDEX);
+            double nag = getDoubleValue(tableModel.getValueAt(row, NAG_SETTING_INDEX));
+            tableModel.setValueAt(nag == 0 ? "" : nag, row, NAG_SETTING_INDEX);
+            double other = getDoubleValue(tableModel.getValueAt(row, OTHER_BASE_INDEX));
+            tableModel.setValueAt(other == 0 ? "" : other, row, OTHER_BASE_INDEX);
             double plusG;
-            double goldIngG = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Gold(ing g)")));
-            tableModel.setValueAt(goldIngG == 0 ? "" : goldIngG, row, billDetails.indexOf("Gold(ing g)"));
+            double goldIngG = getDoubleValue(tableModel.getValueAt(row, GOLD_WEIGHT_INDEX));
+            tableModel.setValueAt(goldIngG == 0 ? "" : goldIngG, row, GOLD_WEIGHT_INDEX);
             double goldCost;
             double total;
-//                if (col == billDetails.indexOf("L") || col == RAW_INDEX || col == DULL_CHILLAI_INDEX || col == billDetails.indexOf("M/CM") || col == billDetails.indexOf("Rh") || col == billDetails.indexOf("Nag") || col == billDetails.indexOf("Other") || col == PLUSGOLD || col == billDetails.indexOf("Gold(ing g)") || col == GOLD_COST_INDEX || col == TOTAL_COST_INDEX)
 
             plusG = labour + raw + dullChillai + mCm + rh + nag + other;
             goldCost = goldIngG * goldrate;
@@ -806,9 +806,10 @@ public class NewBill extends JFrame {
                 grandTotal += value;
             }
             grandTotalLabel.setText("Grand total:" + grandTotal);
-            if (col==ITEM_NAME_INDEX) {
-                String value=codeToItemName.get(getStringValue(tableModel,row,ITEM_NAME_INDEX,""));
-                if(value!=null)tableModel.setValueAt(value,row,ITEM_NAME_INDEX);
+            if (col == ITEM_NAME_INDEX) {
+
+                String value = codeToItemName.get(getStringValue(tableModel, row, ITEM_NAME_INDEX, "").trim().toUpperCase());
+                if (value != null) tableModel.setValueAt(value, row, ITEM_NAME_INDEX);
             }
             billTable.repaint();
             UtilityMethods.addModelListeners(listeners, tableModel);

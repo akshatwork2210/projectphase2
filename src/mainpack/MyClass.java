@@ -51,13 +51,26 @@ public class MyClass {
             codeToItemName.put("KT", "Kandora Plus Thegda");
             codeToItemName.put("L", "Latkan");
             codeToItemName.put("TO", "Tops");
-            codeToItemName.put("J", "Jhumki");
+
+            codeToItemName.put("1J", "1 Step Jhumki");
+            codeToItemName.put("2J", "2 Step Jhumki");
+            codeToItemName.put("3J", "3 Step Jhumki");
+            codeToItemName.put("4J", "4 Step Jhumki");
+            codeToItemName.put("5J", "5 Step Jhumki");
             codeToItemName.put("PC", "Patli Chain");
             codeToItemName.put("MOC", "Moti Chain");
             codeToItemName.put("MIDC", "Midium Chain");
             codeToItemName.put("MINP", "Mini Pandal");
             codeToItemName.put("MIDP", "Midium Pandal");
             codeToItemName.put("BP", "Big Pandal");
+            codeToItemName.put("3LMS4B", "3 Line MS Ladi 4Belt");
+            codeToItemName.put("2LMS4B", "2 Line MS Ladi 4Belt");
+            codeToItemName.put("3LMS2B", "3 Line MS Ladi 2Belt");
+            codeToItemName.put("2LMS2B", "2 Line MS Ladi 2Belt");
+            codeToItemName.put("NMS", "Nice MS Ladi");
+            codeToItemName.put("RCP", "Regular Chain Patta");
+            codeToItemName.put("NSCP", "Nice Small Chain Patta");
+            codeToItemName.put("NRCP", "Nice Regular Chain Patta");
 
 
         }
