@@ -1,6 +1,6 @@
 package loginsignup.login.loggedin.billing.newBill;
 
-import loginsignup.login.loggedin.transactionsandaccounts.newtransaction.AddedTransactions;
+import mainpack.MyClass;
 import org.jdesktop.swingx.prompt.PromptSupport;
 import testpackage.UtilityMethods;
 
@@ -10,23 +10,35 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.AbstractDocument;
-import javax.swing.text.DateFormatter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
-import java.text.DateFormat;
-import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.List;
 import java.util.*;
 
 import static mainpack.MyClass.*;
 
 public class NewBill extends JFrame {
+    public static final int SNO_INDEX = 0;
+    public static final int ORDER_SLIP_QUANTITY_INDEX = 1;
+    public static final int ITEM_NAME_INDEX = 2;
+    public static final int QUANTITY_INDEX = 3;
+    public static final int DESIGN_ID_INDEX = 4;
+    public static final int LABOUR_INDEX = 5;             // "L"
+    public static final int RAW_INDEX = 6;
+    public static final int DULL_CHILLAI_INDEX = 7;       // "dc"
+    public static final int MEENA_INDEX = 8;              // "M/CM"
+    public static final int RHODIUM_INDEX = 9;            // "Rh"
+    public static final int NAG_SETTING_INDEX = 10;       // "Nag"
+    public static final int OTHER_BASE_INDEX = 11;        // "Other"
+    public static final int OTHER_DETAILS_INDEX = 12;
+    public static final int PLUSGOLD = 13; // "+G"
+    public static final int GOLD_WEIGHT_INDEX = 14;       // "Gold(ing g)"
+    public static final int GOLD_COST_INDEX = 15;
+    public static final int TOTAL_COST_INDEX = 16;        // "total"
     int itemID;
     private LocalDateTime dateTime;
     private double goldrate;
@@ -54,7 +66,7 @@ public class NewBill extends JFrame {
     private JButton backButton;
     private JComboBox<String> slipDetailComboBox;
     private JButton submitButton;
-    private final HashMap<Integer, Integer> snoToItemIdMap;
+    private HashMap<Integer, Integer> snoToItemIdMap;
     private JButton resetButton;
     private JButton undoButton;
     private JTextField slipNumberField;
@@ -71,6 +83,304 @@ public class NewBill extends JFrame {
     }
 
     public NewBill() {
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    private void linkBillToTransactions() {
+        int billID = getCurBillID();
+        String customerName = getCustomerName();
+
+        String query = "UPDATE transactions SET billid = ? WHERE customer_name = ? AND billid IS NULL";
+
+        try (PreparedStatement pstmt = C.prepareStatement(query)) {
+
+            pstmt.setInt(1, billID);
+            pstmt.setString(2, customerName);
+
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            Thread.dumpStack();
+            JOptionPane.showMessageDialog(null, "Failed to update transactions!", "Error", JOptionPane.ERROR_MESSAGE);
+            throw new RuntimeException();
+        }
+
+
+    }
+
+    private String getStringValue(DefaultTableModel model, int row, int columnIndex, String defaultValue) {
+        Object value = model.getValueAt(row, columnIndex);
+        return (value != null && !value.toString().trim().isEmpty()) ? value.toString() : defaultValue;
+    }
+
+    private boolean insertData() {
+
+        DefaultTableModel model = (DefaultTableModel) billTable.getModel();
+        int rowCount = model.getRowCount();
+
+        // Database connection setup
+        String url = MyClass.PORT + login.getDatabase();
+        String user = login.getLoginID();
+        String password = login.getPassword();
+        int billID = -1;
+        Connection conn = getTransacTemp();
+        PreparedStatement billDetailsStatement = null;
+        PreparedStatement inventoryStatement = null;
+        PreparedStatement customerTableStatement = null;
+
+        String customerName = customerComboBox.getSelectedItem() == null ? "" : customerComboBox.getSelectedItem().toString();
+
+        if (customerComboBox.getSelectedIndex() == 0) {
+            JOptionPane.showMessageDialog(newBill, "select customer please");
+            return false;
+        }
+        String updateCustomerTableQuery = "update customers set balance=balance+? where customer_name=?";
+        String updateBillsTableQuery = "update bills set date=?,customer_name=? where billid=?";
+        try {
+            PreparedStatement billsTableStatement = conn.prepareStatement(updateBillsTableQuery);
+
+            billsTableStatement.setTimestamp(1, Timestamp.valueOf(getDateTime()));
+            billsTableStatement.setString(2, getCustomerName());
+            billsTableStatement.setInt(3, getCurBillID());
+            billsTableStatement.executeUpdate();
+            billsTableStatement.close();
+        } catch (SQLException exception) {
+            JOptionPane.showMessageDialog(newBill, "error");
+            Thread.dumpStack();
+            throw new RuntimeException();
+        }
+
+        try {
+//            conn = DriverManager.getConnection(url, user, password);
+
+            updateBillsTableQuery = "INSERT INTO billdetails (BillID, SNo, ItemName, DesignID, OrderType, RawCost, LabourCost, DullChillaiCost, " + "MeenaColorMeenaCost, RhodiumCost, NagSettingCost, OtherBaseCosts, TotalBaseCosting, GoldRate, " + "GoldPlatingWeight, TotalGoldCost, TotalFinalCost, OrderSlipNumber,OtherBaseCostNotes,quantity) " + "VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)";
+            billDetailsStatement = conn.prepareStatement(updateBillsTableQuery);
+            String inventoryQuery = "update inventory set TotalQuantity=TotalQuantity-? where DesignID=?";
+            inventoryStatement = conn.prepareStatement(inventoryQuery);
+            double grandTotal = 0;
+            for (int i = 0; i < rowCount - 1; i++) {
+                int serialNo = Integer.parseInt(getStringValue(model, i, SNO_INDEX, "0"));
+                String itemName = getStringValue(model, i, ITEM_NAME_INDEX, "Unknown");
+
+                if (itemName.isEmpty()) {
+                    JOptionPane.showMessageDialog(newBill, "please do not leave item name empty");
+                    throw new RuntimeException();
+                }
+
+
+                String designID = getStringValue(model, i, DESIGN_ID_INDEX, "NoID");
+                String orderType = slipDetailComboBox.getSelectedItem() == null ? "" : slipDetailComboBox.getSelectedItem().toString();
+
+
+                if (snoToItemIdMap.containsKey(serialNo)) {
+                    int itemId = snoToItemIdMap.get(serialNo);
+
+                    // Fetch OrderType from orderslip table using itemId
+                    String query = "SELECT slip_type FROM order_slips WHERE item_id = ?";
+                    PreparedStatement pstmt = conn.prepareStatement(query);
+                    pstmt.setInt(1, itemId);
+                    ResultSet rs = pstmt.executeQuery();
+
+                    orderType = slipDetailComboBox.getSelectedItem().toString();
+                    if (rs.next()) {
+                        orderType = rs.getString("slip_type"); // Override with DB value
+                    }
+                    rs.close();
+                    pstmt.close();
+                }
+                int quantity = Integer.parseInt(getStringValue(model, i, QUANTITY_INDEX, "0"));
+                if (quantity == 0) {
+                    JOptionPane.showMessageDialog(newBill, "please do not leave quantity field empty");
+                    return false;
+                }
+                double raw = Double.parseDouble(getStringValue(model, i, RAW_INDEX, "0"));
+                double labour = Double.parseDouble(getStringValue(model, i, LABOUR_INDEX, "0"));
+                double dullChillai = Double.parseDouble(getStringValue(model, i, DULL_CHILLAI_INDEX, "0"));
+                double mcm = Double.parseDouble(getStringValue(model, i, MEENA_INDEX, "0"));
+                double rh = Double.parseDouble(getStringValue(model, i, RHODIUM_INDEX, "0"));
+                double nag = Double.parseDouble(getStringValue(model, i, NAG_SETTING_INDEX, "0"));
+                double other = Double.parseDouble(getStringValue(model, i, OTHER_BASE_INDEX, "0"));
+                double totalBaseCost = Double.parseDouble(getStringValue(model, i, PLUSGOLD, "0"));
+                double goldRate = newBill.goldrate;
+                double goldPlatingWeight = Double.parseDouble(getStringValue(model, i, GOLD_WEIGHT_INDEX, "0"));
+                double totalGoldCost = Double.parseDouble(getStringValue(model, i, GOLD_COST_INDEX, "0"));
+                double totalFinalCost = Double.parseDouble(getStringValue(model, i, TOTAL_COST_INDEX, "0"));
+                String otherDetails = getStringValue(model, i, OTHER_DETAILS_INDEX, "");
+                int orderSlipNumber = snoToItemIdMap.getOrDefault(serialNo, 0);
+                if ((model.getValueAt(i, ORDER_SLIP_QUANTITY_INDEX) == null || model.getValueAt(i, ORDER_SLIP_QUANTITY_INDEX).toString().trim().isEmpty()) && !designID.contentEquals("NoID")) {
+                    inventoryStatement.setInt(1, quantity);
+                    inventoryStatement.setString(2, designID);
+                    inventoryStatement.addBatch();
+                }
+                billDetailsStatement.setInt(1, getCurBillID()); // Replace with actual BillID
+                billDetailsStatement.setInt(2, serialNo);
+                billDetailsStatement.setString(3, itemName);
+                billDetailsStatement.setString(4, designID);
+                billDetailsStatement.setString(5, orderType);
+                billDetailsStatement.setDouble(6, raw);
+                billDetailsStatement.setDouble(7, labour);
+                billDetailsStatement.setDouble(8, dullChillai);
+                billDetailsStatement.setDouble(9, mcm);
+                billDetailsStatement.setDouble(10, rh);
+                billDetailsStatement.setDouble(11, nag);
+                billDetailsStatement.setDouble(12, other);
+                billDetailsStatement.setDouble(13, totalBaseCost);
+                billDetailsStatement.setDouble(14, goldRate);
+                billDetailsStatement.setDouble(15, goldPlatingWeight);
+                billDetailsStatement.setDouble(16, totalGoldCost);
+                billDetailsStatement.setDouble(17, totalFinalCost);
+                billDetailsStatement.setLong(18, orderSlipNumber);
+                billDetailsStatement.setString(19, otherDetails);
+                billDetailsStatement.setInt(20, quantity);
+                billDetailsStatement.addBatch();
+                grandTotal = grandTotal + totalFinalCost;
+
+            }
+            System.out.println(grandTotal + " is the grand total");
+
+
+            billDetailsStatement.executeBatch();
+            inventoryStatement.executeBatch();
+            customerTableStatement = conn.prepareStatement(updateCustomerTableQuery);
+
+            customerTableStatement.setDouble(1, grandTotal);
+            customerTableStatement.setString(2, customerName);
+            customerTableStatement.executeUpdate();
+
+            conn.commit(); // Commit transaction
+
+            JOptionPane.showMessageDialog(null, "Bill details saved successfully! bill id is " + getCurBillID());
+            billTable.repaint();
+            return true;
+        } catch (Exception ex) {
+            try {
+                if (conn != null) {
+                    conn.rollback(); // Rollback on error
+                }
+
+            } catch (SQLException rollbackEx) {
+                Thread.dumpStack();
+                throw new RuntimeException();
+            }
+            Thread.dumpStack();
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error saving bill details!", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+
+        } finally {
+            try {
+
+                if (billDetailsStatement != null) billDetailsStatement.close();
+                if (inventoryStatement != null) inventoryStatement.close();
+                if (customerTableStatement != null) customerTableStatement.close();
+
+            } catch (SQLException closeEx) {
+                Thread.dumpStack();
+            }
+        }
+    }
+
+    private void setCurBillID(int billID) {
+        curBillID = billID;
+    }
+
+    public int getCurBillID() {
+        return curBillID;
+    }
+
+    private void setCurrentDate(LocalDateTime localDateTime) {
+        if (localDateTime == null) {
+            return;
+        }
+        dateTime = localDateTime;
+    }
+
+    public LocalDateTime getDateTime() {
+        return dateTime;
+    }
+
+    private void reCalculateValuesAndAppend() {
+        List<Integer> mathColumns = Arrays.asList(LABOUR_INDEX, RAW_INDEX, DULL_CHILLAI_INDEX, MEENA_INDEX, RHODIUM_INDEX, NAG_SETTING_INDEX, OTHER_BASE_INDEX, PLUSGOLD, GOLD_WEIGHT_INDEX, GOLD_COST_INDEX, TOTAL_COST_INDEX);
+        double plusG = 0;
+//        TableModelListener[] listeners = removeModelListener(tableModel);
+        int i = 0;
+        for (int row = 0; row < tableModel.getRowCount(); row++) {
+            for (int col : mathColumns) {
+
+                Object value = tableModel.getValueAt(row, col);
+                double numericValue = 0.0;
+
+                if (value != null && !value.toString().trim().isEmpty()) {
+                    try {
+                        numericValue = Double.parseDouble(value.toString());
+                    } catch (NumberFormatException e) {
+                        Thread.dumpStack();
+                    }
+
+                }
+
+                if (i < 7) {
+                    plusG += numericValue;
+                }
+                double goldrate = this.goldrate;
+                double goldcost;
+                if (i == 8) {
+                    goldcost = goldrate * numericValue;
+                    tableModel.setValueAt(goldcost == 0 ? "" : goldcost, row, GOLD_COST_INDEX);
+
+                    tableModel.setValueAt((goldcost + plusG) == 0 ? "" : (goldcost + plusG), row, TOTAL_COST_INDEX);
+                }
+
+                i++;
+
+            }
+            int quantity = tableModel.getValueAt(row, QUANTITY_INDEX) != null && !tableModel.getValueAt(row, QUANTITY_INDEX).toString().isEmpty() ? Integer.parseInt((tableModel.getValueAt(row, QUANTITY_INDEX).toString())) : 0;
+            plusG = plusG * quantity;
+            tableModel.setValueAt(plusG == 0 ? "" : plusG, row, PLUSGOLD);
+
+            plusG = 0;
+            i = 0;
+        }
+
+        for (int row = 0; row < tableModel.getRowCount() - 1; row++)
+            checkAndRemoveRow(row, tableModel, SNO_INDEX, false);
+        billTable.repaint();
+        scrollPane.repaint();
+//        addModelListeners(listeners, tableModel);
+
+    }
+
+    private void setGoldRate(double goldrate) {
+        this.goldrate = goldrate;
+    }
+
+    private double getDoubleValue(Object value) {
+        if (value == null || value.toString().trim().isEmpty()) {
+            return 0.0;
+        }
+        try {
+            return Double.parseDouble(value.toString().trim());
+        } catch (NumberFormatException e) {
+
+            return 0.0; // Return 0.0 if parsing fails
+        }
+    }
+
+    public Connection getTransacTemp() {
+        return transacTemp;
+    }
+
+    DefaultTableModel tableModel;
+    Vector<String> billDetails = new Vector<>();
+
+    public void init() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         setContentPane(panel);
@@ -110,15 +420,17 @@ public class NewBill extends JFrame {
         snoToItemIdMap = new HashMap<>();
         backButton.addActionListener(e -> {
             setVisible(false);
+            billingScreen.setVisible(true);
+            dispose();
+            searchResultWindow.dispose();
             try {
                 getTransacTemp().close();
             } catch (SQLException ex) {
-                throw new RuntimeException(ex);
+                ex.printStackTrace();
             }
-            billingScreen.setVisible(true);
-            searchResultWindow.dispose();
-        });
 
+
+        });
         NewBill temp = this;
         slipNumberField.addActionListener(e -> {
             try {
@@ -136,7 +448,7 @@ public class NewBill extends JFrame {
 
                 Statement stmt = C.createStatement();
 //                    String query = "select slip_id from order_slips where (slip_id=" + slipNumberField.getText() +" and customer_name='"+customerName+"'"+ ";";
-                String query = "SELECT slip_id FROM order_slips WHERE slip_id=" + slipNumberField.getText() + " AND customer_name='" + customerName + "';";
+                String query = "SELECT slip_id FROM order_slips WHERE slip_id=" + slipNumberField.getText() + " AND customer_name='" + getCustomerName() + "';";
 
                 ResultSet rs = stmt.executeQuery(query);
                 if (!rs.next()) {
@@ -159,19 +471,20 @@ public class NewBill extends JFrame {
             searchResultWindow.setVisible(true);
             submitButton.setEnabled(false);
             backButton.setEnabled(false);
-            positionFrames(temp, searchResultWindow);
+            UtilityMethods.splitFrame(temp, searchResultWindow, UtilityMethods.HORIZONTAL_SPLIT);
 
         });
         submitButton.addActionListener(e -> {
-            if (insertData())
+            if (insertData()) {
                 linkBillToTransactions();
-        });
-
-
-        goldRateTextField.addActionListener(e -> {
+                dispose();
+                newBill = new NewBill();
+                newBill.init();
+                newBill.setVisible(true);
+            }
         });
         resetButton.addActionListener(e -> UtilityMethods.csvOut(tableModel));
-        customerComboBox.addActionListener(e -> customerName = customerComboBox.getSelectedItem() == null ? "" : customerComboBox.getSelectedItem().toString());
+        customerComboBox.addActionListener(e -> setCustomerName(customerComboBox.getSelectedItem() == null ? "" : customerComboBox.getSelectedItem().toString()));
         undoButton.addActionListener(e -> {
             UtilityMethods.csvToTableModel(tableModel, "C:\\Users\\Aparw\\ShreeGurukripaJewellers\\output.csv");
             billTable.repaint();
@@ -187,296 +500,7 @@ public class NewBill extends JFrame {
                 newBill.setVisible(true);
             }
         });
-    }
 
-    public String getCustomerName() {
-        return customerName;
-    }
-
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
-    }
-
-    private void linkBillToTransactions() {
-        int billID = getCurBillID();
-        String customerName = getCustomerName();
-
-        String query = "UPDATE transactions SET billid = ? WHERE customer_name = ? AND billid IS NULL";
-
-        try (
-                PreparedStatement pstmt = C.prepareStatement(query)) {
-
-            pstmt.setInt(1, billID);
-            pstmt.setString(2, customerName);
-
-            pstmt.executeUpdate();
-
-        } catch (SQLException e) {
-            Thread.dumpStack();
-            JOptionPane.showMessageDialog(null, "Failed to update transactions!", "Error", JOptionPane.ERROR_MESSAGE);
-            throw new RuntimeException();
-        }
-
-
-    }
-
-    private String getStringValue(DefaultTableModel model, int row, int columnIndex, String defaultValue) {
-        Object value = model.getValueAt(row, columnIndex);
-        return (value != null && !value.toString().trim().isEmpty()) ? value.toString() : defaultValue;
-    }
-
-    private boolean insertData() {
-
-        DefaultTableModel model = (DefaultTableModel) billTable.getModel();
-        int rowCount = model.getRowCount();
-
-        // Database connection setup
-        String url = "jdbc:mysql://localhost:3306/" + login.getDatabase();
-        String user = login.getLoginID();
-        String password = login.getPassword();
-        int billID = -1;
-        Connection conn = getTransacTemp();
-        PreparedStatement stmt1 = null;
-        PreparedStatement inventoryStatement = null;
-
-        String customerName = customerComboBox.getSelectedItem() == null ? "" : customerComboBox.getSelectedItem().toString();
-
-        if (customerComboBox.getSelectedIndex() == 0) {
-            JOptionPane.showMessageDialog(newBill, "select customer please");
-            return false;
-        }
-
-        try {
-//            conn = DriverManager.getConnection(url, user, password);
-            conn.setAutoCommit(false); // Start transaction
-
-            String sql1 = "INSERT INTO bills (date) VALUES (?)";
-            try (PreparedStatement pstmt = conn.prepareStatement(sql1, Statement.RETURN_GENERATED_KEYS)) {
-
-                pstmt.setTimestamp(1, Timestamp.valueOf(getDateTime()));
-                int affectedRows = pstmt.executeUpdate();
-                ResultSet rs = pstmt.getGeneratedKeys();
-                if (rs.next()) setCurBillID((rs.getInt(1)));
-
-
-            } catch (SQLException exception) {
-                JOptionPane.showMessageDialog(newBill, "error");
-                Thread.dumpStack();
-                throw new RuntimeException();
-            }
-            sql1 = "INSERT INTO billdetails (BillID, SNo, ItemName, DesignID, OrderType, RawCost, LabourCost, DullChillaiCost, " + "MeenaColorMeenaCost, RhodiumCost, NagSettingCost, OtherBaseCosts, TotalBaseCosting, GoldRate, " + "GoldPlatingWeight, TotalGoldCost, TotalFinalCost, OrderSlipNumber,OtherBaseCostNotes,quantity,customer_name) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)";
-            stmt1 = conn.prepareStatement(sql1);
-            String inventoryQuery = "update inventory set TotalQuantity=TotalQuantity-? where DesignID=?";
-            inventoryStatement = conn.prepareStatement(inventoryQuery);
-            for (int i = 0; i < rowCount - 1; i++) {
-                int serialNo = Integer.parseInt(getStringValue(model, i, billDetails.indexOf("SNo"), "0"));
-                String itemName = getStringValue(model, i, billDetails.indexOf("ItemName"), "Unknown");
-
-                if (itemName.isEmpty()) {
-                    JOptionPane.showMessageDialog(newBill, "please do not leave item name empty");
-                    throw new RuntimeException();
-                }
-
-
-                String designID = getStringValue(model, i, billDetails.indexOf("DesignID"), "NoID");
-                String orderType = slipDetailComboBox.getSelectedItem() == null ? "" : slipDetailComboBox.getSelectedItem().toString();
-
-
-                if (snoToItemIdMap.containsKey(serialNo)) {
-                    int itemId = snoToItemIdMap.get(serialNo);
-
-                    // Fetch OrderType from orderslip table using itemId
-                    String query = "SELECT slip_type FROM order_slips WHERE item_id = ?";
-                    PreparedStatement pstmt = conn.prepareStatement(query);
-                    pstmt.setInt(1, itemId);
-                    ResultSet rs = pstmt.executeQuery();
-
-                    orderType = slipDetailComboBox.getSelectedItem().toString();
-                    if (rs.next()) {
-                        orderType = rs.getString("slip_type"); // Override with DB value
-                    }
-                    rs.close();
-                    pstmt.close();
-                }
-                int quantity = Integer.parseInt(getStringValue(model, i, billDetails.indexOf("Quantity"), "0"));
-                if (quantity == 0) {
-                    JOptionPane.showMessageDialog(newBill, "please do not leave quantity field empty");
-                    return false;
-                }
-                double raw = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Raw"), "0"));
-                double labour = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("L"), "0"));
-                double dullChillai = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("dc"), "0"));
-                double mcm = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("M/CM"), "0"));
-                double rh = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Rh"), "0"));
-                double nag = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Nag"), "0"));
-                double other = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Other"), "0"));
-                double totalBaseCost = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("+G"), "0"));
-                double goldRate = newBill.goldrate;
-                double goldPlatingWeight = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("Gold(ing g)"), "0"));
-                double totalGoldCost = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("gold cost"), "0"));
-                double totalFinalCost = Double.parseDouble(getStringValue(model, i, billDetails.indexOf("total"), "0"));
-                String otherDetails = getStringValue(model, i, billDetails.indexOf("OtherDetails"), "");
-                int orderSlipNumber = snoToItemIdMap.getOrDefault(serialNo, 0);
-                if ((model.getValueAt(i, billDetails.indexOf("OrderSlip/quantity")) == null || model.getValueAt(i, billDetails.indexOf("OrderSlip/quantity")).toString().trim().isEmpty()) && !designID.contentEquals("NoID")) {
-                    inventoryStatement.setInt(1, quantity);
-                    inventoryStatement.setString(2, designID);
-                    System.out.println("batch added");
-                    inventoryStatement.addBatch();
-                }
-                stmt1.setInt(1, getCurBillID()); // Replace with actual BillID
-                stmt1.setInt(2, serialNo);
-                stmt1.setString(3, itemName);
-                stmt1.setString(4, designID);
-                stmt1.setString(5, orderType);
-                stmt1.setDouble(6, raw);
-                stmt1.setDouble(7, labour);
-                stmt1.setDouble(8, dullChillai);
-                stmt1.setDouble(9, mcm);
-                stmt1.setDouble(10, rh);
-                stmt1.setDouble(11, nag);
-                stmt1.setDouble(12, other);
-                stmt1.setDouble(13, totalBaseCost);
-                stmt1.setDouble(14, goldRate);
-                stmt1.setDouble(15, goldPlatingWeight);
-                stmt1.setDouble(16, totalGoldCost);
-                stmt1.setDouble(17, totalFinalCost);
-                stmt1.setInt(18, orderSlipNumber);
-                stmt1.setString(19, otherDetails);
-                stmt1.setInt(20, quantity);
-                stmt1.setString(21, customerName);
-                stmt1.addBatch();
-
-            }
-
-
-            stmt1.executeBatch();
-            inventoryStatement.executeBatch();
-            conn.commit(); // Commit transaction
-
-
-            JOptionPane.showMessageDialog(null, "Bill details saved successfully! bill id is " + getCurBillID());
-            setCustomerName(customerName);
-            billTable.repaint();
-            return true;
-        } catch (Exception ex) {
-            try {
-                if (conn != null) {
-                    conn.rollback(); // Rollback on error
-                }
-
-            } catch (SQLException rollbackEx) {
-                Thread.dumpStack();
-                throw new RuntimeException();
-            }
-            Thread.dumpStack();
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Error saving bill details!", "Error", JOptionPane.ERROR_MESSAGE);
-            return false;
-
-        } finally {
-            try {
-                if (stmt1 != null) stmt1.close();
-//                if (conn != null) conn.close();
-            } catch (SQLException closeEx) {
-                Thread.dumpStack();
-            }
-        }
-    }
-
-    private void setCurBillID(int billID) {
-        curBillID = billID;
-    }
-
-    public int getCurBillID() {
-        return curBillID;
-    }
-
-    private void setCurrentDate(LocalDateTime localDateTime) {
-        if (localDateTime == null) {
-            return;
-        }
-        dateTime = localDateTime;
-    }
-
-    public LocalDateTime getDateTime() {
-        return dateTime;
-    }
-
-    private void reCalculateValuesAndAppend() {
-        List<Integer> mathColumns = Arrays.asList(billDetails.indexOf("L"), billDetails.indexOf("Raw"), billDetails.indexOf("dc"), billDetails.indexOf("M/CM"), billDetails.indexOf("Rh"), billDetails.indexOf("Nag"), billDetails.indexOf("Other"), billDetails.indexOf("+G"), billDetails.indexOf("Gold(ing g)"), billDetails.indexOf("gold cost"), billDetails.indexOf("total"));
-        double plusG = 0;
-//        TableModelListener[] listeners = removeModelListener(tableModel);
-        int i = 0;
-        for (int row = 0; row < tableModel.getRowCount(); row++) {
-            for (int col : mathColumns) {
-
-                Object value = tableModel.getValueAt(row, col);
-                double numericValue = 0.0;
-
-                if (value != null && !value.toString().trim().isEmpty()) {
-                    try {
-                        numericValue = Double.parseDouble(value.toString());
-                    } catch (NumberFormatException e) {
-                        Thread.dumpStack();
-                    }
-
-                }
-
-                if (i < 7) {
-                    plusG += numericValue;
-                }
-                double goldrate = this.goldrate;
-                double goldcost;
-                if (i == 8) {
-                    goldcost = goldrate * numericValue;
-                    tableModel.setValueAt(goldcost == 0 ? "" : goldcost, row, billDetails.indexOf("gold cost"));
-
-                    tableModel.setValueAt((goldcost + plusG) == 0 ? "" : (goldcost + plusG), row, billDetails.indexOf("total"));
-                }
-
-                i++;
-
-            }
-            int quantity = tableModel.getValueAt(row, billDetails.indexOf("Quantity")) != null && !tableModel.getValueAt(row, billDetails.indexOf("Quantity")).toString().isEmpty() ? Integer.parseInt((tableModel.getValueAt(row, billDetails.indexOf("Quantity")).toString())) : 0;
-            plusG = plusG * quantity;
-            tableModel.setValueAt(plusG == 0 ? "" : plusG, row, billDetails.indexOf("+G"));
-
-            plusG = 0;
-            i = 0;
-        }
-
-        for (int row = 0; row < tableModel.getRowCount() - 1; row++)
-            checkAndRemoveRow(row, tableModel, billDetails.indexOf("SNo"), false);
-        billTable.repaint();
-        scrollPane.repaint();
-//        addModelListeners(listeners, tableModel);
-
-    }
-
-    private void setGoldRate(double goldrate) {
-        this.goldrate = goldrate;
-    }
-
-    private double getDoubleValue(Object value) {
-        if (value == null || value.toString().trim().isEmpty()) {
-            return 0.0;
-        }
-        try {
-            return Double.parseDouble(value.toString().trim());
-        } catch (NumberFormatException e) {
-
-            return 0.0; // Return 0.0 if parsing fails
-        }
-    }
-
-    public Connection getTransacTemp() {
-        return transacTemp;
-    }
-
-    DefaultTableModel tableModel;
-    Vector<String> billDetails = new Vector<>();
-
-    public void init() {
 
         if (!customerComboBox.isEnabled()) customerComboBox.setEnabled(true);
         billTable.getInputMap(JTable.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("DELETE"), "deleteRow");
@@ -492,7 +516,7 @@ public class NewBill extends JFrame {
                 if (selectedRow != -1) {
                     // Ensure a row is selected
                     if (billTable.getRowCount() != 1)
-                        checkAndRemoveRow(selectedRow, tableModel, billDetails.indexOf("SNo"), true);// Remove the row
+                        checkAndRemoveRow(selectedRow, tableModel, SNO_INDEX, true);// Remove the row
                 }
 
                 UtilityMethods.addModelListeners(listeners, tableModel);
@@ -505,13 +529,29 @@ public class NewBill extends JFrame {
         });
 
         try {
-            if (transacTemp != null) if (!transacTemp.isClosed()) transacTemp.close();
+            if (transacTemp != null && !transacTemp.isClosed()) transacTemp.close();
             transacTemp = getConnection(login.getUrl(), login.getLoginID(), login.getPassword());
             transacTemp.setAutoCommit(false);
         } catch (SQLException e) {
             Thread.dumpStack();
             throw new RuntimeException();
         }
+        Connection conn = getTransacTemp();
+
+        String sql1 = "INSERT INTO bills () VALUES ()";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql1, Statement.RETURN_GENERATED_KEYS)) {
+            conn.setAutoCommit(false); // Start transaction
+            int affectedRows = pstmt.executeUpdate();
+            ResultSet rs = pstmt.getGeneratedKeys();
+            if (rs.next()) setCurBillID((rs.getInt(1)));
+            idLabel.setText("bill id: " + getCurBillID());
+
+        } catch (SQLException exception) {
+            JOptionPane.showMessageDialog(newBill, "error");
+            Thread.dumpStack();
+            throw new RuntimeException();
+        }
+
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         PromptSupport.setPrompt("Slip Number", slipNumberField);
         PromptSupport.setForeground(Color.GRAY, slipNumberField);
@@ -522,32 +562,59 @@ public class NewBill extends JFrame {
         LocalDate oneYearAgo = today.minusYears(1);
         billDetails = new Vector<>();
         billDetails.add("SNo");
+        System.out.println(SNO_INDEX);
         billDetails.add("OrderSlip/quantity");
+        System.out.println(ORDER_SLIP_QUANTITY_INDEX);
         billDetails.add("ItemName");
+        System.out.println(ITEM_NAME_INDEX);
+
         billDetails.add("Quantity");
+        System.out.println(QUANTITY_INDEX);
+
         billDetails.add("DesignID");
+        System.out.println(DESIGN_ID_INDEX);
+
         billDetails.add("L");
+        System.out.println(LABOUR_INDEX);
+
         billDetails.add("Raw");
+        System.out.println(RAW_INDEX);
+
         billDetails.add("dc");
+        System.out.println(DULL_CHILLAI_INDEX);
+
         billDetails.add("M/CM");
+        System.out.println(MEENA_INDEX);
+
         billDetails.add("Rh");
+        System.out.println(RHODIUM_INDEX);
+
         billDetails.add("Nag");
+        System.out.println(NAG_SETTING_INDEX);
+
         billDetails.add("Other");
+        System.out.println(OTHER_BASE_INDEX);
         billDetails.add("OtherDetails");
+        System.out.println(OTHER_DETAILS_INDEX);
         billDetails.add("+G");
+        System.out.println(PLUSGOLD);
         billDetails.add("Gold(ing g)");
+        System.out.println(GOLD_WEIGHT_INDEX);
         billDetails.add("gold cost");
+        System.out.println(GOLD_COST_INDEX);
         billDetails.add("total");
+        System.out.println(TOTAL_COST_INDEX);
+
         tableModel = new DefaultTableModel(billDetails, 1) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                if (column == billDetails.indexOf("SNo")) return false;
-                if (column == billDetails.indexOf("OrderSlip/quantity")) return false;
-                if (column == billDetails.indexOf("total")) return false;
-                if (column == billDetails.indexOf("+G")) return false;
-                if (column == billDetails.indexOf("gold cost")) return false;
-                String value = tableModel.getValueAt(row, billDetails.indexOf("OrderSlip/quantity")) == null ? "" : tableModel.getValueAt(row, billDetails.indexOf("OrderSlip/quantity")).toString();
-                return (column != billDetails.indexOf("Quantity") && column != billDetails.indexOf("DesignID")) || value.isEmpty();
+                if (column == SNO_INDEX) return false;
+                if (column == ORDER_SLIP_QUANTITY_INDEX) return false;
+                if (column == TOTAL_COST_INDEX) return false;
+                if (column == PLUSGOLD) return false;
+                if (column == GOLD_COST_INDEX) return false;
+                String value = tableModel.getValueAt(row, ORDER_SLIP_QUANTITY_INDEX) == null ? "" : tableModel.getValueAt(row, ORDER_SLIP_QUANTITY_INDEX).toString();
+                return (column != QUANTITY_INDEX && column != DESIGN_ID_INDEX) || value.isEmpty();
             }
 
         };
@@ -567,15 +634,15 @@ public class NewBill extends JFrame {
             if (customerComboBox.isEnabled()) {
                 customerComboBox.setEnabled(false);
             }
-            int snoValue = (tableModel.getValueAt(row, billDetails.indexOf("SNo")) != null && !tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString().isEmpty()) ? Integer.parseInt(tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString().contentEquals("") ? "0" : tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString()) : -1;
+            int snoValue = (tableModel.getValueAt(row, SNO_INDEX) != null && !tableModel.getValueAt(row, SNO_INDEX).toString().isEmpty()) ? Integer.parseInt(tableModel.getValueAt(row, SNO_INDEX).toString().contentEquals("") ? "0" : tableModel.getValueAt(row, SNO_INDEX).toString()) : -1;
             TableModelListener[] listeners = UtilityMethods.removeModelListener(tableModel);
             if (snoValue == -1) {
                 sno++;
 
-                tableModel.setValueAt(sno, row, billDetails.indexOf("SNo"));
+                tableModel.setValueAt(sno, row, SNO_INDEX);
                 snoValue = sno;
 
-//                    tableModel.getValueAt(row, billDetails.indexOf("SNo")) == null ? -1 : Integer.parseInt(tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString().contentEquals("") ? "0" : tableModel.getValueAt(row, billDetails.indexOf("SNo")).toString());
+//                    tableModel.getValueAt(row, SNO_INDEX) == null ? -1 : Integer.parseInt(tableModel.getValueAt(row, SNO_INDEX).toString().contentEquals("") ? "0" : tableModel.getValueAt(row, SNO_INDEX).toString());
             }
 
 
@@ -596,8 +663,8 @@ public class NewBill extends JFrame {
                 }
 
             }
-            int designIdIndex = billDetails.indexOf("DesignID");
-            int quantityIndex = billDetails.indexOf("Quantity");
+            int designIdIndex = DESIGN_ID_INDEX;
+            int quantityIndex = QUANTITY_INDEX;
 
             int quantity = 0;
             try {
@@ -621,17 +688,17 @@ public class NewBill extends JFrame {
 
                         if (rs.next()) {
 
-                            listOfNonEditableCells.add(new Integer[]{row, billDetails.indexOf("ItemName")});
+                            listOfNonEditableCells.add(new Integer[]{row, ITEM_NAME_INDEX});
                             String itemName = rs.getString("itemname");
                             String price = rs.getString("price");
-                            tableModel.setValueAt(itemName, row, billDetails.indexOf("ItemName"));
-                            tableModel.setValueAt(price, row, billDetails.indexOf("Raw"));
+                            tableModel.setValueAt(itemName, row, ITEM_NAME_INDEX);
+                            tableModel.setValueAt(price, row, RAW_INDEX);
                         } else {
-                            listOfNonEditableCells.removeIf(cell -> cell[0] == row && cell[1] == billDetails.indexOf("ItemName"));
+                            listOfNonEditableCells.removeIf(cell -> cell[0] == row && cell[1] == ITEM_NAME_INDEX);
 
                             tableModel.setValueAt("", row, designIdIndex);
-                            tableModel.setValueAt("", row, billDetails.indexOf("ItemName"));
-                            tableModel.setValueAt("", row, billDetails.indexOf("Raw"));
+                            tableModel.setValueAt("", row, ITEM_NAME_INDEX);
+                            tableModel.setValueAt("", row, RAW_INDEX);
                         }
 
                         DefaultTableModel newModel = redoModel();
@@ -645,9 +712,9 @@ public class NewBill extends JFrame {
                 } else {
                     // If designID field is empty, clear ItemName as well
                     tableModel.setValueAt("", row, designIdIndex);
-                    tableModel.setValueAt("", row, billDetails.indexOf("ItemName"));
-                    tableModel.setValueAt("", row, billDetails.indexOf("Raw"));
-                    listOfNonEditableCells.removeIf(cell -> cell[0] == row && cell[1] == billDetails.indexOf("ItemName"));
+                    tableModel.setValueAt("", row, ITEM_NAME_INDEX);
+                    tableModel.setValueAt("", row, RAW_INDEX);
+                    listOfNonEditableCells.removeIf(cell -> cell[0] == row && cell[1] == ITEM_NAME_INDEX);
 
                 }
             }
@@ -699,58 +766,57 @@ public class NewBill extends JFrame {
 
             }
 
-            double labour = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("L")));
-            tableModel.setValueAt(labour == 0 ? "" : labour, row, billDetails.indexOf("L"));
-            double raw = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Raw")));
-            tableModel.setValueAt(raw == 0 ? "" : raw, row, billDetails.indexOf("Raw"));
-            double dullChillai = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("dc")));
-            tableModel.setValueAt(dullChillai == 0 ? "" : dullChillai, row, billDetails.indexOf("dc"));
-            double mCm = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("M/CM")));
-            tableModel.setValueAt(mCm == 0 ? "" : mCm, row, billDetails.indexOf("M/CM"));
-            double rh = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Rh")));
-            tableModel.setValueAt(rh == 0 ? "" : rh, row, billDetails.indexOf("Rh"));
-            double nag = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Nag")));
-            tableModel.setValueAt(nag == 0 ? "" : nag, row, billDetails.indexOf("Nag"));
-            double other = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Other")));
-            tableModel.setValueAt(other == 0 ? "" : other, row, billDetails.indexOf("Other"));
+            double labour = getDoubleValue(tableModel.getValueAt(row, LABOUR_INDEX));
+            tableModel.setValueAt(labour == 0 ? "" : labour, row, LABOUR_INDEX);
+            double raw = getDoubleValue(tableModel.getValueAt(row, RAW_INDEX));
+            tableModel.setValueAt(raw == 0 ? "" : raw, row, RAW_INDEX);
+            double dullChillai = getDoubleValue(tableModel.getValueAt(row, DULL_CHILLAI_INDEX));
+            tableModel.setValueAt(dullChillai == 0 ? "" : dullChillai, row, DULL_CHILLAI_INDEX);
+            double mCm = getDoubleValue(tableModel.getValueAt(row, MEENA_INDEX));
+            tableModel.setValueAt(mCm == 0 ? "" : mCm, row, MEENA_INDEX);
+            double rh = getDoubleValue(tableModel.getValueAt(row, RHODIUM_INDEX));
+            tableModel.setValueAt(rh == 0 ? "" : rh, row, RHODIUM_INDEX);
+            double nag = getDoubleValue(tableModel.getValueAt(row, NAG_SETTING_INDEX));
+            tableModel.setValueAt(nag == 0 ? "" : nag, row, NAG_SETTING_INDEX);
+            double other = getDoubleValue(tableModel.getValueAt(row, OTHER_BASE_INDEX));
+            tableModel.setValueAt(other == 0 ? "" : other, row, OTHER_BASE_INDEX);
             double plusG;
-            double goldIngG = getDoubleValue(tableModel.getValueAt(row, billDetails.indexOf("Gold(ing g)")));
-            tableModel.setValueAt(goldIngG == 0 ? "" : goldIngG, row, billDetails.indexOf("Gold(ing g)"));
+            double goldIngG = getDoubleValue(tableModel.getValueAt(row, GOLD_WEIGHT_INDEX));
+            tableModel.setValueAt(goldIngG == 0 ? "" : goldIngG, row, GOLD_WEIGHT_INDEX);
             double goldCost;
             double total;
-//                if (col == billDetails.indexOf("L") || col == billDetails.indexOf("Raw") || col == billDetails.indexOf("dc") || col == billDetails.indexOf("M/CM") || col == billDetails.indexOf("Rh") || col == billDetails.indexOf("Nag") || col == billDetails.indexOf("Other") || col == billDetails.indexOf("+G") || col == billDetails.indexOf("Gold(ing g)") || col == billDetails.indexOf("gold cost") || col == billDetails.indexOf("total"))
 
             plusG = labour + raw + dullChillai + mCm + rh + nag + other;
             goldCost = goldIngG * goldrate;
             plusG *= quantity;
             total = plusG + goldCost;
-            tableModel.setValueAt(total == 0 ? "" : total, row, billDetails.indexOf("total"));
-            tableModel.setValueAt(plusG == 0 ? "" : plusG, row, billDetails.indexOf("+G"));
-            tableModel.setValueAt(goldCost == 0 ? "" : goldCost, row, billDetails.indexOf("gold cost"));
+            tableModel.setValueAt(total == 0 ? "" : total, row, TOTAL_COST_INDEX);
+            tableModel.setValueAt(plusG == 0 ? "" : plusG, row, PLUSGOLD);
+            tableModel.setValueAt(goldCost == 0 ? "" : goldCost, row, GOLD_COST_INDEX);
 
 
             if (updateThroughSlip) {
                 createBillToOrderSlipAssosciation(sno, itemID);
                 updateThroughSlip = false;
             }
-            checkAndRemoveRow(row, tableModel, billDetails.indexOf("SNo"), false);
+            checkAndRemoveRow(row, tableModel, SNO_INDEX, false);
             double grandTotal = 0;
             for (int i = 0; i < tableModel.getRowCount(); i++) {
-                double value = tableModel.getValueAt(i, billDetails.indexOf("total")) == null ? 0 : tableModel.getValueAt(i, billDetails.indexOf("total")).toString().isEmpty() ? 0 : Double.parseDouble(tableModel.getValueAt(i, billDetails.indexOf("total")).toString());
+                double value = tableModel.getValueAt(i, TOTAL_COST_INDEX) == null ? 0 : tableModel.getValueAt(i, TOTAL_COST_INDEX).toString().isEmpty() ? 0 : Double.parseDouble(tableModel.getValueAt(i, TOTAL_COST_INDEX).toString());
                 grandTotal += value;
             }
             grandTotalLabel.setText("Grand total:" + grandTotal);
+            if (col == ITEM_NAME_INDEX) {
 
+                String value = codeToItemName.get(getStringValue(tableModel, row, ITEM_NAME_INDEX, "").trim().toUpperCase());
+                if (value != null) tableModel.setValueAt(value, row, ITEM_NAME_INDEX);
+            }
             billTable.repaint();
             UtilityMethods.addModelListeners(listeners, tableModel);
-            for (TableModelListener l : listeners) System.out.println(l);
-            System.out.println("listeners added");
         });
 
 
         try {
-
-
             Statement stmt2 = C.createStatement();
             ResultSet rs2 = stmt2.executeQuery("select type_name from ordertype;");
             while (rs2.next()) {
@@ -768,7 +834,6 @@ public class NewBill extends JFrame {
 
     }
 
-    int i = 0;
 
 //    private void generateBillID() {
 //        try {
@@ -825,28 +890,26 @@ public class NewBill extends JFrame {
                 sno++; // Increment SNo
                 tableModel.setValueAt(sno, i, snoIndex); // Set new value in SNo column
             }
-            tableModel.setValueAt("", billTable.getRowCount() - 1, billDetails.indexOf("SNo"));
+            tableModel.setValueAt("", billTable.getRowCount() - 1, SNO_INDEX);
             this.sno = sno;
         }
     }
 
     private void reCheckEnableDisableInItemNameColumn() {
-        listOfNonEditableCells.removeIf(cell -> cell[1] == billDetails.indexOf("ItemName"));
+        listOfNonEditableCells.removeIf(cell -> cell[1] == ITEM_NAME_INDEX);
         for (int i = 0; i < tableModel.getRowCount(); i++) {
-            String value = tableModel.getValueAt(i, billDetails.indexOf("DesignID")) == null ? "" : tableModel.getValueAt(i, billDetails.indexOf("DesignID")).toString();
-            if (!value.isEmpty()) listOfNonEditableCells.add(new Integer[]{i, billDetails.indexOf("ItemName")});
+            String value = tableModel.getValueAt(i, DESIGN_ID_INDEX) == null ? "" : tableModel.getValueAt(i, DESIGN_ID_INDEX).toString();
+            if (!value.isEmpty()) listOfNonEditableCells.add(new Integer[]{i, ITEM_NAME_INDEX});
         }
     }
 
     private void relinkAssociations(int removeSNO) //THIS FUNCTION IS ONLY CALLED WHEN DELETING A ITEM ROW FROM BILL TABLE WHICH
 //            CORRUSPONDS TO A ORDER SLIP
-
     {
         if (snoToItemIdMap.get(removeSNO) == null) return;
         HashMap<Integer, Integer> tempMap = new HashMap<>();
         int itemid = snoToItemIdMap.get(removeSNO);
-        System.out.println(tableModel.getValueAt(removeSNO, billDetails.indexOf("Quantity")) == null ? "" : tableModel.getValueAt(removeSNO, billDetails.indexOf("Quantity")).toString());
-        int quantity = Integer.parseInt(tableModel.getValueAt(removeSNO - 1, billDetails.indexOf("Quantity")).toString());
+        int quantity = Integer.parseInt(tableModel.getValueAt(removeSNO - 1, QUANTITY_INDEX).toString());
         Connection temp = getTransacTemp();
 
         try {
@@ -858,8 +921,7 @@ public class NewBill extends JFrame {
 
 
             stmt.executeUpdate();
-            if (searchResultWindow.isVisible())
-                searchResultWindow.fetchData(searchResultWindow.getTableModel());
+            if (searchResultWindow.isVisible()) searchResultWindow.fetchData(searchResultWindow.getTableModel());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -905,13 +967,13 @@ public class NewBill extends JFrame {
                     }
                 }
 
-                if (column == billDetails.indexOf("SNo")) return false;
-                if (column == billDetails.indexOf("OrderSlip/quantity")) return false;
-                if (column == billDetails.indexOf("total")) return false;
-                if (column == billDetails.indexOf("+G")) return false;
-                if (column == billDetails.indexOf("gold cost")) return false;
-                String value = tableModel.getValueAt(row, billDetails.indexOf("OrderSlip/quantity")) == null ? "" : tableModel.getValueAt(row, billDetails.indexOf("OrderSlip/quantity")).toString();
-                return (column != billDetails.indexOf("Quantity") && column != billDetails.indexOf("DesignID")) || value.isEmpty();
+                if (column == SNO_INDEX) return false;
+                if (column == ORDER_SLIP_QUANTITY_INDEX) return false;
+                if (column == TOTAL_COST_INDEX) return false;
+                if (column == PLUSGOLD) return false;
+                if (column == GOLD_COST_INDEX) return false;
+                String value = tableModel.getValueAt(row, ORDER_SLIP_QUANTITY_INDEX) == null ? "" : tableModel.getValueAt(row, ORDER_SLIP_QUANTITY_INDEX).toString();
+                return (column != QUANTITY_INDEX && column != DESIGN_ID_INDEX) || value.isEmpty();
             }
         };
 

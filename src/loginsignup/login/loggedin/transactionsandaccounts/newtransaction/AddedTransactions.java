@@ -18,18 +18,20 @@ public class AddedTransactions extends JFrame {
         setContentPane(panel);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
-    public void init(){
+
+    public void init() {
 
     }
+
     public void fetchData(LocalDate date) {
         String[] columnNames = {"ID", "Date", "Party", "In", "Out"};
         DefaultTableModel model = new DefaultTableModel(columnNames, 0);
 
         String query = "SELECT transaction_id, date, customer_name, amount FROM transactions WHERE date = ?";
 
-        try (Connection conn =MyClass.C;
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
+        try  {
+            Connection conn = MyClass.C;
+            PreparedStatement stmt = conn.prepareStatement(query);
             stmt.setDate(1, java.sql.Date.valueOf(date));  // Convert LocalDate to java.sql.Date
 
             ResultSet rs = stmt.executeQuery();
@@ -41,7 +43,7 @@ public class AddedTransactions extends JFrame {
                 double amount = rs.getDouble("amount");
 
                 // Depending on whether it's incoming or outgoing
-                Object[] row = new Object[] {
+                Object[] row = new Object[]{
                         id,
                         sqlDate.toLocalDate(),  // back to LocalDate if needed
                         party,
@@ -55,7 +57,9 @@ public class AddedTransactions extends JFrame {
             transactionTable.setModel(model);
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+//            throw new RuntimeException(e);
+            e.printStackTrace();
+            return;
         }
     }
 

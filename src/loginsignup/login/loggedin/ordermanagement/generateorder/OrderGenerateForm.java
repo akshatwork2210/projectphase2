@@ -1,15 +1,12 @@
 package loginsignup.login.loggedin.ordermanagement.generateorder;
 
 import mainpack.MyClass;
-import testpackage.UtilityMethods;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
-import javax.swing.text.TableView;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
@@ -25,7 +22,7 @@ import java.util.Vector;
 
 import static testpackage.UtilityMethods.*;
 
-public class OrderGenerateForm extends JFrame {
+public class   OrderGenerateForm extends JFrame {
 
     HashMap<Integer, String> snoToDetailsMap;
     private JPanel panel;
@@ -39,10 +36,21 @@ public class OrderGenerateForm extends JFrame {
     private JButton resetFormButton;
     private JButton undoResetButton;
     private JComboBox<String> dateComboBox;
+    //THE BELOW CODE IS FOR COLUMN NAMES CONSTANTS
+    public static final int DESIGN_ID_INDEX = 0;
+    public static final int ITEM_NAME_INDEX = 1;
+    public static final int QUANTITY_INDEX = 2;
+    public static final int PLATING_INDEX = 3;
+    public static final int RAW_MATERIAL_COST_INDEX = 4;
+    public static final int OTHER_DETAILS_INDEX = 5;
+
+
     ArrayList<Integer[][]> ar;
     Vector<Integer[]> listOfDisabledCells;
 
+
     public OrderGenerateForm() {
+
         backupModel = null;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -111,19 +119,20 @@ public class OrderGenerateForm extends JFrame {
                 // Loop through each row and insert into order_slips
                 for (int i = 0; i < rowCount - 1; i++) {
                     created = true;
-                    if (model.getValueAt(i, 1).toString().contentEquals("")) break;
-                    String designId = (String) model.getValueAt(i, 0);
-                    String itemName = (String) model.getValueAt(i, 1);
+                    if (model.getValueAt(i, ITEM_NAME_INDEX)==null||model.getValueAt(i, ITEM_NAME_INDEX).toString().trim().contentEquals("")) break;
+                    String designId = (String) model.getValueAt(i, DESIGN_ID_INDEX);
+                    String itemName = (String) model.getValueAt(i, ITEM_NAME_INDEX);
 
-                    int quantity = !model.getValueAt(i, 2).toString().contentEquals("") ? Integer.parseInt(model.getValueAt(i, 2).toString()) : 0;
-                    double platingGrams = Double.parseDouble(model.getValueAt(i, 3).toString());
-                    double rawMaterialCost = Double.parseDouble(model.getValueAt(i, 4).toString());
+                    int quantity = !model.getValueAt(i, QUANTITY_INDEX).toString().contentEquals("") ? Integer.parseInt(model.getValueAt(i, QUANTITY_INDEX).toString()) : 0;
+                    double platingGrams = getDoubleValue(model.getValueAt(i, PLATING_INDEX))==null?0: getDoubleValue(model.getValueAt(i, PLATING_INDEX));
+                    double rawMaterialCost = getDoubleValue(model.getValueAt(i, RAW_MATERIAL_COST_INDEX))==null?0: getDoubleValue(model.getValueAt(i, RAW_MATERIAL_COST_INDEX));
                     String otherDetails;
                     try {
-                        otherDetails = model.getValueAt(i, 5).toString();
+                        otherDetails = model.getValueAt(i, OTHER_DETAILS_INDEX).toString();
                     } catch (NullPointerException ex) {
                         otherDetails = "";
                     }
+
                     String customerName = customerNameComboBox.getSelectedItem() == null ? "" : customerNameComboBox.getSelectedItem().toString();
                     String orderSlipType = orderSlipTypeComboBox.getSelectedItem().toString();
                     int sno = i + 1;
@@ -159,6 +168,16 @@ public class OrderGenerateForm extends JFrame {
         });
     }
 
+    private Double getDoubleValue(Object string) {
+        if (string == null) return null;
+
+        try {
+            return Double.parseDouble(string.toString());
+        } catch (NumberFormatException e) {
+        return null;
+        }
+    }
+
     int prevRow = 0;
     DefaultTableModel model;
 
@@ -169,6 +188,7 @@ public class OrderGenerateForm extends JFrame {
 
         generateAndAddDates(dateComboBox, false);
         String[] columnNames = {"design id", "Item Name", "Quantity", "Plating", "Raw Material Cost", "Other Details"};//jtable content
+
         orderSlip.getTableHeader().setReorderingAllowed(false);
         // Create a DefaultTableModel with columns and no rows initially
         model = new DefaultTableModel(columnNames, 1);
@@ -179,7 +199,6 @@ public class OrderGenerateForm extends JFrame {
                 int row = e.getFirstRow();
                 int column = e.getColumn();
                 model.removeTableModelListener(modelListener);
-                int designIDindex = orderSlip.getColumnModel().getColumnIndex("design id");
                 String cellContent;
                 try {
                     cellContent = model.getValueAt(row, column) == null ? "" : model.getValueAt(row, column).toString();
@@ -187,27 +206,24 @@ public class OrderGenerateForm extends JFrame {
                     disableName();
                     return;
                 }
-                if (column == designIDindex) {
+                if (column == DESIGN_ID_INDEX) {
                     if (!cellContent.contentEquals("")) {
                         try {
                             Statement stmt = MyClass.C.createStatement();
-                            String designid = orderSlip.getModel().getValueAt(row, designIDindex) == null ? "" : orderSlip.getModel().getValueAt(row, designIDindex).toString();
+                            String designid = orderSlip.getModel().getValueAt(row, DESIGN_ID_INDEX) == null ? "" : orderSlip.getModel().getValueAt(row, DESIGN_ID_INDEX).toString();
                             ResultSet resultSet = stmt.executeQuery("Select * from inventory where DesignID= '" + designid + "';");
                             if (resultSet.next()) {
                                 if (resultSet.getString(1).contentEquals(cellContent)) {
-                                    model.setValueAt(resultSet.getString("itemname"), row, 1);
-                                    model.setValueAt(resultSet.getString("price"), row, 4);
-                                    model.setValueAt(resultSet.getString(1), row, 0);
+                                    model.setValueAt(resultSet.getString("itemname"), row, ITEM_NAME_INDEX);
+                                    model.setValueAt(resultSet.getDouble("price"), row, RAW_MATERIAL_COST_INDEX);
                                 }
 
                             } else {
                                 TableColumnModel columnModel = orderSlip.getColumnModel();
-                                model.setValueAt("", row, columnModel.getColumnIndex("design id"));
-                                model.setValueAt("", row, columnModel.getColumnIndex("Item Name"));
-                                model.setValueAt("", row, columnModel.getColumnIndex("Raw Material Cost"));
-
+                                model.setValueAt("", row, DESIGN_ID_INDEX);
+                                model.setValueAt("", row, ITEM_NAME_INDEX);
+                                model.setValueAt("", row, RAW_MATERIAL_COST_INDEX);
                                 //add code to make raw amount also emppty
-
                                 prevRow = 0;
                             }
 
@@ -217,6 +233,16 @@ public class OrderGenerateForm extends JFrame {
                         }
 
                     }
+                }
+                if (column == QUANTITY_INDEX) {
+                    model.setValueAt(getIntegerValue(model.getValueAt(row, QUANTITY_INDEX)) == null ? "" : getIntegerValue(model.getValueAt(row, QUANTITY_INDEX)), row, QUANTITY_INDEX);
+                }
+                if (column == RAW_MATERIAL_COST_INDEX){
+                    model.setValueAt(getDoubleValue(model.getValueAt(row,RAW_MATERIAL_COST_INDEX)==null?"":getDoubleValue(model.getValueAt(row,RAW_MATERIAL_COST_INDEX))),row,RAW_MATERIAL_COST_INDEX);
+                }
+                if(column== PLATING_INDEX){
+                    model.setValueAt(getDoubleValue(model.getValueAt(row,PLATING_INDEX)==null?"":getDoubleValue(model.getValueAt(row,PLATING_INDEX))),row,PLATING_INDEX);
+
                 }
                 int lastRow = model.getRowCount() - 1;
                 if (row == lastRow && !cellContent.isEmpty()) {
@@ -280,11 +306,22 @@ public class OrderGenerateForm extends JFrame {
 
     }
 
+    private Integer getIntegerValue(Object value) {
+        if (value == null) return null;
+        try {
+            return Integer.valueOf(value.toString().trim());
+        } catch (NumberFormatException ex) {
+            System.err.println("Invalid integer input at line 311: " + value);
+            return null;
+        }
+    }
+
+
     private void reMapKeys(int sno) {
         HashMap<Integer, String> tempMap = new HashMap<>();
 
-        Iterator<Integer> iterator = snoToDetailsMap==null?null:snoToDetailsMap.keySet().iterator();
-        while (iterator!=null && iterator.hasNext()) {
+        Iterator<Integer> iterator = snoToDetailsMap == null ? null : snoToDetailsMap.keySet().iterator();
+        while (iterator != null && iterator.hasNext()) {
             int key = iterator.next();
             if (key < sno) {
                 tempMap.put(key, snoToDetailsMap.get(key));
