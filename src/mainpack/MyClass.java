@@ -5,7 +5,7 @@ import loginsignup.login.LOGIN;
 import loginsignup.login.loggedin.AddParty;
 import loginsignup.login.loggedin.MainScreen;
 import loginsignup.login.loggedin.accountingandledger.AALScreen;
-import loginsignup.login.loggedin.accountingandledger.ledgerwindows.ItemLedger;
+import loginsignup.login.loggedin.accountingandledger.ledgerwindows.LedgerWindow;
 import loginsignup.login.loggedin.billing.BillingScreen;
 import loginsignup.login.loggedin.billing.newBill.NewBill;
 import loginsignup.login.loggedin.billing.newBill.SearchResultWindow;
@@ -77,7 +77,7 @@ public class MyClass {
         {
             purchaseBill = new PurchaseBill();
             login = new LOGIN();
-            itemLedger=new ItemLedger();
+            ledgerWindow =new LedgerWindow();
             login_signup = new LOGIN_SIGNUP();
             billingScreen = new BillingScreen();
             mainScreen = new MainScreen();
@@ -138,7 +138,7 @@ public class MyClass {
     public static ViewTransactions viewTransactions;
     public static AddParty addParty;
     public static ViewBackendBill viewBackendBill;
-    public static ItemLedger itemLedger;
+    public static LedgerWindow ledgerWindow;
 
     public static Connection getConnection(String url, String user, String password) {
         Connection conn;

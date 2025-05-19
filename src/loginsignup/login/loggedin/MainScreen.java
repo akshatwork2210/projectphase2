@@ -3,6 +3,10 @@ package loginsignup.login.loggedin;
 import java.io.*;
 
 import loginsignup.login.loggedin.accountingandledger.AALScreen;
+import loginsignup.login.loggedin.billing.BillingScreen;
+import loginsignup.login.loggedin.billing.newBill.NewBill;
+import loginsignup.login.loggedin.transactionsandaccounts.Transactions;
+import loginsignup.login.loggedin.transactionsandaccounts.newtransaction.NewTransaction;
 import mainpack.MyClass;
 import org.w3c.dom.html.HTMLDivElement;
 
@@ -16,6 +20,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Date;
+import java.util.Random;
 
 public class MainScreen extends JFrame {
     public void createBackup() {
@@ -116,6 +121,8 @@ public class MainScreen extends JFrame {
         billingButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+
+                MyClass.billingScreen = new BillingScreen();
                 MyClass.billingScreen.setVisible(true);
                 setVisible(false);
 
@@ -167,8 +174,9 @@ public class MainScreen extends JFrame {
         addPartyButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                MyClass.addParty.setVisible(true);
+                MyClass.addParty=new AddParty();
                 MyClass.addParty.init();
+                MyClass.addParty.setVisible(true);
             }
         });
         accountingAndLedgerButton.addActionListener(new ActionListener() {
@@ -183,6 +191,7 @@ public class MainScreen extends JFrame {
         textField.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+
                 String text = textField.getText();
                 if (text.startsWith("delete ")) {
                     String date = text.substring(7);
@@ -194,12 +203,45 @@ public class MainScreen extends JFrame {
                     }
 
                 }
+                if (text.startsWith("randomGenerationOfBills ")) {
+                    int numberofDays= Integer.parseInt(text.substring(24));
+                    generateBillsAndTransaction(numberofDays);
+                }
             }
         });
     }
 
+    private void generateBillsAndTransaction(int numberOfDays) {
+
+        Random random=new Random();
+        for(int counter=0;counter<numberOfDays;counter++) {
+            boolean choice=random.nextBoolean();//true means generating transaction
+            int numberOfTransactions=1+random.nextInt(4);
+            if(!choice) {
+                for (int subCounter = 0; subCounter < numberOfTransactions; subCounter++) {
+                    MyClass.newBill = new NewBill();
+                    MyClass.newBill.init();
+                    int numberOfItems=1+random.nextInt(10);
+                    int date=numberOfDays-counter;
+                    MyClass.newBill.insertRandomValues(numberOfItems,date,null);
+                    MyClass.newBill.getSubmitButton().doClick();
+                    MyClass.newBill.getBackButton().doClick();
+                }
+            }
+            if(choice){
+                MyClass.newTransaction=new NewTransaction();
+                MyClass.newTransaction.init();
+                int date=numberOfDays-counter;
+                MyClass.newTransaction.generateTransactions(numberOfTransactions,date);
+                MyClass.newTransaction.getBackButton().doClick();
+            }
+
+        }
+
+    }
+
     private void deleteAndForwardBalance(LocalDate localDate) {
-                System.out.println(localDate.toString() + " deleting data");
+        System.out.println(localDate.toString() + " deleting data");
 //        String updateQuery = "update customers c join billdetails bd on bd.customer_name=c.customer_name set openingAccount=openingAccount + (select sum(totalfinalcost) from billdetails bd2 where bd2.customer_name=c.customer_name and bd2.date<?));";
         String updateQuery =
                 "UPDATE customers c " +
@@ -242,7 +284,7 @@ public class MainScreen extends JFrame {
             statement.close();
             con.commit();
         } catch (SQLException e) {
-            if(con!=null) {
+            if (con != null) {
                 try {
                     con.rollback();
                 } catch (SQLException ex) {
@@ -251,9 +293,9 @@ public class MainScreen extends JFrame {
             }
             e.printStackTrace();
             throw new RuntimeException(e);
-        }finally {
+        } finally {
             try {
-               if(con!=null) con.close();
+                if (con != null) con.close();
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }

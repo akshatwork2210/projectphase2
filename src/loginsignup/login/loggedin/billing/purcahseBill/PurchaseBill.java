@@ -141,7 +141,7 @@ public class PurchaseBill extends JFrame {
                 billStmt.setString(4, itemName);
                 billStmt.setInt(5, -quantity);
                 billStmt.setBigDecimal(6, rawCost);
-                billStmt.setBigDecimal(7, totalCost);
+                billStmt.setBigDecimal(7, totalCost.negate());
                 grandTotal = grandTotal.add(totalCost);
                 // Fill remaining required fields with defaults
                 billStmt.setString(8, "purchase"); // example OrderType

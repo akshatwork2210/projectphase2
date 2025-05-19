@@ -147,8 +147,10 @@ public class UtilityMethods {
                 while (rs.next()) {
                     if (rs.getInt(3) == billID) lastbillTotal += rs.getDouble(1);
                     grandTotalBill += rs.getDouble(1);
-                    System.out.println(rs.getDouble(1) + "   from sql" + rs.getDouble(2));
+//                    System.out.println(rs.getDouble(1) + "   from sql" + rs.getDouble(2));
                 }
+                System.out.println(grandTotalBill+ " value of grand total bill");
+
             }
             statement.close();
             statement = MyClass.C.prepareStatement(transactionQuery);
@@ -183,7 +185,14 @@ public class UtilityMethods {
             throw new RuntimeException(e);
         }
     }
+    public static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
 
+        long factor = (long) Math.pow(10, places);
+        value = value * factor;
+        long tmp = Math.round(value);
+        return (double) tmp / factor;
+    }
     public static void writeTableToExcel(JTable table, String filename) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Table Data");

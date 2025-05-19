@@ -218,7 +218,7 @@ public class ViewBackendBill extends JFrame {
                 row.add(rs.getString("TotalBaseCosting") == null ? "0" : rs.getString("TotalBaseCosting")); // +G
                 row.add(rs.getString("GoldPlatingWeight") == null ? "0" : rs.getString("GoldPlatingWeight")); // Gold(g)
                 row.add(rs.getString("GoldRate") == null ? "0" : rs.getString("GoldRate")); // Gold Rate
-                row.add(rs.getString("TotalFinalCost") == null ? "0" : rs.getString("TotalFinalCost")); // Total
+                    row.add(rs.getString("TotalFinalCost") == null ? "0" : rs.getString("TotalFinalCost")); // Total
 
                 model.addRow(row);
             } while (rs.next());

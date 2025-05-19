@@ -39,6 +39,7 @@ public class NewBill extends JFrame {
     public static final int GOLD_WEIGHT_INDEX = 14;       // "Gold(ing g)"
     public static final int GOLD_COST_INDEX = 15;
     public static final int TOTAL_COST_INDEX = 16;        // "total"
+    private static int modular = 1;
     int itemID;
     private LocalDateTime dateTime;
     private double goldrate;
@@ -243,7 +244,6 @@ public class NewBill extends JFrame {
                 grandTotal = grandTotal + totalFinalCost;
 
             }
-            System.out.println(grandTotal + " is the grand total");
 
 
             billDetailsStatement.executeBatch();
@@ -253,10 +253,10 @@ public class NewBill extends JFrame {
             customerTableStatement.setDouble(1, grandTotal);
             customerTableStatement.setString(2, customerName);
             customerTableStatement.executeUpdate();
-
+            System.out.println(billID + " is the billid");
             conn.commit(); // Commit transaction
 
-            JOptionPane.showMessageDialog(null, "Bill details saved successfully! bill id is " + getCurBillID());
+            //            JOptionPane.showMessageDialog(null, "Bill details saved successfully! bill id is " + getCurBillID());
             billTable.repaint();
             return true;
         } catch (Exception ex) {
@@ -333,9 +333,9 @@ public class NewBill extends JFrame {
                 double goldcost;
                 if (i == 8) {
                     goldcost = goldrate * numericValue;
-                    tableModel.setValueAt(goldcost == 0 ? "" : goldcost, row, GOLD_COST_INDEX);
+                    tableModel.setValueAt(goldcost == 0 ? "" : UtilityMethods.round(goldcost, 2), row, GOLD_COST_INDEX);
 
-                    tableModel.setValueAt((goldcost + plusG) == 0 ? "" : (goldcost + plusG), row, TOTAL_COST_INDEX);
+                    tableModel.setValueAt((goldcost + plusG) == 0 ? "" : UtilityMethods.round(goldcost + plusG, 2), row, TOTAL_COST_INDEX);
                 }
 
                 i++;
@@ -343,7 +343,7 @@ public class NewBill extends JFrame {
             }
             int quantity = tableModel.getValueAt(row, QUANTITY_INDEX) != null && !tableModel.getValueAt(row, QUANTITY_INDEX).toString().isEmpty() ? Integer.parseInt((tableModel.getValueAt(row, QUANTITY_INDEX).toString())) : 0;
             plusG = plusG * quantity;
-            tableModel.setValueAt(plusG == 0 ? "" : plusG, row, PLUSGOLD);
+            tableModel.setValueAt(plusG == 0 ? "" : UtilityMethods.round(plusG, 2), row, PLUSGOLD);
 
             plusG = 0;
             i = 0;
@@ -481,13 +481,21 @@ public class NewBill extends JFrame {
                 newBill = new NewBill();
                 newBill.init();
                 newBill.setVisible(true);
+//                if(NewBill.randomFlag && NewBill.modular%50!=0){
+//                Random random=new Random();
+//                    newBill.insertRandomValues(8);
+//                    NewBill.modular++;
+//                    newBill.submitButton.doClick();
+//                }
             }
         });
         resetButton.addActionListener(e -> UtilityMethods.csvOut(tableModel));
         customerComboBox.addActionListener(e -> setCustomerName(customerComboBox.getSelectedItem() == null ? "" : customerComboBox.getSelectedItem().toString()));
         undoButton.addActionListener(e -> {
-            UtilityMethods.csvToTableModel(tableModel, "C:\\Users\\Aparw\\ShreeGurukripaJewellers\\output.csv");
-            billTable.repaint();
+            int date = 1;
+            insertRandomValues(8, date, (customerComboBox != null && customerComboBox.getSelectedIndex() != 0 && customerComboBox.getSelectedItem() != null ? customerComboBox.getSelectedItem().toString() : null));
+
+
         });
         dateComboBox.addActionListener(e -> setCurrentDate(UtilityMethods.parseDate(dateComboBox.getSelectedItem() == null ? "" : dateComboBox.getSelectedItem().toString())));
         resetButton1.addActionListener(new ActionListener() {
@@ -562,48 +570,31 @@ public class NewBill extends JFrame {
         LocalDate oneYearAgo = today.minusYears(1);
         billDetails = new Vector<>();
         billDetails.add("SNo");
-        System.out.println(SNO_INDEX);
         billDetails.add("OrderSlip/quantity");
-        System.out.println(ORDER_SLIP_QUANTITY_INDEX);
         billDetails.add("ItemName");
-        System.out.println(ITEM_NAME_INDEX);
 
         billDetails.add("Quantity");
-        System.out.println(QUANTITY_INDEX);
 
         billDetails.add("DesignID");
-        System.out.println(DESIGN_ID_INDEX);
 
         billDetails.add("L");
-        System.out.println(LABOUR_INDEX);
 
         billDetails.add("Raw");
-        System.out.println(RAW_INDEX);
 
         billDetails.add("dc");
-        System.out.println(DULL_CHILLAI_INDEX);
 
         billDetails.add("M/CM");
-        System.out.println(MEENA_INDEX);
 
         billDetails.add("Rh");
-        System.out.println(RHODIUM_INDEX);
 
         billDetails.add("Nag");
-        System.out.println(NAG_SETTING_INDEX);
 
         billDetails.add("Other");
-        System.out.println(OTHER_BASE_INDEX);
         billDetails.add("OtherDetails");
-        System.out.println(OTHER_DETAILS_INDEX);
         billDetails.add("+G");
-        System.out.println(PLUSGOLD);
         billDetails.add("Gold(ing g)");
-        System.out.println(GOLD_WEIGHT_INDEX);
         billDetails.add("gold cost");
-        System.out.println(GOLD_COST_INDEX);
         billDetails.add("total");
-        System.out.println(TOTAL_COST_INDEX);
 
         tableModel = new DefaultTableModel(billDetails, 1) {
             @Override
@@ -790,9 +781,9 @@ public class NewBill extends JFrame {
             goldCost = goldIngG * goldrate;
             plusG *= quantity;
             total = plusG + goldCost;
-            tableModel.setValueAt(total == 0 ? "" : total, row, TOTAL_COST_INDEX);
-            tableModel.setValueAt(plusG == 0 ? "" : plusG, row, PLUSGOLD);
-            tableModel.setValueAt(goldCost == 0 ? "" : goldCost, row, GOLD_COST_INDEX);
+            tableModel.setValueAt(total == 0 ? "" : UtilityMethods.round(total, 2), row, TOTAL_COST_INDEX);
+            tableModel.setValueAt(plusG == 0 ? "" : UtilityMethods.round(plusG, 2), row, PLUSGOLD);
+            tableModel.setValueAt(goldCost == 0 ? "" : UtilityMethods.round(goldCost, 2), row, GOLD_COST_INDEX);
 
 
             if (updateThroughSlip) {
@@ -805,7 +796,7 @@ public class NewBill extends JFrame {
                 double value = tableModel.getValueAt(i, TOTAL_COST_INDEX) == null ? 0 : tableModel.getValueAt(i, TOTAL_COST_INDEX).toString().isEmpty() ? 0 : Double.parseDouble(tableModel.getValueAt(i, TOTAL_COST_INDEX).toString());
                 grandTotal += value;
             }
-            grandTotalLabel.setText("Grand total:" + grandTotal);
+            grandTotalLabel.setText("Grand total:" + UtilityMethods.round(grandTotal, 2));
             if (col == ITEM_NAME_INDEX) {
 
                 String value = codeToItemName.get(getStringValue(tableModel, row, ITEM_NAME_INDEX, "").trim().toUpperCase());
@@ -833,9 +824,34 @@ public class NewBill extends JFrame {
         UtilityMethods.generateAndAddDates(dateComboBox, false);
 
     }
+//    private void insertRandomValues(int rows) {
+//        Random rand = new Random();
+//
+//        for (int r = 0; r < rows; r++) {
+//            // Create a new row with empty values
+//            Vector<Object> rowData = new Vector<>(Collections.nCopies(tableModel.getColumnCount(), ""));
+//
+//            tableModel.addRow(rowData); // add empty row first
+//
+//            for (int c = 0; c < tableModel.getColumnCount(); c++) {
+//                if (!tableModel.isCellEditable(r, c)) continue; // skip non-editable cells
+//                if (c == DESIGN_ID_INDEX) continue; // skip DesignID as requested
+//
+//                // Insert a dummy/random value
+//                if (c == ITEM_NAME_INDEX || c == OTHER_DETAILS_INDEX) {
+//                    tableModel.setValueAt("RandomText" + rand.nextInt(100), r, c);
+//                } else if (c == RAW_INDEX || c == LABOUR_INDEX || c == DULL_CHILLAI_INDEX || c == MEENA_INDEX ||
+//                        c == RHODIUM_INDEX || c == NAG_SETTING_INDEX || c == OTHER_BASE_INDEX) {
+//                    tableModel.setValueAt(rand.nextInt(100), r, c); // Random number 0-99
+//                } else {
+//                    tableModel.setValueAt(rand.nextDouble() * 10, r, c); // For gold weight etc.
+//                }
+//            }
+//        }
+//    }
 
 
-//    private void generateBillID() {
+    //    private void generateBillID() {
 //        try {
 //            Statement stmt1;
 //            stmt1 = C.createStatement();
@@ -856,6 +872,73 @@ public class NewBill extends JFrame {
 //            throw new RuntimeException(e);
 //        }
 //    }
+    public void insertRandomValues(int rows, int date, String customer_name) {
+        Random random = new Random();
+
+
+        for (int i = 0; i < rows; i++) {
+            String[] JEWELRY_ITEMS = {
+                    "Solitaire Ring", "Pearl Stud Earrings", "Diamond Pendant", "Gold Bangle", "Kundan Necklace",
+                    "Ruby Cocktail Ring", "Meenakari Jhumka", "Emerald Choker", "Platinum Chain", "CZ Toe Ring",
+                    "Antique Kada", "Temple Design Pendant", "Rose Gold Bracelet", "Dual-tone Hoops", "Navratna Necklace",
+                    "Sapphire Studs", "Victorian Brooch", "Adjustable Finger Ring", "Oxidized Anklet", "Layered Mangalsutra",
+                    "Traditional Nose Pin", "Butterfly Charm Pendant", "Bridal Matha Patti", "Tanzanite Drop Earrings", "Floral Armlet (Bajuband)"
+            };
+
+
+            int row = tableModel.getRowCount() - 1; // newly created row
+
+            // ITEM_NAME_INDEX
+            tableModel.setValueAt(JEWELRY_ITEMS[random.nextInt(JEWELRY_ITEMS.length)], row, ITEM_NAME_INDEX);
+            int goldRate = 9500 + random.nextInt(500);
+            goldRateTextField.setText(goldRate + "");
+
+            dateComboBox.setSelectedIndex(date);
+            if (customer_name == null)
+                customerComboBox.setSelectedIndex(1 + random.nextInt(customerComboBox.getItemCount() - 1));
+            else
+                customerComboBox.setSelectedItem(customer_name);
+                //            customerComboBox.setSelectedIndex(1);
+                // QUANTITY_INDEX
+                int quantity = 1 + random.nextInt(30);  // random int from 1 to 30
+            tableModel.setValueAt(quantity, row, QUANTITY_INDEX);
+
+            // LABOUR_INDEX ("L")
+            double labour = Math.round((1 + random.nextDouble() * 499) * 100.0) / 100.0;
+            tableModel.setValueAt(labour, row, LABOUR_INDEX);
+
+            // RAW_INDEX
+            double raw = Math.round((1 + random.nextDouble() * 499) * 100.0) / 100.0;
+            tableModel.setValueAt(raw, row, RAW_INDEX);
+
+            // DULL_CHILLAI_INDEX ("dc")
+            double dc = Math.round((1 + random.nextDouble() * 499) * 100.0) / 100.0;
+            tableModel.setValueAt(dc, row, DULL_CHILLAI_INDEX);
+
+            // MEENA_INDEX ("M/CM")
+            double meena = Math.round((1 + random.nextDouble() * 499) * 100.0) / 100.0;
+            tableModel.setValueAt(meena, row, MEENA_INDEX);
+
+            // RHODIUM_INDEX ("Rh")
+            double rhodium = Math.round((1 + random.nextDouble() * 499) * 100.0) / 100.0;
+            tableModel.setValueAt(rhodium, row, RHODIUM_INDEX);
+
+            // NAG_SETTING_INDEX ("Nag")
+            double nag = Math.round((1 + random.nextDouble() * 499) * 100.0) / 100.0;
+            tableModel.setValueAt(nag, row, NAG_SETTING_INDEX);
+
+            // OTHER_BASE_INDEX ("Other")
+            double other = Math.round((1 + random.nextDouble() * 499) * 100.0) / 100.0;
+            tableModel.setValueAt(other, row, OTHER_BASE_INDEX);
+
+            // OTHER_DETAILS_INDEX
+            tableModel.setValueAt("Note " + (random.nextInt(10) + 1), row, OTHER_DETAILS_INDEX);
+
+            // GOLD_WEIGHT_INDEX ("Gold(ing g)") - 1 to 5
+            double goldWeight = Math.round((1 + random.nextDouble() * 4) * 100.0) / 100.0;
+            tableModel.setValueAt(goldWeight, row, GOLD_WEIGHT_INDEX);
+        }
+    }
 
     private void checkAndRemoveRow(int row, DefaultTableModel tableModel, int snoIndex, boolean forceRemove) {
         // Ensure the row index is valid

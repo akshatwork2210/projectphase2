@@ -1,9 +1,10 @@
 package loginsignup.login.loggedin;
 
 import mainpack.MyClass;
+import testpackage.UtilityMethods;
 
 import javax.swing.*;
-import java.awt.*;
+import javax.swing.text.AbstractDocument;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.PreparedStatement;
@@ -17,15 +18,27 @@ public class AddParty extends JFrame {
     private JButton backButton;
     private JTextField customerNameField;
     private JButton addButton;
+    private JTextField openingBalanceTextField;
 
     public AddParty() {
-setContentPane(panel1);
+
+    }
+
+    private void reset() {
+        customerNameField.setText("");
+        openingBalanceTextField.setText("");
+
+    }
+
+    public void init() {
+//        ((AbstractDocument) openingBalanceTextField.getDocument()).setDocumentFilter(UtilityMethods.getDocFilter());
+        setContentPane(panel1);
         backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-                MyClass.mainScreen.setVisible(true);
 
+                MyClass.mainScreen.setVisible(true);
+                dispose();
 
             }
         });
@@ -34,17 +47,24 @@ setContentPane(panel1);
             public void actionPerformed(ActionEvent e) {
                 String name = customerNameField.getText().isEmpty() ? "error" : customerNameField.getText();
                 if (name.contentEquals("error")) return;
-                String query = "insert into customers(customer_name) values(?)";
-
+                String query = "insert into customers(customer_name,openingaccount,balance) values(?,?,0)";
+                double openingaccount=0;
+                try {
+                    openingaccount = Double.parseDouble(openingBalanceTextField.getText()==null || openingBalanceTextField.getText().trim().isEmpty()?"0": openingBalanceTextField.getText());
+                } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(addParty,"please enter valid balance");
+                return;
+                }
                 try {
                     PreparedStatement preparedStatement = MyClass.C.prepareStatement(query);
                     preparedStatement.setString(1, name);
+                    preparedStatement.setDouble(2, openingaccount);
                     preparedStatement.executeUpdate();
-                    JOptionPane.showMessageDialog(addParty,"succesfull operation");
+                    JOptionPane.showMessageDialog(addParty, "succesfull operation");
                     reset();
                 } catch (SQLIntegrityConstraintViolationException ex) {
 //                    throw new RuntimeException(ex);
-                    JOptionPane.showMessageDialog(addParty,"Part Name already exists");
+                    JOptionPane.showMessageDialog(addParty, "Part Name already exists");
                     ex.printStackTrace();
 
                     return;
@@ -54,13 +74,6 @@ setContentPane(panel1);
 
             }
         });
-    }
-
-    private void reset() {
-    customerNameField.setText("");
-    }
-
-    public void init() {
         pack();
 
     }
