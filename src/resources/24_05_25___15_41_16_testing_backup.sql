@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.36, for Win64 (x86_64)
 --
--- Host: localhost    Database: sample
+-- Host: localhost    Database: testing
 -- ------------------------------------------------------
 -- Server version	8.0.36
 
@@ -77,7 +77,7 @@ CREATE TABLE `bills` (
   PRIMARY KEY (`BillID`),
   KEY `fk_bill` (`customer_name`),
   CONSTRAINT `fk_bill` FOREIGN KEY (`customer_name`) REFERENCES `customers` (`customer_name`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2688 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2691 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -104,7 +104,7 @@ CREATE TABLE `customers` (
   `openingaccount` decimal(15,2) DEFAULT NULL,
   PRIMARY KEY (`customer_id`),
   UNIQUE KEY `customer_name` (`customer_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -113,7 +113,7 @@ CREATE TABLE `customers` (
 
 LOCK TABLES `customers` WRITE;
 /*!40000 ALTER TABLE `customers` DISABLE KEYS */;
-INSERT INTO `customers` VALUES (37,'Basheer Bhai',-40300.00,0.00),(38,'MOHSEEN BHAI',-26925.00,0.00);
+INSERT INTO `customers` VALUES (37,'Basheer Bhai',-40300.00,0.00),(38,'MOHSEEN BHAI',-26925.00,0.00),(39,'PAPPU JI KTN',0.00,0.00),(40,'GOLDEN PLAZA',0.00,0.00),(41,'OPG',0.00,0.00),(42,'TRIPATHI JI',0.00,0.00),(43,'RAJESH JI AJR',0.00,0.00),(44,'SANVI JI RAHUL',0.00,0.00),(45,'SHREE NITESH JI PRATAPGAD',0.00,0.00),(46,'PURUSHOTTUM JI',0.00,0.00),(47,'GJN SA',0.00,0.00),(48,'SHREE ARJUN LAL JI',0.00,0.00);
 /*!40000 ALTER TABLE `customers` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -129,6 +129,7 @@ CREATE TABLE `inventory` (
   `TotalQuantity` int NOT NULL,
   `itemname` varchar(50) DEFAULT NULL,
   `price` int DEFAULT NULL,
+  `OPENINGSTOCK` mediumtext,
   PRIMARY KEY (`DesignID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -139,7 +140,7 @@ CREATE TABLE `inventory` (
 
 LOCK TABLES `inventory` WRITE;
 /*!40000 ALTER TABLE `inventory` DISABLE KEYS */;
-INSERT INTO `inventory` VALUES ('2LMS4B',104,'2LINE MS LADI',230),('3LMS4B',35,'3LINE MS LADI',260),('BP',90,'BADE PANDAL',85),('KANCHAIN',208,'KANCHAIN',35),('MIDP',165,'MIDIUM PANDAL',75),('MINHGGS',30,'GHANTI GHUNGRU HAR',230);
+INSERT INTO `inventory` VALUES ('2LMS4B',104,'2LINE MS LADI',230,NULL),('3LMS4B',33,'3LINE MS LADI',260,NULL),('BP',90,'BADE PANDAL',85,NULL),('KANCHAIN',208,'KANCHAIN',35,NULL),('MIDP',139,'MIDIUM PANDAL',75,NULL),('MINHGGS',30,'GHANTI GHUNGRU HAR',230,NULL);
 /*!40000 ALTER TABLE `inventory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -173,7 +174,7 @@ CREATE TABLE `order_slips` (
   CONSTRAINT `fk_design_id` FOREIGN KEY (`design_id`) REFERENCES `inventory` (`DesignID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_slip_id` FOREIGN KEY (`slip_id`) REFERENCES `order_slips_main` (`slip_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `order_slips_ibfk_1` FOREIGN KEY (`slip_type`) REFERENCES `ordertype` (`type_name`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=448 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=464 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -182,6 +183,7 @@ CREATE TABLE `order_slips` (
 
 LOCK TABLES `order_slips` WRITE;
 /*!40000 ALTER TABLE `order_slips` DISABLE KEYS */;
+INSERT INTO `order_slips` VALUES ('Kachhe Ka Baaki','TRIPATHI JI',185.00,'AD DOKIYA NAG',4,0.20,'2025-05-20 15:15:24','',NULL,54,448,1,0),('Kachhe Ka Baaki','TRIPATHI JI',60.00,'3 LINE BOX CHAIN',1,0.30,'2025-05-20 15:15:24','',NULL,54,449,2,0),('Kachhe Ka Baaki','TRIPATHI JI',0.00,'AD TOPS JOD',5,0.05,'2025-05-20 15:15:24','ROD LAGANA',NULL,54,450,3,0),('Kachhe Ka Baaki','TRIPATHI JI',320.00,'HR CHUDI SET',2,0.60,'2025-05-20 15:15:24','CHOUDI CHUDI',NULL,54,451,4,0),('Kachhe Ka Baaki','GOLDEN PLAZA',90.00,'MIDIUM PANDAL',20,0.00,'2025-05-20 15:16:17','','MIDP',55,452,1,0),('Kachhe Ka Baaki','GOLDEN PLAZA',0.00,'RANI PATTA HAR SET',1,0.00,'2025-05-20 15:17:01','',NULL,56,453,1,0),('Kachhe Ka Baaki','OPG',0.00,'HATHFUL JODI',2,0.00,'2025-05-20 15:17:38','',NULL,57,454,1,0),('Kachhe Ka Baaki','RAJESH JI AJR',90.00,'MIDIUM PANDAL',6,0.00,'2025-05-20 15:19:02','','MIDP',58,455,1,0),('Kachhe Ka Baaki','TRIPATHI JI',0.00,'PLASTER PATLI SET',1,1.00,'2025-05-20 15:20:32','',NULL,59,456,1,0),('Kachhe Ka Baaki','TRIPATHI JI',250.00,'RAJWADI RING',476,0.00,'2025-05-20 15:21:08','',NULL,60,457,1,0),('Kachhe Ka Baaki','SHREE NITESH JI PRATAPGAD',260.00,'3LINE MS LADI',2,0.20,'2025-05-20 15:24:02','','3LMS4B',61,458,1,0),('Kachhe Ka Baaki','SHREE NITESH JI PRATAPGAD',80.00,'TIKA NAG',1,0.07,'2025-05-20 15:24:02','',NULL,61,459,2,0),('Kachhe Ka Baaki','SHREE NITESH JI PRATAPGAD',0.00,'TOPDI JODI',7,0.05,'2025-05-20 15:24:02','MEENA 7',NULL,61,460,3,0),('Kachhe Ka Baaki','GJN SA',200.00,'DOKIYA NAG',1,0.40,'2025-05-20 15:25:35','',NULL,62,461,1,0),('Kachhe Ka Baaki','SHREE ARJUN LAL JI',500.00,'MINI RANI HAR NAG',1,0.60,'2025-05-20 15:27:04','URGENT',NULL,63,462,1,0);
 /*!40000 ALTER TABLE `order_slips` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -197,7 +199,7 @@ CREATE TABLE `order_slips_main` (
   `slip_type` varchar(50) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`slip_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -206,6 +208,7 @@ CREATE TABLE `order_slips_main` (
 
 LOCK TABLES `order_slips_main` WRITE;
 /*!40000 ALTER TABLE `order_slips_main` DISABLE KEYS */;
+INSERT INTO `order_slips_main` VALUES (54,'Kachhe Ka Baaki','2025-05-20 15:15:24'),(55,'Kachhe Ka Baaki','2025-05-20 15:16:17'),(56,'Kachhe Ka Baaki','2025-05-20 15:17:01'),(57,'Kachhe Ka Baaki','2025-05-20 15:17:38'),(58,'Kachhe Ka Baaki','2025-05-20 15:19:02'),(59,'Kachhe Ka Baaki','2025-05-20 15:20:32'),(60,'Kachhe Ka Baaki','2025-05-20 15:21:08'),(61,'Kachhe Ka Baaki','2025-05-20 15:24:02'),(62,'Kachhe Ka Baaki','2025-05-20 15:25:35'),(63,'Kachhe Ka Baaki','2025-05-20 15:27:04');
 /*!40000 ALTER TABLE `order_slips_main` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -274,4 +277,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-05-19 20:57:35
+-- Dump completed on 2025-05-24 15:41:16

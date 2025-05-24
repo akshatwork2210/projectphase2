@@ -11,10 +11,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -22,7 +19,7 @@ import java.util.Vector;
 
 import static testpackage.UtilityMethods.*;
 
-public class   OrderGenerateForm extends JFrame {
+public class OrderGenerateForm extends JFrame {
 
     HashMap<Integer, String> snoToDetailsMap;
     private JPanel panel;
@@ -99,11 +96,21 @@ public class   OrderGenerateForm extends JFrame {
             }
             DefaultTableModel model = (DefaultTableModel) orderSlip.getModel();
             int rowCount = model.getRowCount();
+            Connection con = null;
+            PreparedStatement slipDataStatement = null;
+            PreparedStatement inventoryUpdateStatement = null;
 
             try {
+
                 // Generate a new slip_id for the entire batch
+                con = DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
+                con.setAutoCommit(false);
+
                 String insertMainQuery = "INSERT INTO order_slips_main (slip_type) VALUES (?)";
-                PreparedStatement stmt = MyClass.C.prepareStatement(insertMainQuery, Statement.RETURN_GENERATED_KEYS);
+                String inventoryUpdateQuery = "update inventory set totalquantity=totalquantity-? where designid=?";
+
+                inventoryUpdateStatement = con.prepareStatement(inventoryUpdateQuery);
+                PreparedStatement stmt = con.prepareStatement(insertMainQuery, Statement.RETURN_GENERATED_KEYS);
                 stmt.setString(1, orderSlipTypeComboBox.getSelectedItem() == null ? "" : orderSlipTypeComboBox.getSelectedItem().toString());
                 stmt.executeUpdate();
 
@@ -116,16 +123,19 @@ public class   OrderGenerateForm extends JFrame {
                 }
                 rs.close();
                 boolean created = false;
+                String slipDataInsertQuery = "INSERT INTO order_slips (slip_type, customer_name, slip_id, design_id, item_name, quantity, plating_grams, raw_material_price, other_details, sno) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                slipDataStatement = con.prepareStatement(slipDataInsertQuery);
                 // Loop through each row and insert into order_slips
                 for (int i = 0; i < rowCount - 1; i++) {
                     created = true;
-                    if (model.getValueAt(i, ITEM_NAME_INDEX)==null||model.getValueAt(i, ITEM_NAME_INDEX).toString().trim().contentEquals("")) break;
-                    String designId = (String) model.getValueAt(i, DESIGN_ID_INDEX);
+                    if (model.getValueAt(i, ITEM_NAME_INDEX) == null || model.getValueAt(i, ITEM_NAME_INDEX).toString().trim().contentEquals(""))
+                        break;
+                    String designId = model.getValueAt(i, DESIGN_ID_INDEX) != null ? model.getValueAt(i, DESIGN_ID_INDEX).toString() : "";
                     String itemName = (String) model.getValueAt(i, ITEM_NAME_INDEX);
 
                     int quantity = !model.getValueAt(i, QUANTITY_INDEX).toString().contentEquals("") ? Integer.parseInt(model.getValueAt(i, QUANTITY_INDEX).toString()) : 0;
-                    double platingGrams = getDoubleValue(model.getValueAt(i, PLATING_INDEX))==null?0: getDoubleValue(model.getValueAt(i, PLATING_INDEX));
-                    double rawMaterialCost = getDoubleValue(model.getValueAt(i, RAW_MATERIAL_COST_INDEX))==null?0: getDoubleValue(model.getValueAt(i, RAW_MATERIAL_COST_INDEX));
+                    double platingGrams = getDoubleValue(model.getValueAt(i, PLATING_INDEX)) == null ? 0 : getDoubleValue(model.getValueAt(i, PLATING_INDEX));
+                    double rawMaterialCost = getDoubleValue(model.getValueAt(i, RAW_MATERIAL_COST_INDEX)) == null ? 0 : getDoubleValue(model.getValueAt(i, RAW_MATERIAL_COST_INDEX));
                     String otherDetails;
                     try {
                         otherDetails = model.getValueAt(i, OTHER_DETAILS_INDEX).toString();
@@ -137,32 +147,55 @@ public class   OrderGenerateForm extends JFrame {
                     String orderSlipType = orderSlipTypeComboBox.getSelectedItem().toString();
                     int sno = i + 1;
                     // Insert Query
-                    String query = "INSERT INTO order_slips (slip_type, customer_name, slip_id, design_id, item_name, quantity, plating_grams, raw_material_price, other_details, sno) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-                    PreparedStatement preparedStatement = MyClass.C.prepareStatement(query);
-                    preparedStatement.setString(1, orderSlipType);
-                    preparedStatement.setString(2, customerName);
-                    preparedStatement.setInt(3, slipId);
-                    preparedStatement.setString(4, designId);
-                    preparedStatement.setString(5, itemName);
-                    preparedStatement.setInt(6, quantity);
-                    preparedStatement.setDouble(7, platingGrams);
-                    preparedStatement.setDouble(8, rawMaterialCost);
-                    preparedStatement.setString(9, otherDetails);
-                    preparedStatement.setInt(10, sno);
-
-                    preparedStatement.executeUpdate();
-                    preparedStatement.close();
 
 
+                    slipDataStatement.setString(1, orderSlipType);
+                    slipDataStatement.setString(2, customerName);
+                    slipDataStatement.setInt(3, slipId);
+                    if (!designId.isEmpty()) {
+                        inventoryUpdateStatement.setInt(1, quantity);
+                        inventoryUpdateStatement.setString(2, designId);
+                        inventoryUpdateStatement.addBatch();
+                    }
+                    slipDataStatement.setString(4, designId);
+
+                    slipDataStatement.setString(5, itemName);
+                    slipDataStatement.setInt(6, quantity);
+                    slipDataStatement.setDouble(7, platingGrams);
+                    slipDataStatement.setDouble(8, rawMaterialCost);
+                    slipDataStatement.setString(9, otherDetails);
+                    slipDataStatement.setInt(10, sno);
+                    slipDataStatement.addBatch();
                 }
+                slipDataStatement.executeBatch();
+                inventoryUpdateStatement.executeBatch();
+                con.commit();
+
                 if (created) System.out.println("New  slip created: Slip ID = " + slipId);
                 else
                     JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "Empty form  error", "error", JOptionPane.ERROR_MESSAGE);
 
             } catch (SQLException ex) {
 //                    ex.printStackTrace();
-                Thread.dumpStack();
+                try {
+                    con.rollback();
+                    System.out.println("rollbacked");
+                    ex.printStackTrace();
+                    return;
+                } catch (SQLException exc) {
+                    exc.printStackTrace();
+                    throw new RuntimeException(exc);
+                }
+            } finally {
+                try {
+                    if (inventoryUpdateStatement != null) inventoryUpdateStatement.close();
+                    if (slipDataStatement != null) slipDataStatement.close();
+                    if (con != null) con.close();
+                    System.out.println("connection closed");
+                } catch (SQLException ex) {
+                    System.out.println("could not close connection");
+                    throw new RuntimeException(ex);
+                }
             }
             init();
         });
@@ -174,7 +207,7 @@ public class   OrderGenerateForm extends JFrame {
         try {
             return Double.parseDouble(string.toString());
         } catch (NumberFormatException e) {
-        return null;
+            return null;
         }
     }
 
@@ -237,11 +270,11 @@ public class   OrderGenerateForm extends JFrame {
                 if (column == QUANTITY_INDEX) {
                     model.setValueAt(getIntegerValue(model.getValueAt(row, QUANTITY_INDEX)) == null ? "" : getIntegerValue(model.getValueAt(row, QUANTITY_INDEX)), row, QUANTITY_INDEX);
                 }
-                if (column == RAW_MATERIAL_COST_INDEX){
-                    model.setValueAt(getDoubleValue(model.getValueAt(row,RAW_MATERIAL_COST_INDEX)==null?"":getDoubleValue(model.getValueAt(row,RAW_MATERIAL_COST_INDEX))),row,RAW_MATERIAL_COST_INDEX);
+                if (column == RAW_MATERIAL_COST_INDEX) {
+                    model.setValueAt(getDoubleValue(model.getValueAt(row, RAW_MATERIAL_COST_INDEX) == null ? "" : getDoubleValue(model.getValueAt(row, RAW_MATERIAL_COST_INDEX))), row, RAW_MATERIAL_COST_INDEX);
                 }
-                if(column== PLATING_INDEX){
-                    model.setValueAt(getDoubleValue(model.getValueAt(row,PLATING_INDEX)==null?"":getDoubleValue(model.getValueAt(row,PLATING_INDEX))),row,PLATING_INDEX);
+                if (column == PLATING_INDEX) {
+                    model.setValueAt(getDoubleValue(model.getValueAt(row, PLATING_INDEX) == null ? "" : getDoubleValue(model.getValueAt(row, PLATING_INDEX))), row, PLATING_INDEX);
 
                 }
                 int lastRow = model.getRowCount() - 1;

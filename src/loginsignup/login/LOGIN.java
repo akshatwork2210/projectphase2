@@ -16,6 +16,7 @@ public class LOGIN extends JFrame {
     private JButton QUITButton;
     private JButton BACKButton;
     private JPanel panel;
+    private JCheckBox isProduction;
     private String loginID;
     private String password;
     private String host;
@@ -35,6 +36,7 @@ public class LOGIN extends JFrame {
     }
 
     private String url;
+
     public String getPassword() {
         return password;
     }
@@ -53,7 +55,7 @@ public class LOGIN extends JFrame {
                 System.exit(0);
             }
         });
-    pack();
+        pack();
         BACKButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -68,19 +70,19 @@ public class LOGIN extends JFrame {
             public void actionPerformed(ActionEvent e) {
 
                 try {
-                     host="localhost";
-                     database="sample";
-                    String port="3306";
-                    url = "jdbc:mysql://" + host + ":"+port+"/" + database;
-                    Connection c= MyClass.getConnection(url,user.getText(),pass.getText());
-                    MyClass.C=c;
-                    loginID=user.getText();
-                    password=pass.getText();
-                  Statement stmt;
-                    stmt=c.createStatement();
+                    host = "localhost";
+                    database = isProduction.isSelected() ? "sample" : "testing";
+                    String port = "3306";
+                    url = "jdbc:mysql://" + host + ":" + port + "/" + database;
+                    Connection c = MyClass.getConnection(url, user.getText(), pass.getText());
+                    MyClass.C = c;
+                    loginID = user.getText();
+                    password = pass.getText();
+                    Statement stmt;
+                    stmt = c.createStatement();
                 } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(MyClass.login,"error");
-                return;
+                    JOptionPane.showMessageDialog(MyClass.login, "error");
+                    return;
                 }
                 MyClass.mainScreen.setVisible(true);
                 setVisible(false);

@@ -10,17 +10,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.sql.Date;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Objects;
 
 import static testpackage.UtilityMethods.*;
 
 public class ViewOrders extends JFrame {
-    private int prevCustomerSelected = 0;
-    private String prevPanaSelected;
+    private static final int DESIGN_ID_INDEX = 0;
+    private static final int QUANTITY_INDEX = 2;
+    private static final boolean PREVIOUSPRESS = true;
+    private static final boolean NEXTPRESS = false;
 
 
     public ViewOrders() {
@@ -65,24 +64,21 @@ public class ViewOrders extends JFrame {
                 throw new RuntimeException(ex);
             } catch (NullPointerException ignored) {
             }
-            prevCustomerSelected = customerComboBox.getSelectedIndex();
         });
         panaTypeComboBox.addActionListener(e -> {
             id = 1;
             try {
                 Statement stmt = MyClass.C.createStatement();
-                String query;
-//                    query= + "WHERE customer_name = \"" + customerComboBox.getSelectedItem().toString() + "\" " + "AND slip_type = \"" + panaTypeComboBox.getSelectedItem().toString() + "\";";
-                query = "SELECT MIN(slip_id) FROM order_slips ";
+                String query = "SELECT MIN(slip_id) FROM order_slips ";
                 if (!(customerComboBox.getSelectedIndex() == 0)) {
-                    query += "WHERE customer_name = \"" + Objects.requireNonNull(customerComboBox.getSelectedItem()).toString() + "\" ";
+                    query += "WHERE customer_name = \"" + (customerComboBox.getSelectedItem() != null ? customerComboBox.getSelectedItem().toString() : "") + "\" ";
                     if (!(panaTypeComboBox.getSelectedIndex() == 0)) {
-                        query += "AND slip_type = \"" + Objects.requireNonNull(panaTypeComboBox.getSelectedItem()).toString() + "\";";
+                        query += "AND slip_type = \"" + (panaTypeComboBox.getSelectedItem() != null ? panaTypeComboBox.getSelectedItem().toString() : "") + "\";";
                     } else {
                         query += ";";
                     }
                 } else if (!(panaTypeComboBox.getSelectedIndex() == 0)) {
-                    query += "WHERE slip_type =\"" + Objects.requireNonNull(panaTypeComboBox.getSelectedItem()).toString() + "\";";
+                    query += "WHERE slip_type =\"" + Objects.requireNonNull(panaTypeComboBox.getSelectedItem()) + "\";";
 
                 } else query += ";";
 
@@ -106,7 +102,6 @@ public class ViewOrders extends JFrame {
         });
         backButton.addActionListener(e -> {
             panaTypeComboBox.getActionListeners();
-            ActionListener[] customers = customerComboBox.getActionListeners();
             setVisible(false);
             MyClass.orderScreen.setVisible(true);
         });
@@ -117,19 +112,7 @@ public class ViewOrders extends JFrame {
                 int id = getCurrentBillID();
                 try {
                     Statement stmt = MyClass.C.createStatement();
-                    String query = "SELECT * FROM order_slips WHERE slip_id > " + id;
-
-                    // Check if a customer is selected
-                    if (customerComboBox.getSelectedIndex() != 0) {
-                        query += " AND customer_name = '" + customerComboBox.getSelectedItem().toString() + "'";
-                    }
-
-                    // Check if a slip type is selected
-                    if (panaTypeComboBox.getSelectedIndex() != 0) {
-                        query += " AND slip_type = '" + panaTypeComboBox.getSelectedItem().toString() + "'";
-                    }
-
-                    query += " ORDER BY slip_id ASC LIMIT 1;"; // Ensuring we get the next slip_id
+                    String query = getNextPrevQuery(id);
 
                     System.out.println("Generated Query: " + query);
 
@@ -143,6 +126,23 @@ public class ViewOrders extends JFrame {
                 }
 
 
+            }
+
+            private String getNextPrevQuery(int id) {
+                String query = "SELECT * FROM order_slips WHERE slip_id > " + id;
+
+                // Check if a customer is selected
+                if (customerComboBox.getSelectedIndex() != 0) {
+                    query += " AND customer_name = '" + Objects.toString(customerComboBox.getSelectedItem(), "")+ "'";
+                }
+
+                // Check if a slip type is selected
+                if (panaTypeComboBox.getSelectedIndex() != 0) {
+                    query += " AND slip_type = '" + Objects.toString(panaTypeComboBox.getSelectedItem(), "") + "'";
+                }
+
+                query += " ORDER BY slip_id ASC LIMIT 1;"; // Ensuring we get the next slip_id
+                return query;
             }
         });
         prevButton.addActionListener(new ActionListener() {
@@ -239,7 +239,7 @@ public class ViewOrders extends JFrame {
             public void actionPerformed(ActionEvent e) {
 
                 //                printPanel(panel);
-                printQueue.offer(() -> printWithDefaultSettings((DefaultTableModel) orderSlipTable.getModel(),getCurrentBillID() , new Date(1000000), customerName,UtilityMethods.ORDER_SLIP));
+                printQueue.offer(() -> printWithDefaultSettings((DefaultTableModel) orderSlipTable.getModel(), getCurrentBillID(), new Date(1000000), customerName, ORDER_SLIP));
 
                 writeTableToExcel(orderSlipTable, "myfile.xlxx");
             }
@@ -252,47 +252,97 @@ public class ViewOrders extends JFrame {
                     return;
                 }
                 if (deleteAction == JOptionPane.OK_OPTION) {
+                    Connection con = null;
+                    Statement prevNextStatement = null;
+                    Statement orderSlipMainDeleteStatement = null;
+                    PreparedStatement inventoryUpdateStatement = null;
+
+                    boolean nextOrPrev;
                     try {
-                        String query = generateQueryForDelete();
-
-
-                        ResultSet rs = MyClass.C.createStatement().executeQuery(query);
-                        int idd = MyClass.viewOrders.id;
-
-                        if (rs.next()) {
-                            if (rs.getString(1).contentEquals("" + idd)) {
-                                System.out.println(rs.getString(1) + "       " + idd);
-                                nextButton.doClick();
+                        con = DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
+                        con.setAutoCommit(false);
+                        String prevNextQuery;
+                        prevNextQuery = "select min(slip_id) from order_slips ";
+                        if (!(customerComboBox.getSelectedIndex() == 0)) {
+                            prevNextQuery += "where customer_name=\"" + customerName + "\" ";
+                            if (!(panaTypeComboBox.getSelectedIndex() == 0)) {
+                                prevNextQuery += " and slip_type= \"" + panaType + "\";";
                             } else {
-                                prevButton.doClick();
-                                System.out.println(rs.getString(1) + "       " + idd);
+                                prevNextQuery += ";";
+                            }
 
+                        } else if (!(panaTypeComboBox.getSelectedIndex() == 0)) {
+                            prevNextQuery += "where slip_type=\"" + panaType + "\";";
+                        } else prevNextQuery += ";";
+                        prevNextStatement = con.createStatement();
+                        ResultSet rs = prevNextStatement.executeQuery(prevNextQuery);
+                        int idd = MyClass.viewOrders.id;
+//                        if (rs.next()) {
+//                            if (rs.getString(1).contentEquals("" + idd)) {
+//                                System.out.println(rs.getString(1) + "       " + idd);
+//                                nextButton.doClick();
+//                                nextOrPrev = PREVIOUSPRESS;// if error occurs, previous will be pressed to get back to current billid
+//                            } else {
+//                                prevButton.doClick();
+//                                nextOrPrev = NEXTPRESS;// if error occurs, next will be pressed to get back to current billid
+//                                System.out.println(rs.getString(1) + "       " + idd);
+//                            }
+//                        }
+                        String orderSlipMainDeleteString = "delete from order_slips_main where slip_id=" + idd;
+                        orderSlipMainDeleteStatement = con.createStatement();
+                        orderSlipMainDeleteStatement.executeUpdate(orderSlipMainDeleteString);
+                        DefaultTableModel model = (DefaultTableModel) orderSlipTable.getModel();
+                        String inventoryUpdateQuery = "update inventory set totalquantity=totalquantity+? where designid = ? ";
+                        inventoryUpdateStatement = con.prepareStatement(inventoryUpdateQuery);
+                        for (int i = 0; i < orderSlipTable.getRowCount(); i++) {
+                            Object designID = model.getValueAt(i, DESIGN_ID_INDEX);
+                            if (designID != null && !designID.toString().isEmpty()) {
+
+                                String designIDValue = designID.toString();
+                                Object quantityObject = model.getValueAt(i, QUANTITY_INDEX);
+                                String quantityString = quantityObject != null ? quantityObject.toString() : "0/0";
+                                quantityString = quantityString.substring(quantityString.indexOf('/') + 1);
+                                int quantity = Integer.parseInt(quantityString);
+                                inventoryUpdateStatement.setInt(1, quantity);
+                                inventoryUpdateStatement.setString(2, designIDValue);
+                                inventoryUpdateStatement.addBatch();
+                                System.out.println(designIDValue + " quantity is updated by increasing by " + quantity);
                             }
                         }
-                        MyClass.C.createStatement().executeUpdate("delete from order_slips_main where slip_id=" + idd);
+                        inventoryUpdateStatement.executeBatch();
+                        con.commit();
+                        con.close();
                         System.out.println("id ->" + idd + "deleted");
                     } catch (SQLException ex) {
-                        throw new RuntimeException(ex);
+                        try {
+                            if (con != null) con.rollback();
+                            System.out.println("rollbacked");
+                            ex.printStackTrace();
+                            return;
+                        } catch (SQLException exc) {
+                            JOptionPane.showMessageDialog(MyClass.viewOrders, "rollback error occured");
+                            exc.printStackTrace();
+                            return;
+                        }
+                    } finally {
+
+                        try {
+                            if (prevNextStatement == null) prevNextStatement.close();
+                            if (orderSlipMainDeleteStatement == null) orderSlipMainDeleteStatement.close();
+                            if (inventoryUpdateStatement == null) inventoryUpdateStatement.close();
+                            if (con != null) con.close();
+
+                        } catch (SQLException ex) {
+                            JOptionPane.showMessageDialog(MyClass.viewOrders, "logs are saved in logs file contact the technical support");
+                            ex.printStackTrace();
+                            UtilityMethods.storeLogs(ex);
+                        }
                     }
+
                 }
             }
 
-            private String generateQueryForDelete() {
-                String query;
-                query = "select min(slip_id) from order_slips ";
-                if (!(customerComboBox.getSelectedIndex() == 0)) {
-                    query += "where customer_name=\"" + customerName + "\" ";
-                    if (!(panaTypeComboBox.getSelectedIndex() == 0)) {
-                        query += " and slip_type= \"" + panaType + "\";";
-                    } else {
-                        query += ";";
-                    }
 
-                } else if (!(panaTypeComboBox.getSelectedIndex() == 0)) {
-                    query += "where slip_type=\"" + panaType + "\";";
-                } else query += ";";
-                return query;
-            }
         });
     }
 
@@ -309,7 +359,7 @@ public class ViewOrders extends JFrame {
             billIDLabel.setText("");
             nameLabel.setText("");
 
-            this.id=id;
+            this.id = id;
             model.setRowCount(0);
             return;
         }
@@ -347,7 +397,7 @@ public class ViewOrders extends JFrame {
                 panaType = rs.getString("slip_type");
                 totalPlating = totalPlating.add(BigDecimal.valueOf(Double.parseDouble(rs.getString("plating_grams"))));
                 totalPlatingField.setText("total plating: " + totalPlating.setScale(3, RoundingMode.HALF_UP));
-                model.addRow(new Object[]{rs.getString("design_id"), rs.getString("item_name"), rs.getInt("billed_quantity")+"/"+rs.getInt("quantity"), rs.getBigDecimal("plating_grams"), rs.getBigDecimal("raw_material_price"), rs.getString("other_details")});
+                model.addRow(new Object[]{rs.getString("design_id"), rs.getString("item_name"), rs.getInt("billed_quantity") + "/" + rs.getInt("quantity"), rs.getBigDecimal("plating_grams"), rs.getBigDecimal("raw_material_price"), rs.getString("other_details")});
             }
             if (count == 0) {
                 JOptionPane.showMessageDialog(MyClass.viewOrders, "slip not found error", "error", JOptionPane.ERROR_MESSAGE);

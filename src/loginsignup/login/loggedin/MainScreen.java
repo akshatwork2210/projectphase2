@@ -68,7 +68,7 @@ public class MainScreen extends JFrame {
         String filePath = "tempBack.bat";
         SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yy___HH_mm_ss");
         String timestamp = sdf.format(new Date());
-        timestamp += "_backup.sql";
+        timestamp += "_"+dbName+"_backup.sql";
         String backupFile = System.getProperty("user.dir") + "\\src\\resources\\" + timestamp;
 
         try {
@@ -159,7 +159,7 @@ public class MainScreen extends JFrame {
         backUpDataButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                createFile(MyClass.login.getLoginID(), MyClass.login.getPassword(), "sample");
+                createFile(MyClass.login.getLoginID(), MyClass.login.getPassword(), MyClass.login.getDatabase());
             }
         });
         transactionManagementButton.addActionListener(new ActionListener() {

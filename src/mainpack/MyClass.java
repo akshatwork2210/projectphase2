@@ -32,9 +32,9 @@ import java.util.Map;
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class MyClass {
     // 1. Create the mapping once (you can do this statically or in constructor)
-   public static Map<String, String> codeToItemName ;
+    public static Map<String, String> codeToItemName;
 
-    public static final String PORT="jdbc:mysql://localhost:3306/";
+    public static final String PORT = "jdbc:mysql://localhost:3306/";
 
     public static void main(String[] args) {
 
@@ -77,7 +77,7 @@ public class MyClass {
         {
             purchaseBill = new PurchaseBill();
             login = new LOGIN();
-            ledgerWindow =new LedgerWindow();
+            ledgerWindow = new LedgerWindow();
             login_signup = new LOGIN_SIGNUP();
             billingScreen = new BillingScreen();
             mainScreen = new MainScreen();
@@ -90,7 +90,7 @@ public class MyClass {
             transactions = new Transactions();
             viewBackendBill = new ViewBackendBill();
             addParty = new AddParty();
-            aalScreen=new AALScreen();
+            aalScreen = new AALScreen();
             viewTransactions = new ViewTransactions();
             newTransaction = new NewTransaction();
             searchResultWindow = new SearchResultWindow();

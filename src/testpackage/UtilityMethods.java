@@ -99,6 +99,33 @@ public class UtilityMethods {
 //
 //        return balances;
 //    }
+    public static void storeLogs(Exception e) {
+        try {
+            // Generate timestamp for filename
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+
+            // Define logs directory path inside src
+            String logsDirPath = "src/logs";
+            File logsDir = new File(logsDirPath);
+            if (!logsDir.exists()) {
+                logsDir.mkdirs(); // Create the folder if it doesn't exist
+            }
+
+            // Define log file path
+            String filename = timestamp + "_error_logs.txt";
+            File logFile = new File(logsDir, filename);
+
+            // Write the exception stack trace to the file
+            try (PrintWriter pw = new PrintWriter(new FileWriter(logFile))) {
+                pw.println("Exception occurred at: " + timestamp);
+                e.printStackTrace(pw);
+                System.out.println("Log saved to " + logFile.getAbsolutePath());
+            }
+
+        } catch (IOException ioEx) {
+            System.err.println("Failed to save logs: " + ioEx.getMessage());
+        }
+    }
     public static double[] balance(int billID) {
         double lastbillTotal = 0;
         String openingBalanceStatement="select openingaccount from customers where customer_name=(select customer_name from bills where billid=?)";
