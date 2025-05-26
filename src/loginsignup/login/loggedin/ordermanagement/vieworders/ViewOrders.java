@@ -412,6 +412,7 @@ public class ViewOrders extends JFrame {
             query = "SELECT DATE_FORMAT(created_at, '%d-%m-%y') AS formatted_date FROM order_slips WHERE slip_id = " + id + ";";
             Statement stmt2 = MyClass.C.createStatement();
             ResultSet rs2 = stmt2.executeQuery(query);
+            System.out.println();
             if (rs2.next()) dateLabel.setText("date: " + rs2.getString(1));
 
         } catch (SQLException e) {

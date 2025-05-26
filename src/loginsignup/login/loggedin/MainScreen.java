@@ -5,6 +5,8 @@ import java.io.*;
 import loginsignup.login.loggedin.accountingandledger.AALScreen;
 import loginsignup.login.loggedin.billing.BillingScreen;
 import loginsignup.login.loggedin.billing.newBill.NewBill;
+import loginsignup.login.loggedin.inventorymanagement.InventoryScreen;
+import loginsignup.login.loggedin.ordermanagement.OrderScreen;
 import loginsignup.login.loggedin.transactionsandaccounts.Transactions;
 import loginsignup.login.loggedin.transactionsandaccounts.newtransaction.NewTransaction;
 import mainpack.MyClass;
@@ -124,7 +126,6 @@ public class MainScreen extends JFrame {
 
                 MyClass.billingScreen = new BillingScreen();
                 MyClass.billingScreen.setVisible(true);
-                setVisible(false);
 
 
             }
@@ -144,14 +145,14 @@ public class MainScreen extends JFrame {
         orderManagementButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                MyClass.orderScreen= new OrderScreen();
                 MyClass.orderScreen.setVisible(true);
-                setVisible(false);
             }
         });
         inventoryManagementButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setVisible(false);
+                MyClass.inventoryScreen=new InventoryScreen();
                 MyClass.inventoryScreen.setVisible(true);
                 MyClass.inventoryScreen.init();
             }
@@ -165,8 +166,8 @@ public class MainScreen extends JFrame {
         transactionManagementButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setVisible(false);
 
+                MyClass.transactions=new Transactions();
                 MyClass.transactions.init();
                 MyClass.transactions.setVisible(true);
             }

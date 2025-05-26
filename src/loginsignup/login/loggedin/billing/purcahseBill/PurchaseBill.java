@@ -82,7 +82,7 @@ public class PurchaseBill extends JFrame {
     int insertData() {
 
 
-        try {
+        try   {
             String customerName = customerComboBox.getSelectedItem() == null ? "" : customerComboBox.getSelectedItem().toString();
             String billDetailQuery = "INSERT INTO billdetails (BillID, SNo, DesignID, ItemName, Quantity, RawCost, TotalFinalCost, " + "OrderType, LabourCost, TotalBaseCosting, GoldRate, GoldPlatingWeight, TotalGoldCost) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             String billsTableQuery = "update bills set date = ?,customer_name=? where billid=?";

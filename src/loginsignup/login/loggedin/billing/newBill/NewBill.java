@@ -446,15 +446,17 @@ public class NewBill extends JFrame {
 
             try {
 
+                String query;
+                if (customerComboBox.isEnabled()) {
+                    query = "SELECT slip_id FROM order_slips WHERE slip_id=" + slipNumberField.getText();
+                } else
+                    query = "SELECT slip_id FROM order_slips WHERE slip_id=" + slipNumberField.getText() + " AND customer_name='" + getCustomerName() + "';";
                 Statement stmt = C.createStatement();
-//                    String query = "select slip_id from order_slips where (slip_id=" + slipNumberField.getText() +" and customer_name='"+customerName+"'"+ ";";
-                String query = "SELECT slip_id FROM order_slips WHERE slip_id=" + slipNumberField.getText() + " AND customer_name='" + getCustomerName() + "';";
 
                 ResultSet rs = stmt.executeQuery(query);
                 if (!rs.next()) {
                     JOptionPane.showMessageDialog(newBill, "orderslip not found");
                     slipNumberField.setText("");
-
                     return;
                 }
             } catch (SQLException ex) {
@@ -898,9 +900,9 @@ public class NewBill extends JFrame {
                 customerComboBox.setSelectedIndex(1 + random.nextInt(customerComboBox.getItemCount() - 1));
             else
                 customerComboBox.setSelectedItem(customer_name);
-                //            customerComboBox.setSelectedIndex(1);
-                // QUANTITY_INDEX
-                int quantity = 1 + random.nextInt(30);  // random int from 1 to 30
+            //            customerComboBox.setSelectedIndex(1);
+            // QUANTITY_INDEX
+            int quantity = 1 + random.nextInt(30);  // random int from 1 to 30
             tableModel.setValueAt(quantity, row, QUANTITY_INDEX);
 
             // LABOUR_INDEX ("L")

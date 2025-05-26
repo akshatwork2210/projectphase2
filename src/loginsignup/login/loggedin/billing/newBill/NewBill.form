@@ -86,14 +86,6 @@
         </constraints>
         <properties/>
       </component>
-      <component id="124e7" class="javax.swing.JTextField" binding="goldRateTextField">
-        <constraints>
-          <grid row="0" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-            <preferred-size width="150" height="-1"/>
-          </grid>
-        </constraints>
-        <properties/>
-      </component>
       <component id="64bd7" class="javax.swing.JComboBox" binding="dateComboBox">
         <constraints>
           <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
@@ -115,6 +107,14 @@
         <properties>
           <text value="reset"/>
         </properties>
+      </component>
+      <component id="124e7" class="javax.swing.JTextField" binding="goldRateTextField">
+        <constraints>
+          <grid row="0" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+        </constraints>
+        <properties/>
       </component>
     </children>
   </grid>

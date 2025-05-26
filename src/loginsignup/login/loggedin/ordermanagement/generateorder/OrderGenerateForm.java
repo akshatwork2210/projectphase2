@@ -1,6 +1,7 @@
 package loginsignup.login.loggedin.ordermanagement.generateorder;
 
 import mainpack.MyClass;
+import testpackage.UtilityMethods;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
@@ -12,10 +13,9 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Vector;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 import static testpackage.UtilityMethods.*;
 
@@ -33,6 +33,7 @@ public class OrderGenerateForm extends JFrame {
     private JButton resetFormButton;
     private JButton undoResetButton;
     private JComboBox<String> dateComboBox;
+    private JLabel slipIDLabel;
     //THE BELOW CODE IS FOR COLUMN NAMES CONSTANTS
     public static final int DESIGN_ID_INDEX = 0;
     public static final int ITEM_NAME_INDEX = 1;
@@ -41,6 +42,7 @@ public class OrderGenerateForm extends JFrame {
     public static final int RAW_MATERIAL_COST_INDEX = 4;
     public static final int OTHER_DETAILS_INDEX = 5;
 
+    Connection orderSlipConnetionObject;
 
     ArrayList<Integer[][]> ar;
     Vector<Integer[]> listOfDisabledCells;
@@ -96,35 +98,25 @@ public class OrderGenerateForm extends JFrame {
             }
             DefaultTableModel model = (DefaultTableModel) orderSlip.getModel();
             int rowCount = model.getRowCount();
-            Connection con = null;
             PreparedStatement slipDataStatement = null;
             PreparedStatement inventoryUpdateStatement = null;
-
+            PreparedStatement updateOrderSlipsMainTableStatement = null;
             try {
 
                 // Generate a new slip_id for the entire batch
-                con = DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
-                con.setAutoCommit(false);
-
-                String insertMainQuery = "INSERT INTO order_slips_main (slip_type) VALUES (?)";
                 String inventoryUpdateQuery = "update inventory set totalquantity=totalquantity-? where designid=?";
+                java.sql.Timestamp timestamp = java.sql.Timestamp.valueOf(LocalDateTime.parse(Objects.toString(dateComboBox.getSelectedItem(), "") + " 00:00:00", DateTimeFormatter.ofPattern("dd-MM-yy HH:mm:ss")));
+                String updateOrderSlipsMainTableQuery;
+                updateOrderSlipsMainTableQuery = "update order_slips_main set created_at=? where slip_id=?";
+                inventoryUpdateStatement = orderSlipConnetionObject.prepareStatement(inventoryUpdateQuery);
+                updateOrderSlipsMainTableStatement = orderSlipConnetionObject.prepareStatement(updateOrderSlipsMainTableQuery);
+                updateOrderSlipsMainTableStatement.setTimestamp(1, timestamp);
+                updateOrderSlipsMainTableStatement.setInt(2, getSlipID());
+                updateOrderSlipsMainTableStatement.executeUpdate();
 
-                inventoryUpdateStatement = con.prepareStatement(inventoryUpdateQuery);
-                PreparedStatement stmt = con.prepareStatement(insertMainQuery, Statement.RETURN_GENERATED_KEYS);
-                stmt.setString(1, orderSlipTypeComboBox.getSelectedItem() == null ? "" : orderSlipTypeComboBox.getSelectedItem().toString());
-                stmt.executeUpdate();
-
-                // Get the generated slip_id
-                ResultSet rs = stmt.getGeneratedKeys();
-
-                int slipId = -1;
-                if (rs.next()) {
-                    slipId = rs.getInt(1);  // Retrieve the auto-incremented slip_id
-                }
-                rs.close();
                 boolean created = false;
-                String slipDataInsertQuery = "INSERT INTO order_slips (slip_type, customer_name, slip_id, design_id, item_name, quantity, plating_grams, raw_material_price, other_details, sno) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                slipDataStatement = con.prepareStatement(slipDataInsertQuery);
+                String slipDataInsertQuery = "INSERT INTO order_slips (slip_type, customer_name, slip_id, design_id, item_name, quantity, plating_grams, raw_material_price, other_details, sno,created_at) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                slipDataStatement = orderSlipConnetionObject.prepareStatement(slipDataInsertQuery);
                 // Loop through each row and insert into order_slips
                 for (int i = 0; i < rowCount - 1; i++) {
                     created = true;
@@ -151,7 +143,7 @@ public class OrderGenerateForm extends JFrame {
 
                     slipDataStatement.setString(1, orderSlipType);
                     slipDataStatement.setString(2, customerName);
-                    slipDataStatement.setInt(3, slipId);
+                    slipDataStatement.setInt(3, getSlipID());
                     if (!designId.isEmpty()) {
                         inventoryUpdateStatement.setInt(1, quantity);
                         inventoryUpdateStatement.setString(2, designId);
@@ -165,20 +157,21 @@ public class OrderGenerateForm extends JFrame {
                     slipDataStatement.setDouble(8, rawMaterialCost);
                     slipDataStatement.setString(9, otherDetails);
                     slipDataStatement.setInt(10, sno);
+                    slipDataStatement.setTimestamp(11, timestamp);
                     slipDataStatement.addBatch();
                 }
                 slipDataStatement.executeBatch();
                 inventoryUpdateStatement.executeBatch();
-                con.commit();
+                orderSlipConnetionObject.commit();
 
-                if (created) System.out.println("New  slip created: Slip ID = " + slipId);
+                if (created) System.out.println("New  slip created: Slip ID = " + getSlipID());
                 else
                     JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "Empty form  error", "error", JOptionPane.ERROR_MESSAGE);
 
             } catch (SQLException ex) {
 //                    ex.printStackTrace();
                 try {
-                    con.rollback();
+                    orderSlipConnetionObject.rollback();
                     System.out.println("rollbacked");
                     ex.printStackTrace();
                     return;
@@ -190,14 +183,17 @@ public class OrderGenerateForm extends JFrame {
                 try {
                     if (inventoryUpdateStatement != null) inventoryUpdateStatement.close();
                     if (slipDataStatement != null) slipDataStatement.close();
-                    if (con != null) con.close();
+                    if (orderSlipConnetionObject != null) orderSlipConnetionObject.close();
                     System.out.println("connection closed");
                 } catch (SQLException ex) {
                     System.out.println("could not close connection");
                     throw new RuntimeException(ex);
                 }
             }
-            init();
+            dispose();
+            MyClass.orderGenerateForm=new OrderGenerateForm();
+            MyClass.orderGenerateForm.init();
+            MyClass.orderGenerateForm.setVisible(true);
         });
     }
 
@@ -218,10 +214,9 @@ public class OrderGenerateForm extends JFrame {
 
         listOfDisabledCells = new Vector<>();
         ar = new ArrayList<>();
-
         generateAndAddDates(dateComboBox, false);
+        generateAndAddNames(customerNameComboBox);
         String[] columnNames = {"design id", "Item Name", "Quantity", "Plating", "Raw Material Cost", "Other Details"};//jtable content
-
         orderSlip.getTableHeader().setReorderingAllowed(false);
         // Create a DefaultTableModel with columns and no rows initially
         model = new DefaultTableModel(columnNames, 1);
@@ -284,7 +279,6 @@ public class OrderGenerateForm extends JFrame {
                 if (model.getRowCount() != 1) {
                     if (isRowEmpty(row)) {
                         model.removeRow(row);
-//                       reMapKeys(row + 1);
                         disableName();
                     }
                 }
@@ -304,26 +298,6 @@ public class OrderGenerateForm extends JFrame {
             }
         });
 
-        ArrayList<String> customerNames = new ArrayList<>();
-        try {
-            Statement stmt = MyClass.C.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT customer_name,customer_id FROM customers");
-            customerNameComboBox.removeAllItems();
-            customerNames.add("Select Customer");
-            while (rs.next()) {
-                String customerName = rs.getString("customer_name");
-                customerNames.add(customerName);
-            }
-
-
-            for (String customerName : customerNames) {
-                customerNameComboBox.addItem(customerName);
-            }
-
-        } catch (SQLException ex) {
-            Thread.dumpStack();
-            JOptionPane.showMessageDialog(null, "Error fetching customer data: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
         Vector<String> orderSlipType = new Vector<>();
         try {
             Statement statement = MyClass.C.createStatement();
@@ -332,11 +306,43 @@ public class OrderGenerateForm extends JFrame {
         } catch (SQLException e) {
             Thread.dumpStack();
         }
+        String insertMainQuery = "INSERT INTO order_slips_main (slip_type) VALUES (?)";
+        orderSlipConnetionObject = null;
+        try {
+            orderSlipConnetionObject = DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
+            orderSlipConnetionObject.setAutoCommit(false);
+
+            PreparedStatement stmt = orderSlipConnetionObject.prepareStatement(insertMainQuery, Statement.RETURN_GENERATED_KEYS);
+            stmt.setString(1, orderSlipTypeComboBox.getSelectedItem() == null ? "" : orderSlipTypeComboBox.getSelectedItem().toString());
+            stmt.executeUpdate();
+
+            // Get the generated slip_id
+            ResultSet rs = stmt.getGeneratedKeys();
+
+            if (rs.next()) {
+                setSlipID(rs.getInt(1));
+            } else setSlipID(-1);
+
+            rs.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
         DefaultComboBoxModel<String> panaTypeModel = new DefaultComboBoxModel<>(orderSlipType);
         orderSlipTypeComboBox.setModel(panaTypeModel);
         orderSlip.setModel(model);
 
+    }
+
+    private void setSlipID(int slipID) {
+        this.slipID = slipID;
+        slipIDLabel.setText(slipID + "");
+    }
+
+    private int slipID;
+
+    public int getSlipID() {
+        return slipID;
     }
 
     private Integer getIntegerValue(Object value) {
@@ -349,24 +355,6 @@ public class OrderGenerateForm extends JFrame {
         }
     }
 
-
-    private void reMapKeys(int sno) {
-        HashMap<Integer, String> tempMap = new HashMap<>();
-
-        Iterator<Integer> iterator = snoToDetailsMap == null ? null : snoToDetailsMap.keySet().iterator();
-        while (iterator != null && iterator.hasNext()) {
-            int key = iterator.next();
-            if (key < sno) {
-                tempMap.put(key, snoToDetailsMap.get(key));
-                continue;
-            }
-            if (key == sno) continue;
-            if (key > sno) tempMap.put(key - 1, snoToDetailsMap.get(key));
-
-        }
-        snoToDetailsMap.clear();
-        snoToDetailsMap.putAll(tempMap);
-    }
 
     private boolean isRowEmpty(int row) {
         for (int i = 0; i < model.getColumnCount(); i++) {
