@@ -87,8 +87,8 @@ public class PurchaseBill extends JFrame {
             String billDetailQuery = "INSERT INTO billdetails (BillID, SNo, DesignID, ItemName, Quantity, RawCost, TotalFinalCost, " + "OrderType, LabourCost, TotalBaseCosting, GoldRate, GoldPlatingWeight, TotalGoldCost) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             String billsTableQuery = "update bills set date = ?,customer_name=? where billid=?";
             String updateInventoryQuery = "UPDATE inventory SET TotalQuantity = TotalQuantity + ? WHERE DesignID = ?";
-            String insertInventoryQuery = "INSERT INTO inventory(DesignID, TotalQuantity, itemname, price) VALUES (?, ?, ?, ?)";
-            String updateOtherQuery = "update inventory set price = ? , itemname=? where DesignID = ?";
+            String insertInventoryQuery = "INSERT INTO inventory(DesignID, TotalQuantity, itemname, getBuyPrice) VALUES (?, ?, ?, ?)";
+            String updateOtherQuery = "update inventory set getBuyPrice = ? , itemname=? where DesignID = ?";
             String customerTableQuery = "update customers set balance = balance - ? where customer_name = ?";
 
 
@@ -320,7 +320,7 @@ public class PurchaseBill extends JFrame {
                     model.setValueAt("", row, rawCostIndex);
                 }
                 if (!getStringValue(model.getValueAt(row, designIDIndex)).isEmpty() && designIDexists(getStringValue(model.getValueAt(row, designIDIndex)))) {
-                    JOptionPane.showMessageDialog(MyClass.purchaseBill, "raw price will be update in inventory, re enter design id to avoid this");
+                    JOptionPane.showMessageDialog(MyClass.purchaseBill, "raw getBuyPrice will be update in inventory, re enter design id to avoid this");
                 }
                 updateTotal(row);
             }
@@ -407,7 +407,7 @@ public class PurchaseBill extends JFrame {
             if (rs.next()) {
 //                model.setValueAt("",row,designIDIndex);
                 model.setValueAt(rs.getString("itemname"), row, itemNameIndex);
-                model.setValueAt(rs.getString("price"), row, rawCostIndex);
+                model.setValueAt(rs.getString("getBuyPrice"), row, rawCostIndex);
 
             } else {
 

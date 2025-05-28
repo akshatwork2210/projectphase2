@@ -1,17 +1,18 @@
 package loginsignup.login.loggedin.ordermanagement.generateorder;
 
 import mainpack.MyClass;
+import testpackage.DBStructure;
 import testpackage.UtilityMethods;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumnModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.io.FileOutputStream;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -46,10 +47,10 @@ public class OrderGenerateForm extends JFrame {
 
     ArrayList<Integer[][]> ar;
     Vector<Integer[]> listOfDisabledCells;
+    private Vector<Integer> listOfDisabledcolumn;
 
 
     public OrderGenerateForm() {
-
         backupModel = null;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -191,7 +192,7 @@ public class OrderGenerateForm extends JFrame {
                 }
             }
             dispose();
-            MyClass.orderGenerateForm=new OrderGenerateForm();
+            MyClass.orderGenerateForm = new OrderGenerateForm();
             MyClass.orderGenerateForm.init();
             MyClass.orderGenerateForm.setVisible(true);
         });
@@ -209,58 +210,51 @@ public class OrderGenerateForm extends JFrame {
 
     int prevRow = 0;
     DefaultTableModel model;
+    Vector<String> columnNames;
 
     public void init() {
+        columnNames = new Vector<>(Arrays.asList(new String[]{"design id", "Item Name", "Quantity", "Plating", "Raw Material Cost", "Other Details"}));
+        listOfDisabledcolumn = new Vector<>();
 
         listOfDisabledCells = new Vector<>();
         ar = new ArrayList<>();
         generateAndAddDates(dateComboBox, false);
         generateAndAddNames(customerNameComboBox);
-        String[] columnNames = {"design id", "Item Name", "Quantity", "Plating", "Raw Material Cost", "Other Details"};//jtable content
         orderSlip.getTableHeader().setReorderingAllowed(false);
         // Create a DefaultTableModel with columns and no rows initially
         model = new DefaultTableModel(columnNames, 1);
         modelListener = e -> {
 
             if (e.getType() == TableModelEvent.UPDATE) {
-                TableModelListener[] listeners = removeModelListener(model);
+                TableModelListener[] listeners = UtilityMethods.removeModelListener(model);
                 int row = e.getFirstRow();
                 int column = e.getColumn();
+
                 model.removeTableModelListener(modelListener);
-                String cellContent;
+                String cellContent = "";
                 try {
-                    cellContent = model.getValueAt(row, column) == null ? "" : model.getValueAt(row, column).toString();
+                    cellContent = Objects.toString(model.getValueAt(row, column), "");
                 } catch (ArrayIndexOutOfBoundsException ex) {
-                    disableName();
+                    ex.printStackTrace();
+                    addModelListeners(listeners, model);
                     return;
                 }
+
                 if (column == DESIGN_ID_INDEX) {
-                    if (!cellContent.contentEquals("")) {
-                        try {
-                            Statement stmt = MyClass.C.createStatement();
-                            String designid = orderSlip.getModel().getValueAt(row, DESIGN_ID_INDEX) == null ? "" : orderSlip.getModel().getValueAt(row, DESIGN_ID_INDEX).toString();
-                            ResultSet resultSet = stmt.executeQuery("Select * from inventory where DesignID= '" + designid + "';");
-                            if (resultSet.next()) {
-                                if (resultSet.getString(1).contentEquals(cellContent)) {
-                                    model.setValueAt(resultSet.getString("itemname"), row, ITEM_NAME_INDEX);
-                                    model.setValueAt(resultSet.getDouble("price"), row, RAW_MATERIAL_COST_INDEX);
-                                }
-
-                            } else {
-                                TableColumnModel columnModel = orderSlip.getColumnModel();
-                                model.setValueAt("", row, DESIGN_ID_INDEX);
-                                model.setValueAt("", row, ITEM_NAME_INDEX);
-                                model.setValueAt("", row, RAW_MATERIAL_COST_INDEX);
-                                //add code to make raw amount also emppty
-                                prevRow = 0;
-                            }
-
-
-                        } catch (SQLException ex) {
-                            Thread.dumpStack();
-                        }
-
+                    String designID = cellContent;
+                    String itemName = DBStructure.getInventoryItemName(designID);
+                    if (itemName.contentEquals(String.valueOf(DBStructure.NOT_FOUND))) {
+                        model.setValueAt("", row, DESIGN_ID_INDEX);
+                        model.setValueAt("", row, ITEM_NAME_INDEX);
+                        model.setValueAt("", row, RAW_MATERIAL_COST_INDEX);
+                        listOfDisabledCells.removeIf(cell -> (cell[0] == row && cell[1] == ITEM_NAME_INDEX));
+                    } else {
+                        model.setValueAt(itemName, row, ITEM_NAME_INDEX);
+                        model.setValueAt(DBStructure.getSellPrice(designID), row, RAW_MATERIAL_COST_INDEX);
+                        listOfDisabledCells.add(new Integer[]{row, ITEM_NAME_INDEX});
                     }
+                    reBuildModel();
+
                 }
                 if (column == QUANTITY_INDEX) {
                     model.setValueAt(getIntegerValue(model.getValueAt(row, QUANTITY_INDEX)) == null ? "" : getIntegerValue(model.getValueAt(row, QUANTITY_INDEX)), row, QUANTITY_INDEX);
@@ -279,13 +273,13 @@ public class OrderGenerateForm extends JFrame {
                 if (model.getRowCount() != 1) {
                     if (isRowEmpty(row)) {
                         model.removeRow(row);
-                        disableName();
+                        refreshListOfDisabledCells();
                     }
                 }
 
 
-                disableName();
-                addModelListeners(listeners, model);
+                reBuildModel();
+                UtilityMethods.addModelListeners(listeners, model);
 
             }
 
@@ -334,6 +328,21 @@ public class OrderGenerateForm extends JFrame {
 
     }
 
+    private void refreshListOfDisabledCells() {
+        listOfDisabledCells.clear();
+        for (int i = 0; i < model.getRowCount(); i++) {
+            String value = Objects.toString(model.getValueAt(i, DESIGN_ID_INDEX),"");
+            if (!value.isEmpty()) {
+                listOfDisabledCells.add(new Integer[]{i, ITEM_NAME_INDEX});
+            }
+        }
+        for (Integer[] value : listOfDisabledCells) {
+            System.out.println(value[0] + " " + value[1]);
+        }
+        System.out.println("finish");
+        reBuildModel();
+    }
+
     private void setSlipID(int slipID) {
         this.slipID = slipID;
         slipIDLabel.setText(slipID + "");
@@ -350,7 +359,8 @@ public class OrderGenerateForm extends JFrame {
         try {
             return Integer.valueOf(value.toString().trim());
         } catch (NumberFormatException ex) {
-            System.err.println("Invalid integer input at line 311: " + value);
+            System.out.println(ex.getMessage() + " from getInteger Value function");
+
             return null;
         }
     }
@@ -364,48 +374,32 @@ public class OrderGenerateForm extends JFrame {
         return true;
     }
 
-    private void disableName() {
-        Vector<int[]> listOfDisableCells = new Vector<>();
-        Vector<Vector<Object>> tableData = new Vector<>();
-        model = (DefaultTableModel) orderSlip.getModel();
-        for (int countRow = 0; countRow < orderSlip.getRowCount(); countRow++) {
-            String designID = orderSlip.getModel().getValueAt(countRow, 0) == null ? "" : orderSlip.getModel().getValueAt(countRow, 0).toString();
-            if (!designID.contentEquals("")) {
-                int[] arr = new int[2];
-                arr[0] = countRow;
-                arr[1] = 1;
-                listOfDisableCells.add(arr);
-                System.out.println(arr[0] + " " + arr[1]);
+    private void reBuildModel() {
+        Vector<Vector<Object>> dataVector = new Vector<>();
+        for (int i = 0; i < model.getRowCount(); i++) {
+            Vector<Object> data = new Vector<>();
+            for (int j = 0; j < model.getColumnCount(); j++) {
+                data.add(model.getValueAt(i, j));
             }
-
-        }
-        System.out.println("end line\n\n\n\n\n");
-        for (int ro = 0; ro < model.getRowCount(); ro++) {
-            Vector<Object> rowData = new Vector<>();
-            for (int col = 0; col < model.getColumnCount(); col++) {
-                rowData.add(model.getValueAt(ro, col)); // Add cell data to row vector
-            }
-            tableData.add(rowData); // Add row vector to ArrayList
-        }
-        Vector<String> v = new Vector<>();
-        for (int i = 0; i < orderSlip.getColumnCount(); i++) {
-            v.add(orderSlip.getColumnName(i));
+            dataVector.add(data);
         }
 
-        model = new DefaultTableModel(tableData, v) {
+        model = new DefaultTableModel(dataVector, columnNames) {
             @Override
-            public boolean isCellEditable(int row, int column) {
-                for (int[] cell : listOfDisableCells) {
-                    return cell[0] != row || cell[1] != column; // Disable this cell
+            public boolean isCellEditable(int row1, int column) {
+                for (Integer[] cell : listOfDisabledCells) {
+                    if (cell[0] == row1 && cell[1] == column) {
+                        return false;
+                    }
                 }
-                return true; // Other cells remain editable
+                for (Integer col :  listOfDisabledcolumn) {
+                    if (col == column) return false;
+                }
+                return true;
             }
         };
         orderSlip.setModel(model);
 
 
-//        TableColumn otherDetailsColumn = orderSlip.getColumn("Other Details");
-//        otherDetailsColumn.setCellEditor(getTextAreaEditor());
-//        otherDetailsColumn.setCellRenderer(getTextAreaRenderer());
     }
 }

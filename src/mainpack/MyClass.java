@@ -156,10 +156,12 @@ public class MyClass {
 
         } catch (ClassNotFoundException e) {
             System.out.println("❌ MySQL Driver Not Found!");
-            throw new RuntimeException();
+            e.printStackTrace();
+            throw new RuntimeException(e);
         } catch (SQLException e) {
             System.out.println("❌ Database Connection Failed!");
-            throw new RuntimeException();
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
         return conn;
     }
