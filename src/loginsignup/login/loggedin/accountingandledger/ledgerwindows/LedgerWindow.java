@@ -7,6 +7,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.ObjectStreamException;
 import java.sql.PreparedStatement;
 import java.sql.Ref;
 import java.sql.ResultSet;
@@ -14,6 +15,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Stack;
 
 public class LedgerWindow extends JFrame {
@@ -68,6 +70,7 @@ public class LedgerWindow extends JFrame {
 
     private void fetchCustomerLedger(String customerName) {
         nameLabel.setText(customerName);
+        System.out.println("starting to fetch customer ledger");
 //        String query = "(SELECT b.date AS date, b.BillID AS bill_id, NULL AS transaction_id, IFNULL(SUM(bd.TotalFinalCost), 0) AS bill_amount, NULL AS transaction_amount, NULL AS remark FROM bills b LEFT JOIN billdetails bd ON b.BillID = bd.BillID WHERE b.customer_name = ? GROUP BY b.BillID, b.date) UNION ALL (SELECT t.date AS date, t.billid AS bill_id, t.transaction_id, NULL AS bill_amount, t.amount AS transaction_amount, t.remark FROM transactions t WHERE t.customer_name = ?) ORDER BY date";
         DefaultTableModel model=(DefaultTableModel) ledgerTable.getModel();
         String ledgerQuery = "(SELECT b.date AS date, b.BillID AS bill_id, NULL AS transaction_id, IFNULL(SUM(bd.TotalFinalCost), 0) AS bill_amount, NULL AS transaction_amount, NULL AS remark FROM bills b LEFT JOIN billdetails bd ON b.BillID = bd.BillID WHERE b.customer_name = ? GROUP BY b.BillID, b.date) UNION ALL (SELECT t.date AS date, NULL AS bill_id, t.transaction_id, NULL AS bill_amount, t.amount AS transaction_amount, t.remark FROM transactions t WHERE t.customer_name = ?) ORDER BY date";
@@ -83,6 +86,7 @@ public class LedgerWindow extends JFrame {
             if (openingAccountResultSet.next())
                 balance+=openingAccountResultSet.getDouble(1);
             model.addRow(new String[]{"opening balance","","","",balance+""});
+            System.out.println("first row added in customer ledger for opening balance");
             PreparedStatement ledgerStatement=MyClass.C.prepareStatement(ledgerQuery);
             ledgerStatement.setString(1,customerName);
             ledgerStatement.setString(2,customerName);
@@ -97,14 +101,12 @@ public class LedgerWindow extends JFrame {
                 if (!rs.wasNull()) {
                     id = "BILL#" + billID;
                     debit = rs.getDouble("bill_amount");
-                    System.out.println(debit);
                 } else {
 
                     int transactionID = rs.getInt("transaction_id");
                     id = "TXN#" + transactionID;
                     double amount = rs.getDouble("transaction_amount");
                     String remark = rs.getString("remark");
-                    System.out.println(credit+" is credit amount");;
                     if (amount >= 0) {
                         credit = amount;
                     } else {
@@ -113,14 +115,16 @@ public class LedgerWindow extends JFrame {
                 }
                 String parsedDate= LocalDate.parse(date.toString(),DateTimeFormatter.ofPattern("yyyy-MM-dd")).format(DateTimeFormatter.ofPattern("dd-MM-yy"));
                 balance=balance+(debit!=null?debit:0)-(credit!=null?credit:0);
-                model.addRow(new Object[]{id,parsedDate, debit, credit, UtilityMethods.round(balance,2)});
-
-
+                Object[] objects=new Object[]{id,parsedDate, debit, credit, UtilityMethods.round(balance,2)};
+                model.addRow(objects);
+                for(Object object:objects){
+                    System.out.print(object+"\t");
+                }
+                System.out.println();
             }
             model.fireTableDataChanged();
-            ledgerTable.repaint();
-
-            System.out.println("hi");
+        ledgerTable.repaint();
+            System.out.println("\n\nreturning from fetchcustomer ledger function bye \n\n");
         } catch (SQLException e) {
             e.printStackTrace();
             return;

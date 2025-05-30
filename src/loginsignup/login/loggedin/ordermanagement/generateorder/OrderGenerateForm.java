@@ -126,7 +126,8 @@ public class OrderGenerateForm extends JFrame {
                     String designId = model.getValueAt(i, DESIGN_ID_INDEX) != null ? model.getValueAt(i, DESIGN_ID_INDEX).toString() : "";
                     String itemName = (String) model.getValueAt(i, ITEM_NAME_INDEX);
 
-                    int quantity = !model.getValueAt(i, QUANTITY_INDEX).toString().contentEquals("") ? Integer.parseInt(model.getValueAt(i, QUANTITY_INDEX).toString()) : 0;
+                    int quantity = getIntegerValue(Objects.toString(model.getValueAt(i, QUANTITY_INDEX), "0"));
+
                     double platingGrams = getDoubleValue(model.getValueAt(i, PLATING_INDEX)) == null ? 0 : getDoubleValue(model.getValueAt(i, PLATING_INDEX));
                     double rawMaterialCost = getDoubleValue(model.getValueAt(i, RAW_MATERIAL_COST_INDEX)) == null ? 0 : getDoubleValue(model.getValueAt(i, RAW_MATERIAL_COST_INDEX));
                     String otherDetails;
@@ -185,16 +186,20 @@ public class OrderGenerateForm extends JFrame {
                     if (inventoryUpdateStatement != null) inventoryUpdateStatement.close();
                     if (slipDataStatement != null) slipDataStatement.close();
                     if (orderSlipConnetionObject != null) orderSlipConnetionObject.close();
-                    System.out.println("connection closed");
+                    dispose();
+                    MyClass.orderGenerateForm = new OrderGenerateForm();
+                    MyClass.orderGenerateForm.init();
+                    MyClass.orderGenerateForm.setVisible(true);
                 } catch (SQLException ex) {
                     System.out.println("could not close connection");
-                    throw new RuntimeException(ex);
+                    MyClass.orderGenerateForm = new OrderGenerateForm();
+                    MyClass.orderGenerateForm.init();
+                    MyClass.orderGenerateForm.setVisible(true);
+                    ex.printStackTrace();
+
                 }
             }
-            dispose();
-            MyClass.orderGenerateForm = new OrderGenerateForm();
-            MyClass.orderGenerateForm.init();
-            MyClass.orderGenerateForm.setVisible(true);
+
         });
     }
 
@@ -257,30 +262,30 @@ public class OrderGenerateForm extends JFrame {
 
                 }
                 if (column == QUANTITY_INDEX) {
-                    model.setValueAt(getIntegerValue(model.getValueAt(row, QUANTITY_INDEX)) == null ? "" : getIntegerValue(model.getValueAt(row, QUANTITY_INDEX)), row, QUANTITY_INDEX);
+                    Integer quantity = getIntegerValue(Objects.toString(model.getValueAt(row, QUANTITY_INDEX), "0"));
+
+                    model.setValueAt(quantity == null || quantity == 0 ? "" : quantity, row, QUANTITY_INDEX);
                 }
                 if (column == RAW_MATERIAL_COST_INDEX) {
-                    model.setValueAt(getDoubleValue(model.getValueAt(row, RAW_MATERIAL_COST_INDEX) == null ? "" : getDoubleValue(model.getValueAt(row, RAW_MATERIAL_COST_INDEX))), row, RAW_MATERIAL_COST_INDEX);
+                    Double rawPrice = getDoubleValue(Objects.toString(model.getValueAt(row, RAW_MATERIAL_COST_INDEX), "0"));
+                    model.setValueAt(rawPrice == null || rawPrice == 0 ? "" : rawPrice, row, RAW_MATERIAL_COST_INDEX);
                 }
                 if (column == PLATING_INDEX) {
-                    model.setValueAt(getDoubleValue(model.getValueAt(row, PLATING_INDEX) == null ? "" : getDoubleValue(model.getValueAt(row, PLATING_INDEX))), row, PLATING_INDEX);
-
+                    Double plating = getDoubleValue(Objects.toString(model.getValueAt(row, PLATING_INDEX), "0"));
+                    model.setValueAt(plating == null || plating == 0 ? "" : plating, row, PLATING_INDEX);
                 }
                 int lastRow = model.getRowCount() - 1;
                 if (row == lastRow && !cellContent.isEmpty()) {
                     model.setRowCount(model.getRowCount() + 1);
                 }
-                if (model.getRowCount() != 1) {
+                if (row != model.getRowCount() - 1) {
                     if (isRowEmpty(row)) {
                         model.removeRow(row);
                         refreshListOfDisabledCells();
                     }
                 }
-
-
                 reBuildModel();
                 UtilityMethods.addModelListeners(listeners, model);
-
             }
 
         };
@@ -331,7 +336,7 @@ public class OrderGenerateForm extends JFrame {
     private void refreshListOfDisabledCells() {
         listOfDisabledCells.clear();
         for (int i = 0; i < model.getRowCount(); i++) {
-            String value = Objects.toString(model.getValueAt(i, DESIGN_ID_INDEX),"");
+            String value = Objects.toString(model.getValueAt(i, DESIGN_ID_INDEX), "");
             if (!value.isEmpty()) {
                 listOfDisabledCells.add(new Integer[]{i, ITEM_NAME_INDEX});
             }
@@ -392,7 +397,7 @@ public class OrderGenerateForm extends JFrame {
                         return false;
                     }
                 }
-                for (Integer col :  listOfDisabledcolumn) {
+                for (Integer col : listOfDisabledcolumn) {
                     if (col == column) return false;
                 }
                 return true;

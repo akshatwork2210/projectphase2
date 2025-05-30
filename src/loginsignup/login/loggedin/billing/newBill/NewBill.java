@@ -495,10 +495,10 @@ public class NewBill extends JFrame {
         customerComboBox.addActionListener(e -> setCustomerName(customerComboBox.getSelectedItem() == null ? "" : customerComboBox.getSelectedItem().toString()));
         undoButton.addActionListener(e -> {
             int date = 1;
-            insertRandomValues(8, date, (customerComboBox != null && customerComboBox.getSelectedIndex() != 0 && customerComboBox.getSelectedItem() != null ? customerComboBox.getSelectedItem().toString() : null));
-
-
-        });
+            if (login.getDatabase().toLowerCase().contentEquals("sample"))//testing
+                insertRandomValues(8, date, (customerComboBox != null && customerComboBox.getSelectedIndex() != 0 && customerComboBox.getSelectedItem() != null ? customerComboBox.getSelectedItem().toString() : null));
+                else JOptionPane.showMessageDialog(newBill,"no bro... don't do this");//testing
+        });//testing
         dateComboBox.addActionListener(e -> setCurrentDate(UtilityMethods.parseDate(dateComboBox.getSelectedItem() == null ? "" : dateComboBox.getSelectedItem().toString())));
         resetButton1.addActionListener(new ActionListener() {
             @Override
