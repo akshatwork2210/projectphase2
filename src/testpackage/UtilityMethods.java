@@ -35,6 +35,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class UtilityMethods {
+    public static Connection createConnection() throws SQLException {
+        return DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(),MyClass.login.getPassword());
+    }
     public static final int VERTI_SPLIT = 0;
     public static final int HORIZONTAL_SPLIT = 1;
     //Thread printingThread;

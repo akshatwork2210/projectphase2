@@ -13,14 +13,15 @@ public class DBStructure {
     public static final String INVENTORY_DESIGN_ID = "DesignID";
     public static final String INVENTORY_TOTAL_QUANTITY = "TotalQuantity";
     public static final String INVENTORY_ITEM_NAME = "itemname";
-    public static final String INVENTORY_PRICE = "getBuyPrice";
+    public static final String INVENTORY_BUY_PRICE = "getBuyPrice";
     public static final String INVENTORY_OPENING_STOCK = "OPENINGSTOCK";
-    public static final String INVENTORY_SELL_PRICE="sellPrice";
+    public static final String INVENTORY_SELL_PRICE = "sellPrice";
 
     public static final String ORDER_SLIPS_MAIN = "order_slips_main";
     public static final int NOT_FOUND = -18 * 1;
     private static final int SQLEXCEPTIONOCCURED = -18 * 2;
     private static final int CONNECTION_NOT_CLOSE_ERROR = -18 * 3;
+
 
     static int getStock(String designID) {
 
@@ -82,8 +83,8 @@ public class DBStructure {
         }
     }
 
-    public static double  getSellPrice(String designID) {
-        String query="select "+INVENTORY_SELL_PRICE+ " from "+INVENTORY_TABLE+" WHERE "+INVENTORY_DESIGN_ID+" = ?";
+    public static double getSellPrice(String designID) {
+        String query = "select " + INVENTORY_SELL_PRICE + " from " + INVENTORY_TABLE + " WHERE " + INVENTORY_DESIGN_ID + " = ?";
         Connection con = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -98,8 +99,7 @@ public class DBStructure {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, e.getMessage() + ": error occured");
             return SQLEXCEPTIONOCCURED;
-        }
-        finally {
+        } finally {
             try {
                 if (rs != null) rs.close();
                 if (pstmt != null) pstmt.close();
@@ -113,8 +113,9 @@ public class DBStructure {
 
 
     }
+
     public static double getBuyPrice(String designID) {
-        String query="select "+INVENTORY_PRICE+ " from "+INVENTORY_TABLE+" WHERE "+INVENTORY_DESIGN_ID+" = ?";
+        String query = "select " + INVENTORY_BUY_PRICE + " from " + INVENTORY_TABLE + " WHERE " + INVENTORY_DESIGN_ID + " = ?";
         Connection con = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -129,8 +130,7 @@ public class DBStructure {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, e.getMessage() + ": error occured");
             return SQLEXCEPTIONOCCURED;
-        }
-        finally {
+        } finally {
             try {
                 if (rs != null) rs.close();
                 if (pstmt != null) pstmt.close();
@@ -145,5 +145,18 @@ public class DBStructure {
 
     }
 
+    public static void setBuyPrice(String designID, double price) {
+        String query = "update "+INVENTORY_TABLE+" set "+ INVENTORY_BUY_PRICE +" = ? where "+INVENTORY_DESIGN_ID+" = ?";
+        try (Connection con = UtilityMethods.createConnection(); PreparedStatement stmt = con.prepareStatement(query);) {
+            stmt.setDouble(1, price);
+            stmt.setString(2, designID);
+            stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+
+    }
 
 }

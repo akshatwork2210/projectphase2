@@ -22,6 +22,7 @@ import loginsignup.login.loggedin.transactionsandaccounts.newtransaction.NewTran
 import loginsignup.login.loggedin.transactionsandaccounts.viewTransactions.ViewTransactions;
 import testpackage.UtilityMethods;
 
+import javax.swing.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -113,8 +114,8 @@ public class MyClass {
         }
         login_signup.setVisible(false);
         mainScreen.setVisible(false);
-        login.setVisible(false);
-        login.getLOGINButton().doClick();
+        login.setVisible(true);
+
 //        billingScreen.getPurchaseBillButton().doClick();
         //        billingScreen.getViewBillButton().doClick();
         UtilityMethods.printStartUp();
@@ -159,7 +160,14 @@ public class MyClass {
             e.printStackTrace();
             throw new RuntimeException(e);
         } catch (SQLException e) {
+
             System.out.println("❌ Database Connection Failed!");
+            System.out.println(e.getMessage());
+            if(e.getMessage().contentEquals("Unknown database '"+login.getDatabase()+"'")){
+                JOptionPane.showMessageDialog(login,"database not found error "+e.getErrorCode());
+            e.printStackTrace();
+            return null;
+            }
             e.printStackTrace();
             throw new RuntimeException(e);
         }

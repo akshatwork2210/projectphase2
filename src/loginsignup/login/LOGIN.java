@@ -11,12 +11,13 @@ import java.sql.Statement;
 
 public class LOGIN extends JFrame {
     private JTextField user;
-    private JTextField pass;
+    private JTextField passwordField;
     private JButton LOGINButton;
     private JButton QUITButton;
     private JButton BACKButton;
     private JPanel panel;
     private JCheckBox isProduction;
+    private JTextField databaseField;
     private String loginID;
     private String password;
     private String host;
@@ -71,13 +72,14 @@ public class LOGIN extends JFrame {
 
                 try {
                     host = "localhost";
-                    database = isProduction.isSelected() ? "sample" : "testing";
+
+                    database = databaseField.getText();
                     String port = "3306";
                     url = "jdbc:mysql://" + host + ":" + port + "/" + database;
-                    Connection c = MyClass.getConnection(url, user.getText(), pass.getText());
+                    Connection c = MyClass.getConnection(url, user.getText(), passwordField.getText());
                     MyClass.C = c;
                     loginID = user.getText();
-                    password = pass.getText();
+                    password = passwordField.getText();
                     Statement stmt;
                     stmt = c.createStatement();
                 } catch (SQLException ex) {
@@ -93,5 +95,11 @@ public class LOGIN extends JFrame {
 
     public JButton getLOGINButton() {
         return LOGINButton;
+    }
+
+    public void nullLoginParameters() {
+        database = null;
+        loginID = null;
+        password = null;
     }
 }

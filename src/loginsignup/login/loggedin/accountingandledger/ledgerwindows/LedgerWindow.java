@@ -145,3 +145,6 @@ public class LedgerWindow extends JFrame {
 
     }
 }
+class GetData{
+
+}

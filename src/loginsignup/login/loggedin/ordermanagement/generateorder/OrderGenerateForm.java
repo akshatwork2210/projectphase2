@@ -165,21 +165,20 @@ public class OrderGenerateForm extends JFrame {
                 slipDataStatement.executeBatch();
                 inventoryUpdateStatement.executeBatch();
                 orderSlipConnetionObject.commit();
-
-                if (created) System.out.println("New  slip created: Slip ID = " + getSlipID());
-                else
-                    JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "Empty form  error", "error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Successfully created order_slip id is " + getSlipID());
 
             } catch (SQLException ex) {
 //                    ex.printStackTrace();
                 try {
                     orderSlipConnetionObject.rollback();
                     System.out.println("rollbacked");
+                    JOptionPane.showMessageDialog(MyClass.orderGenerateForm, " error " + ex.getMessage());
                     ex.printStackTrace();
                     return;
                 } catch (SQLException exc) {
+                    JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "error: " + exc.getMessage());
                     exc.printStackTrace();
-                    throw new RuntimeException(exc);
+                    return;
                 }
             } finally {
                 try {
@@ -196,7 +195,7 @@ public class OrderGenerateForm extends JFrame {
                     MyClass.orderGenerateForm.init();
                     MyClass.orderGenerateForm.setVisible(true);
                     ex.printStackTrace();
-
+                    return;
                 }
             }
 
@@ -245,7 +244,7 @@ public class OrderGenerateForm extends JFrame {
                     return;
                 }
 
-                if (column == DESIGN_ID_INDEX) {
+                if (column == DESIGN_ID_INDEX && !cellContent.trim().isEmpty()) {
                     String designID = cellContent;
                     String itemName = DBStructure.getInventoryItemName(designID);
                     if (itemName.contentEquals(String.valueOf(DBStructure.NOT_FOUND))) {
@@ -259,6 +258,13 @@ public class OrderGenerateForm extends JFrame {
                         listOfDisabledCells.add(new Integer[]{row, ITEM_NAME_INDEX});
                     }
                     reBuildModel();
+
+
+                } else if (column == DESIGN_ID_INDEX) {
+                    model.setValueAt("", row, DESIGN_ID_INDEX);
+                    model.setValueAt("", row, ITEM_NAME_INDEX);
+                    model.setValueAt("", row, RAW_MATERIAL_COST_INDEX);
+                    listOfDisabledCells.removeIf(cell -> (cell[0] == row && cell[1] == ITEM_NAME_INDEX));
 
                 }
                 if (column == QUANTITY_INDEX) {

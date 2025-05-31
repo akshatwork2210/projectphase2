@@ -10,10 +10,8 @@ import loginsignup.login.loggedin.ordermanagement.OrderScreen;
 import loginsignup.login.loggedin.transactionsandaccounts.Transactions;
 import loginsignup.login.loggedin.transactionsandaccounts.newtransaction.NewTransaction;
 import mainpack.MyClass;
-import org.w3c.dom.html.HTMLDivElement;
 
 import javax.swing.*;
-import javax.swing.plaf.nimbus.State;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
@@ -70,7 +68,7 @@ public class MainScreen extends JFrame {
         String filePath = "tempBack.bat";
         SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yy___HH_mm_ss");
         String timestamp = sdf.format(new Date());
-        timestamp += "_"+dbName+"_backup.sql";
+        timestamp += "_" + dbName + "_backup.sql";
         String backupFile = System.getProperty("user.dir") + "\\src\\resources\\" + timestamp;
 
         try {
@@ -130,29 +128,35 @@ public class MainScreen extends JFrame {
 
             }
         });
-        backButton.addActionListener(new ActionListener() {
+        logoutButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
                 try {
-                    MyClass.C.close();
+                    if (MyClass.C != null && !MyClass.C.isClosed()) {
+                        MyClass.C.close();
+                    }
+                    MyClass.login.nullLoginParameters();
                 } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(MyClass.mainScreen, "could ont close connection error code:" + ex.getErrorCode() + ":" + ex.getMessage());
+                    return;
                 }
                 MyClass.login.setVisible(true);
+
             }
         });
         orderManagementButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                MyClass.orderScreen= new OrderScreen();
+                MyClass.orderScreen = new OrderScreen();
                 MyClass.orderScreen.setVisible(true);
             }
         });
         inventoryManagementButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                MyClass.inventoryScreen=new InventoryScreen();
+                MyClass.inventoryScreen = new InventoryScreen();
                 MyClass.inventoryScreen.setVisible(true);
                 MyClass.inventoryScreen.init();
             }
@@ -167,7 +171,7 @@ public class MainScreen extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                MyClass.transactions=new Transactions();
+                MyClass.transactions = new Transactions();
                 MyClass.transactions.init();
                 MyClass.transactions.setVisible(true);
             }
@@ -175,7 +179,7 @@ public class MainScreen extends JFrame {
         addPartyButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                MyClass.addParty=new AddParty();
+                MyClass.addParty = new AddParty();
                 MyClass.addParty.init();
                 MyClass.addParty.setVisible(true);
             }
@@ -205,7 +209,7 @@ public class MainScreen extends JFrame {
 
                 }
                 if (text.startsWith("randomGenerationOfBills ")) {
-                    int numberofDays= Integer.parseInt(text.substring(24));
+                    int numberofDays = Integer.parseInt(text.substring(24));
                     generateBillsAndTransaction(numberofDays);
                 }
             }
@@ -214,26 +218,26 @@ public class MainScreen extends JFrame {
 
     private void generateBillsAndTransaction(int numberOfDays) {
 
-        Random random=new Random();
-        for(int counter=0;counter<numberOfDays;counter++) {
-            boolean choice=random.nextBoolean();//true means generating transaction
-            int numberOfTransactions=1+random.nextInt(4);
-            if(!choice) {
+        Random random = new Random();
+        for (int counter = 0; counter < numberOfDays; counter++) {
+            boolean choice = random.nextBoolean();//true means generating transaction
+            int numberOfTransactions = 1 + random.nextInt(4);
+            if (!choice) {
                 for (int subCounter = 0; subCounter < numberOfTransactions; subCounter++) {
                     MyClass.newBill = new NewBill();
                     MyClass.newBill.init();
-                    int numberOfItems=1+random.nextInt(10);
-                    int date=numberOfDays-counter;
-                    MyClass.newBill.insertRandomValues(numberOfItems,date,null);
+                    int numberOfItems = 1 + random.nextInt(10);
+                    int date = numberOfDays - counter;
+                    MyClass.newBill.insertRandomValues(numberOfItems, date, null);
                     MyClass.newBill.getSubmitButton().doClick();
                     MyClass.newBill.getBackButton().doClick();
                 }
             }
-            if(choice){
-                MyClass.newTransaction=new NewTransaction();
+            if (choice) {
+                MyClass.newTransaction = new NewTransaction();
                 MyClass.newTransaction.init();
-                int date=numberOfDays-counter;
-                MyClass.newTransaction.generateTransactions(numberOfTransactions,date);
+                int date = numberOfDays - counter;
+                MyClass.newTransaction.generateTransactions(numberOfTransactions, date);
                 MyClass.newTransaction.getBackButton().doClick();
             }
 
@@ -307,7 +311,7 @@ public class MainScreen extends JFrame {
 
     private JButton billingButton;
     private JPanel panel;
-    private JButton backButton;
+    private JButton logoutButton;
     private JButton orderManagementButton;
     private JButton backUpDataButton;
     private JButton transactionManagementButton;
