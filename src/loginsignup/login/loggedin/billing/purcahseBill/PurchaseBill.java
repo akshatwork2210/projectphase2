@@ -86,8 +86,8 @@ public class PurchaseBill extends JFrame {
             String billDetailQuery = "INSERT INTO "+BILLDETAILS_TABLE+" ("+BILLDETAILS_BILL_ID+", "+BILLDETAILS_SNO+", "+BILLDETAILS_DESIGN_ID+", "+BILLDETAILS_ITEM_NAME+", "+BILLDETAILS_QUANTITY+", "+BILLDETAILS_RAW_COST+", "+BILLDETAILS_TOTAL_FINAL_COST+", " + ""+BILLDETAILS_ORDER_TYPE+", "+BILLDETAILS_LABOUR_COST+", "+BILLDETAILS_TOTAL_BASE_COSTING+", "+BILLDETAILS_GOLD_RATE+", "+BILLDETAILS_GOLD_PLATING_WEIGHT+", "+BILLDETAILS_TOTAL_GOLD_COST+") " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             String billsTableQuery = "update "+BILLS_TABLE+" set "+BILLS_DATE+" = ?,"+BILLS_CUSTOMER_NAME+"=? where "+BILLS_BILL_ID+"=?";
             String updateInventoryQuery = "UPDATE "+INVENTORY_TABLE+" SET "+INVENTORY_TOTAL_QUANTITY+" = "+INVENTORY_TOTAL_QUANTITY+" + ? WHERE "+INVENTORY_DESIGN_ID+" = ?";
-            String insertInventoryQuery = "INSERT INTO "+INVENTORY_TABLE+"("+INVENTORY_DESIGN_ID+", "+INVENTORY_TOTAL_QUANTITY+", "+INVENTORY_ITEM_NAME+", getBuyPrice) VALUES (?, ?, ?, ?)";
-            String updateOtherQuery = "update inventory set getBuyPrice = ? , itemname=? where DesignID = ?";
+            String insertInventoryQuery = "INSERT INTO "+INVENTORY_TABLE+"("+INVENTORY_DESIGN_ID+", "+INVENTORY_TOTAL_QUANTITY+", "+INVENTORY_ITEM_NAME+", "+INVENTORY_BUY_PRICE+") VALUES (?, ?, ?, ?)";
+            String updateOtherQuery = "update inventory set "+INVENTORY_BUY_PRICE+" = ? , itemname=? where DesignID = ?";
             String customerTableQuery = "update "+CUSTOMERS_TABLE+" set "+CUSTOMERS_BALANCE+" = "+CUSTOMERS_BALANCE+" - ? where "+CUSTOMERS_CUSTOMER_NAME+" = ?";
 
 
@@ -406,8 +406,8 @@ public class PurchaseBill extends JFrame {
             ResultSet rs = preparedStatement.executeQuery();
             if (rs.next()) {
 //                model.setValueAt("",row,designIDIndex);
-                model.setValueAt(rs.getString("itemname"), row, itemNameIndex);
-                model.setValueAt(rs.getString("getBuyPrice"), row, rawCostIndex);
+                model.setValueAt(rs.getString(INVENTORY_ITEM_NAME), row, itemNameIndex);
+                model.setValueAt(rs.getString(INVENTORY_BUY_PRICE), row, rawCostIndex);
 
             } else {
 

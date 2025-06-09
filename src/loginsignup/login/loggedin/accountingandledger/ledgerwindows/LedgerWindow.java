@@ -51,7 +51,7 @@ public class LedgerWindow extends JFrame {
             columnNames = new String[]{"id", "date", "debit", "credit", "balance"};
 
         } else if (mode == PURCHASE_MODE) {
-            columnNames = new String[]{"id", "date", "Party Name", "debit", "credit"};
+            columnNames = new String[]{"id", "date", "Party Name", "debit",  "credit"};
         }
         DefaultTableModel defaultTableModel = new DefaultTableModel(columnNames, 0) {
             @Override
