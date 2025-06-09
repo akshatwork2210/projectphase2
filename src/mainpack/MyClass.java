@@ -34,7 +34,7 @@ import java.util.Map;
 public class MyClass {
     // 1. Create the mapping once (you can do this statically or in constructor)
     public static Map<String, String> codeToItemName;
-
+public final static String TITLE="GURUKRIPA JEWELLERS";
     public static final String PORT = "jdbc:mysql://localhost:3306/";
 
     public static void main(String[] args) {

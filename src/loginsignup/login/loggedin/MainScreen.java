@@ -115,23 +115,20 @@ public class MainScreen extends JFrame {
     public MainScreen() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+
         this.setContentPane(panel);
         pack();
 
         billingButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
                 MyClass.billingScreen = new BillingScreen();
                 MyClass.billingScreen.setVisible(true);
-
-
             }
         });
         logoutButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setVisible(false);
                 try {
                     if (MyClass.C != null && !MyClass.C.isClosed()) {
                         MyClass.C.close();
@@ -143,7 +140,7 @@ public class MainScreen extends JFrame {
                     return;
                 }
                 MyClass.login.setVisible(true);
-
+                dispose();
             }
         });
         orderManagementButton.addActionListener(new ActionListener() {
@@ -214,7 +211,15 @@ public class MainScreen extends JFrame {
                 }
             }
         });
+        try {
+            setTitle("WELCOME " + MyClass.TITLE + ": " + MyClass.login.getLoginID().toUpperCase() + " ji".toUpperCase());
+        }
+    catch (NullPointerException ex){
+            Thread.dumpStack();
     }
+    }
+
+
 
     private void generateBillsAndTransaction(int numberOfDays) {
 

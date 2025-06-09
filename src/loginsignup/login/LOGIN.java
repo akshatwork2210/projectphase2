@@ -1,5 +1,6 @@
 package loginsignup.login;
 
+import loginsignup.login.loggedin.MainScreen;
 import mainpack.MyClass;
 
 import javax.swing.*;
@@ -48,6 +49,7 @@ public class LOGIN extends JFrame {
 
     public LOGIN() {
         setContentPane(panel);
+        setTitle(MyClass.TITLE+": LOGIN WINDOW");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         QUITButton.addActionListener(new ActionListener() {
@@ -70,25 +72,17 @@ public class LOGIN extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                try {
-                    host = "localhost";
+                host = "localhost";
 
-                    database = databaseField.getText();
-                    String port = "3306";
-                    url = "jdbc:mysql://" + host + ":" + port + "/" + database;
-                    Connection c = MyClass.getConnection(url, user.getText(), passwordField.getText());
-                    MyClass.C = c;
-                    loginID = user.getText();
-                    password = passwordField.getText();
-                    Statement stmt;
-                    stmt = c.createStatement();
-                } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(MyClass.login, "error");
-                    return;
-                }
+                database = databaseField.getText();
+                String port = "3306";
+                url = "jdbc:mysql://" + host + ":" + port + "/" + database;
+                MyClass.C = MyClass.getConnection(url, user.getText(), passwordField.getText());
+                loginID = user.getText();
+                password = passwordField.getText();
+                MyClass.mainScreen= new MainScreen();
                 MyClass.mainScreen.setVisible(true);
                 setVisible(false);
-
             }
         });
     }

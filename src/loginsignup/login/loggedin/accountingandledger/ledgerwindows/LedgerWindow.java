@@ -200,7 +200,7 @@ class GetData {
                     String dateValue = rs.getString("date");
                     if (!dateValue.isEmpty())
                         values[DATE_COLUMN_INDEX] = LocalDate.parse(dateValue, DateTimeFormatter.ofPattern("yyyy-MM-dd")).format(DateTimeFormatter.ofPattern("dd-MM-yy"));
-                    else values[DATE_COLUMN_INDEX]="";
+                    else values[DATE_COLUMN_INDEX] = "";
                     BigDecimal amount = rs.getBigDecimal("amount");
                     System.out.println(amount);
                     boolean debitCredit;//false->debit,true ->credit
@@ -263,5 +263,10 @@ class GetData {
             return null;
         }
         return tableModel;
+    }
+
+    static DefaultTableModel fetchItemLedger(String desginID) {
+        getInventoryItemName(desginID);
+        return null;
     }
 }

@@ -43,6 +43,7 @@ public class InventoryScreen extends  JFrame {
     }
     public void init(){
 setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         DefaultTableModel m = new DefaultTableModel(
                 new Object[][]{}, // Empty initial data
                 new String[]{"Design ID", "Total Quantity"} // Column names
