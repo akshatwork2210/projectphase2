@@ -213,12 +213,11 @@ public class MainScreen extends JFrame {
         });
         try {
             setTitle("WELCOME " + MyClass.TITLE + ": " + MyClass.login.getLoginID().toUpperCase() + " ji".toUpperCase());
-        }
-    catch (NullPointerException ex){
+        } catch (NullPointerException ex) {
+            System.out.println("not a problem in dump stack");
             Thread.dumpStack();
+        }
     }
-    }
-
 
 
     private void generateBillsAndTransaction(int numberOfDays) {
