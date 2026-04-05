@@ -214,9 +214,12 @@ public class MainScreen extends JFrame {
         try {
             setTitle("WELCOME " + MyClass.TITLE + ": " + MyClass.login.getLoginID().toUpperCase() + " ji".toUpperCase());
         } catch (NullPointerException ex) {
-            System.out.println("not a problem in dump stack");
-            Thread.dumpStack();
+            System.out.println("customer name is not yet fetched due to following error");
+//            Thread.dumpStack();
+
+            ex.printStackTrace();
         }
+
     }
 
 
