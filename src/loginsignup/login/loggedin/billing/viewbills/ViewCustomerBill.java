@@ -48,7 +48,7 @@ public class ViewCustomerBill extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         backButton.addActionListener(e -> {
-            setVisible(false);
+            dispose();
             MyClass.billingScreen.setVisible(true);
         });
         printButton.addActionListener(new ActionListener() {
@@ -103,7 +103,6 @@ public class ViewCustomerBill extends JFrame {
             nextButton.addActionListener(e -> {
                 int currentBillID = getBillID();  // Function to get the current BillID
                 String query;
-                System.out.println("current bill id is " + currentBillID);
                 if (customerNameComboBox.getSelectedIndex() == 0) {
                     // No customer filter
                     query = "SELECT BillID FROM bills WHERE BillID > " + currentBillID + " ORDER BY BillID ASC LIMIT 1";
@@ -128,11 +127,11 @@ public class ViewCustomerBill extends JFrame {
 
                 if (customerNameComboBox.getSelectedIndex() == 0) {
                     // No customer filter
-                    query = "SELECT BillID FROM bills WHERE BillID < " + currentBillID + " ORDER BY BillID DESC LIMIT 1";
+                    query = "SELECT BillID FROM bills WHERE BillID < " + getBillID() + " ORDER BY BillID DESC LIMIT 1";
                 } else {
                     // Get selected customer
                     String selectedCustomer = customerNameComboBox.getSelectedItem() == null ? "" : customerNameComboBox.getSelectedItem().toString();
-                    query = "SELECT BillID FROM bills WHERE BillID < " + currentBillID + " AND customer_name = '" + selectedCustomer + "' ORDER BY BillID DESC LIMIT 1";
+                    query = "SELECT BillID FROM bills WHERE BillID < " + getBillID() + " AND customer_name = '" + selectedCustomer + "' ORDER BY BillID DESC LIMIT 1";
                 }
 
                 try {
@@ -252,19 +251,18 @@ public class ViewCustomerBill extends JFrame {
                 }
                 model.setRowCount(model.getRowCount() + 1);
                 model.setValueAt("Grand Total", model.getRowCount() - 1, model.getColumnCount() - 2);
-                model.setValueAt(grandtotal, model.getRowCount() - 1, model.getColumnCount() - 1);
+                model.setValueAt(UtilityMethods.round(grandtotal,2), model.getRowCount() - 1, model.getColumnCount() - 1);
 
             totalLabel.setText(grandtotal + "");
             idLabel.setText("billID: " + billID);
-            setBillID(billID);
                 table.setModel(model);}//updating the table model with bill details
             {
                 model.setRowCount(model.getRowCount() + 1);
                 model.setValueAt("prev:", model.getRowCount() - 1, model.getColumnCount() - 2);
-                model.setValueAt(balance[0],model.getRowCount()-1,model.getColumnCount()-1);
+                model.setValueAt(UtilityMethods.round(balance[0],2),model.getRowCount()-1,model.getColumnCount()-1);
                 model.setRowCount(model.getRowCount() + 1);
                 model.setValueAt("total", model.getRowCount() - 1, model.getColumnCount() - 2);
-                model.setValueAt(balance[1],model.getRowCount()-1,model.getColumnCount()-1);
+                model.setValueAt(UtilityMethods.round(balance[1],2),model.getRowCount()-1,model.getColumnCount()-1);
 
             }//showing the balances
 
@@ -289,23 +287,22 @@ public class ViewCustomerBill extends JFrame {
                     java.util.Date date = new SimpleDateFormat("yyyy-MM-dd").parse(rs2.getString("date"));
                     String dateformatted = new SimpleDateFormat("dd-MM-yy").format(date);
                     model.setValueAt(rs2.getString("billid") + "/" + dateformatted, model.getRowCount() - 1, model.getColumnCount() - 2);
-                    model.setValueAt(rs2.getString("amount"), model.getRowCount() - 1, model.getColumnCount() - 1);
+                    model.setValueAt(UtilityMethods.round(rs2.getDouble("amount"),2), model.getRowCount() - 1, model.getColumnCount() - 1);
                     totalRecieved += rs2.getDouble("amount");
 
                 }
-                System.out.println(totalRecieved+" is total recieved");
                 model.setRowCount(model.getRowCount() + 1);
                 model.setValueAt("totalRecieved", model.getRowCount() - 1, model.getColumnCount() - 2);
-                model.setValueAt(totalRecieved, model.getRowCount() - 1, model.getColumnCount() - 1);
+                model.setValueAt(UtilityMethods.round(totalRecieved,2), model.getRowCount() - 1, model.getColumnCount() - 1);
             }// showing the transactions linked
 
             {
-                System.out.println(balance[0] + "\t" + balance[1]);
                 model.setRowCount(model.getRowCount() + 1);
                 model.setValueAt("baki", model.getRowCount() - 1, model.getColumnCount() - 2);
-                model.setValueAt((balance[1]-totalRecieved  ), model.getRowCount() - 1, model.getColumnCount() - 1);
+                model.setValueAt(UtilityMethods.round((balance[1]-totalRecieved  ),2), model.getRowCount() - 1, model.getColumnCount() - 1);
             }//showing the balances
-            System.out.println("Table updated successfully!");
+            setBillID(billID);
+
         } catch (SQLException e) {
             throw new RuntimeException();
         } catch (ParseException e) {

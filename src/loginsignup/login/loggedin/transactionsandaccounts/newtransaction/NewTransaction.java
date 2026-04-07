@@ -1,6 +1,5 @@
 package loginsignup.login.loggedin.transactionsandaccounts.newtransaction;
 
-import jdk.jshell.execution.Util;
 import mainpack.MyClass;
 import testpackage.UtilityMethods;
 
@@ -13,10 +12,17 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.Random;
 
 public class NewTransaction extends JFrame {
     private LocalDate date;
+
+    public JButton getBackButton() {
+        return backButton;
+    }
+
     Connection transacCon = null;
+
     public void setDate(Object date) {
         if (date == null) {
             this.date = null;
@@ -42,10 +48,10 @@ public class NewTransaction extends JFrame {
         backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setVisible(false);
+
                 addedTransactions.dispose();
                 MyClass.transactions.setVisible(true);
-
+                dispose();
 
             }
         });
@@ -66,8 +72,8 @@ public class NewTransaction extends JFrame {
                     if (customerName.isEmpty() || partyNameComboBox.getSelectedIndex() == 0) {
                         JOptionPane.showMessageDialog(MyClass.newTransaction, "select valid party name");
                         return;
-                    }
 
+                    }
                     String transactionQuery = "INSERT INTO transactions (customer_name, amount, date,remark) VALUES (?, ?, ?,?)";
                     String customerTableQuery = "update customers set balance=balance-? where customer_name=?";
                     SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yy");
@@ -94,8 +100,8 @@ public class NewTransaction extends JFrame {
                         statement.close();
                         statement = transacCon.prepareStatement(customerTableQuery);
 
-                        statement.setDouble(1,amount);
-                        statement.setString(2,customerName);
+                        statement.setDouble(1, amount);
+                        statement.setString(2, customerName);
                         statement.executeUpdate();
 
                         transacCon.commit();
@@ -125,6 +131,62 @@ public class NewTransaction extends JFrame {
 
             }
         });
+        remarkTextField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                generateTransactions(Integer.parseInt(remarkTextField.getText()), -1);
+            }
+        });
+        clearAccountButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+//                String query = "SELECT COALESCE(SUM(bd.totalfinalcost), 0) - COALESCE(SUM(t.amount), 0) AS outstanding FROM billdetails bd LEFT JOIN transactions t ON t.customer_name = bd.customer_name WHERE bd.customer_name = ?";
+                String query = "SELECT (coalesce(sum(totalfinalcost),0) - (SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE customer_name = ?) + (SELECT IFNULL(openingaccount, 0) FROM customers WHERE customer_name = ?)) AS outstanding FROM billdetails bd JOIN bills b ON b.billid = bd.billid WHERE b.customer_name = ?";
+
+                String customerName = partyNameComboBox.getSelectedItem() != null ? partyNameComboBox.getSelectedItem().toString() : "";
+                PreparedStatement statement=null;
+                try {
+                    statement= MyClass.C.prepareStatement(query);
+                    statement.setString(1, customerName);
+                    statement.setString(2, customerName);
+                    statement.setString(3, customerName);
+                    ResultSet rs=statement.executeQuery();
+                    double balance=0;
+                    if(rs.next()){
+                        balance+=rs.getDouble(1);
+
+                    }
+
+                    balance=(double)(Math.round(balance*100))/100;
+
+                    if(balance==0) {
+                        JOptionPane.showMessageDialog(MyClass.newTransaction,"no advances or dues found");
+
+                        return;
+                    }
+                    if(balance<0){
+                        balance*=(-1);
+                        outRadioButton.setSelected(true);
+                    }else {
+                        inRadioButton.setSelected(true);
+                    }
+                    amountTextField.setText(balance+"");
+
+
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    return;
+                }
+                finally {
+                    try {
+                       if(statement!=null) statement.close();
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            }
+        });
     }
 
     private void appendListOfCustomers(JComboBox comboBox) {
@@ -144,6 +206,46 @@ public class NewTransaction extends JFrame {
         }
 
 
+    }
+
+    public void generateTransactions(int x, int date) {
+        Random random = new Random();
+        String[] remarks = {
+                "Payment received", "Advance given", "Final settlement", "Partial payment", "Refund",
+                "Adjustment", "Bonus", "Penalty", "Service charge", "Extra work"
+        };
+
+        for (int i = 0; i < x; i++) {
+            // 1. Set a random date (index from 1 to 50)
+            int dateCount = dateComboBox.getItemCount();
+            if (date == -1) {
+                if (dateCount > 1) {
+                    dateComboBox.setSelectedIndex(1 + random.nextInt(Math.min(50, dateCount - 1)));
+                }
+            } else {
+                dateComboBox.setSelectedIndex(date);
+            }
+            // 2. Set a random party name
+            int partyCount = partyNameComboBox.getItemCount();
+            if (partyCount > 0) {
+                partyNameComboBox.setSelectedIndex(1 + random.nextInt(partyCount - 1));
+            }
+
+            // 3. Set a random amount between 400000 and 500000
+            int amount = 400000 + random.nextInt(100000); // (100000 - 5000 + 1)
+            amountTextField.setText(String.valueOf(amount));
+
+            // 4. Randomly select in or out radio button
+
+            inRadioButton.setSelected(true);
+
+
+            // 5. Set random remark
+            remarkTextField.setText(remarks[random.nextInt(remarks.length)]);
+
+            // 6. Click submit
+            submitButton.doClick();
+        }
     }
 
     AddedTransactions addedTransactions;
@@ -171,6 +273,7 @@ public class NewTransaction extends JFrame {
     private JRadioButton outRadioButton;
     private JButton submitButton;
     private JTextField remarkTextField;
+    private JButton clearAccountButton;
 
 
 }

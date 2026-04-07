@@ -2,7 +2,7 @@ package loginsignup.login.loggedin.billing.purcahseBill;
 
 import mainpack.MyClass;
 import testpackage.UtilityMethods;
-
+import static testpackage.DBStructure.*;
 import javax.swing.*;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
@@ -51,12 +51,11 @@ public class PurchaseBill extends JFrame {
     }
 
     private boolean returnIsCellEditable(int row, int col, int[][] extraIndices) {
-        if (col == headers.indexOf("Sno")) return false;
+        if (col == snoIndex) return false;
         if (extraIndices != null) {
             for (int[] index : extraIndices) {
                 if (index[0] == row && index[1] == col) return false;
                 if (index[0] == -1 && index[1] == col) return false;
-
             }
         }
         return true;
@@ -82,14 +81,14 @@ public class PurchaseBill extends JFrame {
     int insertData() {
 
 
-        try {
+        try   {
             String customerName = customerComboBox.getSelectedItem() == null ? "" : customerComboBox.getSelectedItem().toString();
-            String billDetailQuery = "INSERT INTO billdetails (BillID, SNo, DesignID, ItemName, Quantity, RawCost, TotalFinalCost, " + "OrderType, LabourCost, TotalBaseCosting, GoldRate, GoldPlatingWeight, TotalGoldCost) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            String billsTableQuery = "update bills set date = ?,customer_name=? where billid=?";
-            String updateInventoryQuery = "UPDATE inventory SET TotalQuantity = TotalQuantity + ? WHERE DesignID = ?";
-            String insertInventoryQuery = "INSERT INTO inventory(DesignID, TotalQuantity, itemname, price) VALUES (?, ?, ?, ?)";
-            String updateOtherQuery = "update inventory set price = ? , itemname=? where DesignID = ?";
-            String customerTableQuery = "update customers set balance = balance - ? where customer_name = ?";
+            String billDetailQuery = "INSERT INTO "+BILLDETAILS_TABLE+" ("+BILLDETAILS_BILL_ID+", "+BILLDETAILS_SNO+", "+BILLDETAILS_DESIGN_ID+", "+BILLDETAILS_ITEM_NAME+", "+BILLDETAILS_QUANTITY+", "+BILLDETAILS_RAW_COST+", "+BILLDETAILS_TOTAL_FINAL_COST+", " + ""+BILLDETAILS_ORDER_TYPE+", "+BILLDETAILS_LABOUR_COST+", "+BILLDETAILS_TOTAL_BASE_COSTING+", "+BILLDETAILS_GOLD_RATE+", "+BILLDETAILS_GOLD_PLATING_WEIGHT+", "+BILLDETAILS_TOTAL_GOLD_COST+") " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String billsTableQuery = "update "+BILLS_TABLE+" set "+BILLS_DATE+" = ?,"+BILLS_CUSTOMER_NAME+"=? where "+BILLS_BILL_ID+"=?";
+            String updateInventoryQuery = "UPDATE "+INVENTORY_TABLE+" SET "+INVENTORY_TOTAL_QUANTITY+" = "+INVENTORY_TOTAL_QUANTITY+" + ? WHERE "+INVENTORY_DESIGN_ID+" = ?";
+            String insertInventoryQuery = "INSERT INTO "+INVENTORY_TABLE+"("+INVENTORY_DESIGN_ID+", "+INVENTORY_TOTAL_QUANTITY+", "+INVENTORY_ITEM_NAME+", "+INVENTORY_BUY_PRICE+") VALUES (?, ?, ?, ?)";
+            String updateOtherQuery = "update inventory set "+INVENTORY_BUY_PRICE+" = ? , itemname=? where DesignID = ?";
+            String customerTableQuery = "update "+CUSTOMERS_TABLE+" set "+CUSTOMERS_BALANCE+" = "+CUSTOMERS_BALANCE+" - ? where "+CUSTOMERS_CUSTOMER_NAME+" = ?";
 
 
             PreparedStatement billsTableStatement = getCon().prepareStatement(billsTableQuery);
@@ -141,7 +140,7 @@ public class PurchaseBill extends JFrame {
                 billStmt.setString(4, itemName);
                 billStmt.setInt(5, -quantity);
                 billStmt.setBigDecimal(6, rawCost);
-                billStmt.setBigDecimal(7, totalCost);
+                billStmt.setBigDecimal(7, totalCost.negate());
                 grandTotal = grandTotal.add(totalCost);
                 // Fill remaining required fields with defaults
                 billStmt.setString(8, "purchase"); // example OrderType
@@ -228,6 +227,7 @@ public class PurchaseBill extends JFrame {
         headers.add("item name");
         headers.add("Quantity");
         headers.add("Raw cost");
+
         headers.add("total");
         designIDIndex = headers.indexOf("designID");
         quantityIndex = headers.indexOf("Quantity");
@@ -320,7 +320,7 @@ public class PurchaseBill extends JFrame {
                     model.setValueAt("", row, rawCostIndex);
                 }
                 if (!getStringValue(model.getValueAt(row, designIDIndex)).isEmpty() && designIDexists(getStringValue(model.getValueAt(row, designIDIndex)))) {
-                    JOptionPane.showMessageDialog(MyClass.purchaseBill, "raw price will be update in inventory, re enter design id to avoid this");
+                    JOptionPane.showMessageDialog(MyClass.purchaseBill, "raw getBuyPrice will be update in inventory, re enter design id to avoid this");
                 }
                 updateTotal(row);
             }
@@ -369,7 +369,7 @@ public class PurchaseBill extends JFrame {
 
         try {
             String query;
-            query = "insert into bills() values()";
+            query = "insert into "+BILLS_TABLE+"() values()";
             con = DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
             getCon().setAutoCommit(false);
             Statement stmt = getCon().createStatement();
@@ -406,8 +406,8 @@ public class PurchaseBill extends JFrame {
             ResultSet rs = preparedStatement.executeQuery();
             if (rs.next()) {
 //                model.setValueAt("",row,designIDIndex);
-                model.setValueAt(rs.getString("itemname"), row, itemNameIndex);
-                model.setValueAt(rs.getString("price"), row, rawCostIndex);
+                model.setValueAt(rs.getString(INVENTORY_ITEM_NAME), row, itemNameIndex);
+                model.setValueAt(rs.getString(INVENTORY_BUY_PRICE), row, rawCostIndex);
 
             } else {
 
@@ -419,7 +419,7 @@ public class PurchaseBill extends JFrame {
     }
 
     public void makeBill(int billID, String customerName, JTable yourTable) {
-        String query = "INSERT INTO billdetails (BillID, SNo, DesignID, ItemName, Quantity, RawCost, TotalFinalCost, " + "OrderType, LabourCost, TotalBaseCosting, GoldRate, GoldPlatingWeight, TotalGoldCost, customer_name) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO "+BILLDETAILS_TABLE+" ("+BILLDETAILS_BILL_ID+", "+BILLDETAILS_SNO+", "+BILLDETAILS_DESIGN_ID+", "+BILLDETAILS_ITEM_NAME+", "+BILLDETAILS_QUANTITY+", "+BILLDETAILS_RAW_COST+", "+BILLDETAILS_TOTAL_FINAL_COST+", " + ""+BILLDETAILS_ORDER_TYPE+", "+BILLDETAILS_LABOUR_COST+", "+BILLDETAILS_TOTAL_BASE_COSTING+", "+BILLDETAILS_GOLD_RATE+", "+BILLDETAILS_GOLD_PLATING_WEIGHT+", "+BILLDETAILS_TOTAL_GOLD_COST+", customer_name) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement stmt = getCon().prepareStatement(query)) {
             DefaultTableModel model = (DefaultTableModel) yourTable.getModel();
