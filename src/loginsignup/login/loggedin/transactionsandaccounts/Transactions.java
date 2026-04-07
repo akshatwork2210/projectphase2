@@ -1,5 +1,6 @@
 package loginsignup.login.loggedin.transactionsandaccounts;
 
+import loginsignup.login.loggedin.transactionsandaccounts.newtransaction.NewTransaction;
 import mainpack.MyClass;
 
 import javax.swing.*;
@@ -35,6 +36,8 @@ public class Transactions extends JFrame {
         newTransactionButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                MyClass.newTransaction=new NewTransaction();
+
                 MyClass.newTransaction.init();
                 MyClass.newTransaction.setVisible(true);
                 setVisible(false);

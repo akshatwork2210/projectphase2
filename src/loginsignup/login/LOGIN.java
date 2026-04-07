@@ -1,5 +1,6 @@
 package loginsignup.login;
 
+import loginsignup.login.loggedin.MainScreen;
 import mainpack.MyClass;
 
 import javax.swing.*;
@@ -11,11 +12,13 @@ import java.sql.Statement;
 
 public class LOGIN extends JFrame {
     private JTextField user;
-    private JTextField pass;
+    private JTextField passwordField;
     private JButton LOGINButton;
     private JButton QUITButton;
     private JButton BACKButton;
     private JPanel panel;
+    private JCheckBox isProduction;
+    private JTextField databaseField;
     private String loginID;
     private String password;
     private String host;
@@ -35,6 +38,7 @@ public class LOGIN extends JFrame {
     }
 
     private String url;
+
     public String getPassword() {
         return password;
     }
@@ -45,6 +49,7 @@ public class LOGIN extends JFrame {
 
     public LOGIN() {
         setContentPane(panel);
+        setTitle(MyClass.TITLE+": LOGIN WINDOW");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         QUITButton.addActionListener(new ActionListener() {
@@ -53,7 +58,7 @@ public class LOGIN extends JFrame {
                 System.exit(0);
             }
         });
-    pack();
+        pack();
         BACKButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -67,6 +72,7 @@ public class LOGIN extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
 
+<<<<<<< HEAD
                 try {
                      host="localhost";
                      database="sample";
@@ -82,14 +88,30 @@ public class LOGIN extends JFrame {
                     JOptionPane.showMessageDialog(MyClass.login,"error");
                 return;
                 }
+=======
+                host = "localhost";
+
+                database = databaseField.getText();
+                String port = "3306";
+                url = "jdbc:mysql://" + host + ":" + port + "/" + database;
+                MyClass.C = MyClass.getConnection(url, user.getText(), passwordField.getText());
+                loginID = user.getText();
+                password = passwordField.getText();
+                MyClass.mainScreen= new MainScreen();
+>>>>>>> development
                 MyClass.mainScreen.setVisible(true);
                 setVisible(false);
-
             }
         });
     }
 
     public JButton getLOGINButton() {
         return LOGINButton;
+    }
+
+    public void nullLoginParameters() {
+        database = null;
+        loginID = null;
+        password = null;
     }
 }

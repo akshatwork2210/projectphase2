@@ -172,6 +172,7 @@ public class ViewBackendBill extends JFrame {
         String query2 = "select customer_name,date from bills where billid =?";
         String customer_name = "";
 
+<<<<<<< HEAD
         try (Connection con = MyClass.getConnection(); PreparedStatement stmt1 = con.prepareStatement(query1); PreparedStatement stmt2 = con.prepareStatement(query2)) {
             stmt1.setInt(1, billid);
             try (ResultSet rs = stmt1.executeQuery()) {
@@ -182,6 +183,26 @@ public class ViewBackendBill extends JFrame {
                 DefaultTableModel model = (DefaultTableModel) billTable.getModel();
                 model.setRowCount(0); // Clear existing data
                 do {
+=======
+                Vector<String> row = new Vector<>();
+                row.add(rs.getString("SNo") == null ? "" : rs.getString("SNo")); // SNo
+                row.add(rs.getString("OrderSlipNumber") == null ? "" : rs.getString("OrderSlipNumber")); // OrderSlip/quantity
+                row.add(rs.getString("ItemName") == null ? "" : rs.getString("ItemName")); // ItemName
+                row.add(rs.getString("Quantity") == null ? "0" : rs.getString("Quantity")); // Quantity
+                row.add(rs.getString("DesignID") == null ? "" : rs.getString("DesignID")); // DesignID
+                row.add(rs.getString("LabourCost") == null ? "0" : rs.getString("LabourCost")); // L
+                row.add(rs.getString("RawCost") == null ? "0" : rs.getString("RawCost")); // Raw
+                row.add(rs.getString("DullChillaiCost") == null ? "0" : rs.getString("DullChillaiCost")); // DC
+                row.add(rs.getString("MeenaColorMeenaCost") == null ? "0" : rs.getString("MeenaColorMeenaCost")); // M/CM
+                row.add(rs.getString("RhodiumCost") == null ? "0" : rs.getString("RhodiumCost")); // Rh
+                row.add(rs.getString("NagSettingCost") == null ? "0" : rs.getString("NagSettingCost")); // Nag
+                row.add(rs.getString("OtherBaseCosts") == null ? "0" : rs.getString("OtherBaseCosts")); // Other
+                row.add(rs.getString("OtherBaseCostNotes") == null ? "" : rs.getString("OtherBaseCostNotes")); // OtherDetails
+                row.add(rs.getString("TotalBaseCosting") == null ? "0" : rs.getString("TotalBaseCosting")); // +G
+                row.add(rs.getString("GoldPlatingWeight") == null ? "0" : rs.getString("GoldPlatingWeight")); // Gold(g)
+                row.add(rs.getString("GoldRate") == null ? "0" : rs.getString("GoldRate")); // Gold Rate
+                    row.add(rs.getString("TotalFinalCost") == null ? "0" : rs.getString("TotalFinalCost")); // Total
+>>>>>>> development
 
                     Vector<String> row = new Vector<>();
                     row.add(rs.getString("SNo") == null ? "" : rs.getString("SNo")); // SNo

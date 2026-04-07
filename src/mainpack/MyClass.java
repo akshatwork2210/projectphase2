@@ -5,7 +5,7 @@ import loginsignup.login.LOGIN;
 import loginsignup.login.loggedin.AddParty;
 import loginsignup.login.loggedin.MainScreen;
 import loginsignup.login.loggedin.accountingandledger.AALScreen;
-import loginsignup.login.loggedin.accountingandledger.ledgerwindows.ItemLedger;
+import loginsignup.login.loggedin.accountingandledger.ledgerwindows.LedgerWindow;
 import loginsignup.login.loggedin.billing.BillingScreen;
 import loginsignup.login.loggedin.billing.newBill.NewBill;
 import loginsignup.login.loggedin.billing.newBill.SearchResultWindow;
@@ -22,6 +22,7 @@ import loginsignup.login.loggedin.transactionsandaccounts.newtransaction.NewTran
 import loginsignup.login.loggedin.transactionsandaccounts.viewTransactions.ViewTransactions;
 import testpackage.UtilityMethods;
 
+import javax.swing.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -32,9 +33,9 @@ import java.util.Map;
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class MyClass {
     // 1. Create the mapping once (you can do this statically or in constructor)
-   public static Map<String, String> codeToItemName ;
-
-    public static final String PORT="jdbc:mysql://localhost:3306/";
+    public static Map<String, String> codeToItemName;
+public final static String TITLE="GURUKRIPA JEWELLERS";
+    public static final String PORT = "jdbc:mysql://localhost:3306/";
 
     public static void main(String[] args) {
 
@@ -77,7 +78,7 @@ public class MyClass {
         {
             purchaseBill = new PurchaseBill();
             login = new LOGIN();
-            itemLedger=new ItemLedger();
+            ledgerWindow = new LedgerWindow();
             login_signup = new LOGIN_SIGNUP();
             billingScreen = new BillingScreen();
             mainScreen = new MainScreen();
@@ -90,7 +91,7 @@ public class MyClass {
             transactions = new Transactions();
             viewBackendBill = new ViewBackendBill();
             addParty = new AddParty();
-            aalScreen=new AALScreen();
+            aalScreen = new AALScreen();
             viewTransactions = new ViewTransactions();
             newTransaction = new NewTransaction();
             searchResultWindow = new SearchResultWindow();
@@ -113,8 +114,8 @@ public class MyClass {
         }
         login_signup.setVisible(false);
         mainScreen.setVisible(false);
-        login.setVisible(false);
-        login.getLOGINButton().doClick();
+        login.setVisible(true);
+
 //        billingScreen.getPurchaseBillButton().doClick();
         //        billingScreen.getViewBillButton().doClick();
         UtilityMethods.printStartUp();
@@ -138,7 +139,7 @@ public class MyClass {
     public static ViewTransactions viewTransactions;
     public static AddParty addParty;
     public static ViewBackendBill viewBackendBill;
-    public static ItemLedger itemLedger;
+    public static LedgerWindow ledgerWindow;
 
     public static Connection getConnection() {
         Connection conn;
@@ -156,10 +157,19 @@ public class MyClass {
 
         } catch (ClassNotFoundException e) {
             System.out.println("❌ MySQL Driver Not Found!");
-            throw new RuntimeException();
+            e.printStackTrace();
+            throw new RuntimeException(e);
         } catch (SQLException e) {
+
             System.out.println("❌ Database Connection Failed!");
-            throw new RuntimeException();
+            System.out.println(e.getMessage());
+            if(e.getMessage().contentEquals("Unknown database '"+login.getDatabase()+"'")){
+                JOptionPane.showMessageDialog(login,"database not found error "+e.getErrorCode());
+            e.printStackTrace();
+            return null;
+            }
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
         return conn;
     }

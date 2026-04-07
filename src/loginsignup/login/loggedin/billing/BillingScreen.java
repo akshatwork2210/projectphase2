@@ -1,6 +1,8 @@
 package loginsignup.login.loggedin.billing;
 
 import loginsignup.login.loggedin.billing.newBill.NewBill;
+import loginsignup.login.loggedin.billing.viewbills.ViewBackendBill;
+import loginsignup.login.loggedin.billing.viewbills.ViewCustomerBill;
 import mainpack.MyClass;
 
 import javax.swing.*;
@@ -54,11 +56,13 @@ public class BillingScreen extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
+                viewCustomerBill=new ViewCustomerBill();
                 viewCustomerBill.setVisible(true);
                 viewCustomerBill.init("customer");
             }
         });
         viewBillButton.addActionListener(e -> {
+            viewBackendBill=new ViewBackendBill();
             viewBackendBill.init();
             viewBackendBill.setVisible(true);
             setVisible(false);

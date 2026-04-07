@@ -3,11 +3,15 @@ package loginsignup.login.loggedin;
 import java.io.*;
 
 import loginsignup.login.loggedin.accountingandledger.AALScreen;
+import loginsignup.login.loggedin.billing.BillingScreen;
+import loginsignup.login.loggedin.billing.newBill.NewBill;
+import loginsignup.login.loggedin.inventorymanagement.InventoryScreen;
+import loginsignup.login.loggedin.ordermanagement.OrderScreen;
+import loginsignup.login.loggedin.transactionsandaccounts.Transactions;
+import loginsignup.login.loggedin.transactionsandaccounts.newtransaction.NewTransaction;
 import mainpack.MyClass;
-import org.w3c.dom.html.HTMLDivElement;
 
 import javax.swing.*;
-import javax.swing.plaf.nimbus.State;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
@@ -16,6 +20,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Date;
+import java.util.Random;
 
 public class MainScreen extends JFrame {
     public void createBackup() {
@@ -63,7 +68,7 @@ public class MainScreen extends JFrame {
         String filePath = "tempBack.bat";
         SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yy___HH_mm_ss");
         String timestamp = sdf.format(new Date());
-        timestamp += "_backup.sql";
+        timestamp += "_" + dbName + "_backup.sql";
         String backupFile = System.getProperty("user.dir") + "\\src\\resources\\" + timestamp;
 
         try {
@@ -110,41 +115,45 @@ public class MainScreen extends JFrame {
     public MainScreen() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+
         this.setContentPane(panel);
         pack();
 
         billingButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                MyClass.billingScreen = new BillingScreen();
                 MyClass.billingScreen.setVisible(true);
-                setVisible(false);
-
-
             }
         });
-        backButton.addActionListener(new ActionListener() {
+        logoutButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setVisible(false);
                 try {
-                    MyClass.C.close();
+                    if (MyClass.C != null && !MyClass.C.isClosed()) {
+                        MyClass.C.close();
+                    }
+                    MyClass.login.nullLoginParameters();
                 } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(MyClass.mainScreen, "could ont close connection error code:" + ex.getErrorCode() + ":" + ex.getMessage());
+                    return;
                 }
                 MyClass.login.setVisible(true);
+                dispose();
             }
         });
         orderManagementButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                MyClass.orderScreen = new OrderScreen();
                 MyClass.orderScreen.setVisible(true);
-                setVisible(false);
             }
         });
         inventoryManagementButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setVisible(false);
+                MyClass.inventoryScreen = new InventoryScreen();
                 MyClass.inventoryScreen.setVisible(true);
                 MyClass.inventoryScreen.init();
             }
@@ -152,14 +161,14 @@ public class MainScreen extends JFrame {
         backUpDataButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                createFile(MyClass.login.getLoginID(), MyClass.login.getPassword(), "sample");
+                createFile(MyClass.login.getLoginID(), MyClass.login.getPassword(), MyClass.login.getDatabase());
             }
         });
         transactionManagementButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setVisible(false);
 
+                MyClass.transactions = new Transactions();
                 MyClass.transactions.init();
                 MyClass.transactions.setVisible(true);
             }
@@ -167,8 +176,9 @@ public class MainScreen extends JFrame {
         addPartyButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                MyClass.addParty.setVisible(true);
+                MyClass.addParty = new AddParty();
                 MyClass.addParty.init();
+                MyClass.addParty.setVisible(true);
             }
         });
         accountingAndLedgerButton.addActionListener(new ActionListener() {
@@ -183,6 +193,7 @@ public class MainScreen extends JFrame {
         textField.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+
                 String text = textField.getText();
                 if (text.startsWith("delete ")) {
                     String date = text.substring(7);
@@ -194,12 +205,55 @@ public class MainScreen extends JFrame {
                     }
 
                 }
+                if (text.startsWith("randomGenerationOfBills ")) {
+                    int numberofDays = Integer.parseInt(text.substring(24));
+                    generateBillsAndTransaction(numberofDays);
+                }
             }
         });
+        try {
+            setTitle("WELCOME " + MyClass.TITLE + ": " + MyClass.login.getLoginID().toUpperCase() + " ji".toUpperCase());
+        } catch (NullPointerException ex) {
+            System.out.println("customer name is not yet fetched due to following error");
+//            Thread.dumpStack();
+
+            ex.printStackTrace();
+        }
+
+    }
+
+
+    private void generateBillsAndTransaction(int numberOfDays) {
+
+        Random random = new Random();
+        for (int counter = 0; counter < numberOfDays; counter++) {
+            boolean choice = random.nextBoolean();//true means generating transaction
+            int numberOfTransactions = 1 + random.nextInt(4);
+            if (!choice) {
+                for (int subCounter = 0; subCounter < numberOfTransactions; subCounter++) {
+                    MyClass.newBill = new NewBill();
+                    MyClass.newBill.init();
+                    int numberOfItems = 1 + random.nextInt(10);
+                    int date = numberOfDays - counter;
+                    MyClass.newBill.insertRandomValues(numberOfItems, date, null);
+                    MyClass.newBill.getSubmitButton().doClick();
+                    MyClass.newBill.getBackButton().doClick();
+                }
+            }
+            if (choice) {
+                MyClass.newTransaction = new NewTransaction();
+                MyClass.newTransaction.init();
+                int date = numberOfDays - counter;
+                MyClass.newTransaction.generateTransactions(numberOfTransactions, date);
+                MyClass.newTransaction.getBackButton().doClick();
+            }
+
+        }
+
     }
 
     private void deleteAndForwardBalance(LocalDate localDate) {
-                System.out.println(localDate.toString() + " deleting data");
+        System.out.println(localDate.toString() + " deleting data");
 //        String updateQuery = "update customers c join billdetails bd on bd.customer_name=c.customer_name set openingAccount=openingAccount + (select sum(totalfinalcost) from billdetails bd2 where bd2.customer_name=c.customer_name and bd2.date<?));";
         String updateQuery =
                 "UPDATE customers c " +
@@ -242,7 +296,7 @@ public class MainScreen extends JFrame {
             statement.close();
             con.commit();
         } catch (SQLException e) {
-            if(con!=null) {
+            if (con != null) {
                 try {
                     con.rollback();
                 } catch (SQLException ex) {
@@ -251,9 +305,9 @@ public class MainScreen extends JFrame {
             }
             e.printStackTrace();
             throw new RuntimeException(e);
-        }finally {
+        } finally {
             try {
-               if(con!=null) con.close();
+                if (con != null) con.close();
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -264,7 +318,7 @@ public class MainScreen extends JFrame {
 
     private JButton billingButton;
     private JPanel panel;
-    private JButton backButton;
+    private JButton logoutButton;
     private JButton orderManagementButton;
     private JButton backUpDataButton;
     private JButton transactionManagementButton;

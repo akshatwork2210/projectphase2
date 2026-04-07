@@ -1,2 +1,2 @@
 @echo off
-mysqldump -u root -ptv%%f*^! sample > "C:\Users\Aparw\ShreeGurukripaJewellers\src\resources\17_05_25___19_27_03_backup.sql"
+mysqldump -u root -p123456 sample > "D:\gurukripa\src\resources\21_12_25___00_11_51_sample_backup.sql"

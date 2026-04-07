@@ -1,11 +1,9 @@
 package loginsignup.login.loggedin.accountingandledger;
 
-import com.microsoft.schemas.office.office.STInsetMode;
-import loginsignup.login.loggedin.accountingandledger.ledgerwindows.ItemLedger;
+import loginsignup.login.loggedin.accountingandledger.ledgerwindows.LedgerWindow;
 import mainpack.MyClass;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -18,10 +16,11 @@ import java.sql.Statement;
 public class AALScreen extends JFrame {
     private JButton backButton;
     private JList<String> itemList;
-    private JList customerList;
+    private JList<String> customerList;
     private JButton cashStatementButton;
     private JButton expenseAccountButton;// component declaration
     private JPanel panel;
+    private JPanel subPanel;
 
     public AALScreen() {
 
@@ -46,7 +45,19 @@ public class AALScreen extends JFrame {
                 }
             }
         });
-
+        customerList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
+                    int index = customerList.locationToIndex(e.getPoint());
+                    if (index >= 0) {
+                        String selectedCustomer = customerList.getModel().getElementAt(index);
+                        openCustomer(selectedCustomer);
+                        System.out.println("selected customer is "+selectedCustomer);
+                    }
+                }
+            }
+        });
 // Handle Enter key
         itemList.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("ENTER"), "openItem");
         itemList.getActionMap().put("openItem", new AbstractAction() {
@@ -59,6 +70,16 @@ public class AALScreen extends JFrame {
             }
         });
 
+        customerList.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("ENTER"), "openItem");
+        customerList.getActionMap().put("openItem", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String selectedCustomer = customerList.getSelectedValue();
+                if (selectedCustomer != null) {
+                    openCustomer(selectedCustomer);
+                }
+            }
+        });
 
 // Your method to handle the item
 
@@ -76,11 +97,18 @@ public class AALScreen extends JFrame {
 
     }
 
+    private void openCustomer(String selectedCustomer) {
+        setVisible(false);
+        MyClass.ledgerWindow = new LedgerWindow();
+        MyClass.ledgerWindow.init(selectedCustomer, LedgerWindow.CUSTOMER_MODE);
+        MyClass.ledgerWindow.setVisible(true);
+    }
+
     private void openItem(String selectedItem) {
         setVisible(false);
-        MyClass.itemLedger=new ItemLedger();
-        MyClass.itemLedger.init(customerList.getSelectedValue()==null?"":customerList.getSelectedValue().toString());
-        MyClass.itemLedger.setVisible(true);
+        MyClass.ledgerWindow = new LedgerWindow();
+        MyClass.ledgerWindow.init(customerList.getSelectedValue() == null ? "" : customerList.getSelectedValue().toString(), LedgerWindow.ITEM_MODE);
+        MyClass.ledgerWindow.setVisible(true);
 
     }
 
@@ -93,7 +121,7 @@ public class AALScreen extends JFrame {
                     model.addElement(rs.getString("DesignID") + "->" + rs.getString("itemname"));
                 }
             }
-            customerList.setModel(model);
+            itemList.setModel(model);
 
 
         } catch (SQLException e) {
@@ -103,6 +131,19 @@ public class AALScreen extends JFrame {
     }
 
     private void getListOfCustomers() {
+        String query = "select customer_name from customers";
+        DefaultListModel<String> model = new DefaultListModel<>();
+
+        try {
+            Statement statement = MyClass.C.createStatement();
+            ResultSet rs = statement.executeQuery(query);
+            while (rs.next()) {
+                model.addElement(rs.getString(1));
+            }
+            customerList.setModel(model);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
     }
 

@@ -35,6 +35,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class UtilityMethods {
+    public static Connection createConnection() throws SQLException {
+        return DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(),MyClass.login.getPassword());
+    }
     public static final int VERTI_SPLIT = 0;
     public static final int HORIZONTAL_SPLIT = 1;
     //Thread printingThread;
@@ -99,6 +102,33 @@ public class UtilityMethods {
 //
 //        return balances;
 //    }
+    public static void storeLogs(Exception e) {
+        try {
+            // Generate timestamp for filename
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+
+            // Define logs directory path inside src
+            String logsDirPath = "src/logs";
+            File logsDir = new File(logsDirPath);
+            if (!logsDir.exists()) {
+                logsDir.mkdirs(); // Create the folder if it doesn't exist
+            }
+
+            // Define log file path
+            String filename = timestamp + "_error_logs.txt";
+            File logFile = new File(logsDir, filename);
+
+            // Write the exception stack trace to the file
+            try (PrintWriter pw = new PrintWriter(new FileWriter(logFile))) {
+                pw.println("Exception occurred at: " + timestamp);
+                e.printStackTrace(pw);
+                System.out.println("Log saved to " + logFile.getAbsolutePath());
+            }
+
+        } catch (IOException ioEx) {
+            System.err.println("Failed to save logs: " + ioEx.getMessage());
+        }
+    }
     public static double[] balance(int billID) {
         double lastbillTotal = 0;
         String openingBalanceStatement="select openingaccount from customers where customer_name=(select customer_name from bills where billid=?)";
@@ -147,8 +177,10 @@ public class UtilityMethods {
                 while (rs.next()) {
                     if (rs.getInt(3) == billID) lastbillTotal += rs.getDouble(1);
                     grandTotalBill += rs.getDouble(1);
-                    System.out.println(rs.getDouble(1) + "   from sql" + rs.getDouble(2));
+//                    System.out.println(rs.getDouble(1) + "   from sql" + rs.getDouble(2));
                 }
+                System.out.println(grandTotalBill+ " value of grand total bill");
+
             }
             statement.close();
             statement = MyClass.C.prepareStatement(transactionQuery);
@@ -183,7 +215,14 @@ public class UtilityMethods {
             throw new RuntimeException(e);
         }
     }
+    public static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
 
+        long factor = (long) Math.pow(10, places);
+        value = value * factor;
+        long tmp = Math.round(value);
+        return (double) tmp / factor;
+    }
     public static void writeTableToExcel(JTable table, String filename) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Table Data");
