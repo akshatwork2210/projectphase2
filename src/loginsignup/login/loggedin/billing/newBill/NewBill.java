@@ -530,7 +530,7 @@ public class NewBill extends JFrame {
 
         try {
             if (transacTemp != null && !transacTemp.isClosed()) transacTemp.close();
-            transacTemp = getConnection(login.getUrl(), login.getLoginID(), login.getPassword());
+            transacTemp = getConnection();
             transacTemp.setAutoCommit(false);
         } catch (SQLException e) {
             Thread.dumpStack();
@@ -541,9 +541,10 @@ public class NewBill extends JFrame {
         String sql1 = "INSERT INTO bills () VALUES ()";
         try (PreparedStatement pstmt = conn.prepareStatement(sql1, Statement.RETURN_GENERATED_KEYS)) {
             conn.setAutoCommit(false); // Start transaction
-            int affectedRows = pstmt.executeUpdate();
-            ResultSet rs = pstmt.getGeneratedKeys();
-            if (rs.next()) setCurBillID((rs.getInt(1)));
+
+            try( ResultSet rs = pstmt.getGeneratedKeys();) {
+               if (rs.next()) setCurBillID((rs.getInt(1)));
+           }
             idLabel.setText("bill id: " + getCurBillID());
 
         } catch (SQLException exception) {
