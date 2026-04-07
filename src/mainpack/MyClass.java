@@ -140,7 +140,7 @@ public class MyClass {
     public static ViewBackendBill viewBackendBill;
     public static ItemLedger itemLedger;
 
-    public static Connection getConnection(String url, String user, String password) {
+    public static Connection getConnection() {
         Connection conn;
         try {
             // Construct the full JDBC URL
@@ -149,7 +149,7 @@ public class MyClass {
             Class.forName("com.mysql.cj.jdbc.Driver");
 
             // Establish Connection
-            conn = DriverManager.getConnection(url, user, password);
+            conn = DriverManager.getConnection(MyClass.login.getUrl(),MyClass.login.getLoginID(), MyClass.login.getPassword());
             conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 
             System.out.println("✅ Database Connected Successfully to: ");

@@ -1,5 +1,6 @@
 package loginsignup.login.loggedin.billing.viewbills;
 
+import mainpack.MyClass;
 import testpackage.UtilityMethods;
 
 import javax.swing.*;
@@ -7,6 +8,7 @@ import javax.swing.table.DefaultTableModel;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -71,20 +73,18 @@ public class ViewBackendBill extends JFrame {
         billDetails.add("gold cost");
         billDetails.add("total");
         prevButton.addActionListener(e -> {
-            try {
-                String query = "SELECT MAX(BillID) FROM bills WHERE BillID < ?";
 
-                if (customerComboBox.getSelectedIndex() != 0) {
-                    query += " AND customer_name = ?";
-                }
+            String query = "SELECT MAX(BillID) FROM bills WHERE BillID < ?";
 
-                if (dateComboBox.getSelectedIndex() != 0) {
-                    query += " AND DATE(date) = ?";
-                }
+            if (customerComboBox.getSelectedIndex() != 0) {
+                query += " AND customer_name = ?";
+            }
 
-                PreparedStatement stmt = C.prepareStatement(query);
+            if (dateComboBox.getSelectedIndex() != 0) {
+                query += " AND DATE(date) = ?";
+            }
+            try (Connection con = MyClass.getConnection(); PreparedStatement stmt = con.prepareStatement(query)) {
                 stmt.setInt(1, curBillID);
-
                 int paramIndex = 2;
                 if (customerComboBox.getSelectedIndex() != 0) {
                     stmt.setString(paramIndex++, customerComboBox.getSelectedItem().toString());
@@ -94,12 +94,13 @@ public class ViewBackendBill extends JFrame {
                     stmt.setString(paramIndex, dateComboBox.getSelectedItem().toString());
                 }
 
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    int prevID = rs.getInt(1);
-                    if (!rs.wasNull()) {
-                        loadBillData(prevID);
-                        setCurBillID(prevID);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        int prevID = rs.getInt(1);
+                        if (!rs.wasNull()) {
+                            loadBillData(prevID);
+                            setCurBillID(prevID);
+                        }
                     }
                 }
             } catch (SQLException ex) {
@@ -108,20 +109,18 @@ public class ViewBackendBill extends JFrame {
         });
 
         nextButton.addActionListener(e -> {
-            try {
-                String query = "SELECT MIN(BillID) FROM bills WHERE BillID > ?";
+            String query = "SELECT MIN(BillID) FROM bills WHERE BillID > ?";
 
-                if (customerComboBox.getSelectedIndex() != 0) {
-                    query += " AND customer_name = ?";
-                }
+            if (customerComboBox.getSelectedIndex() != 0) {
+                query += " AND customer_name = ?";
+            }
 
-                if (dateComboBox.getSelectedIndex() != 0) {
-                    query += " AND DATE(date) = ?";
-                }
+            if (dateComboBox.getSelectedIndex() != 0) {
+                query += " AND DATE(date) = ?";
+            }
 
-                PreparedStatement stmt = C.prepareStatement(query);
+            try (Connection con = MyClass.getConnection(); PreparedStatement stmt = con.prepareStatement(query)) {
                 stmt.setInt(1, curBillID);
-
                 int paramIndex = 2;
                 if (customerComboBox.getSelectedIndex() != 0) {
                     stmt.setString(paramIndex++, customerComboBox.getSelectedItem().toString());
@@ -131,12 +130,13 @@ public class ViewBackendBill extends JFrame {
                     stmt.setString(paramIndex, dateComboBox.getSelectedItem().toString());
                 }
 
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    int nextID = rs.getInt(1);
-                    if (!rs.wasNull()) {
-                        loadBillData(nextID);
-                        setCurBillID(nextID);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        int nextID = rs.getInt(1);
+                        if (!rs.wasNull()) {
+                            loadBillData(nextID);
+                            setCurBillID(nextID);
+                        }
                     }
                 }
             } catch (SQLException ex) {
@@ -164,77 +164,58 @@ public class ViewBackendBill extends JFrame {
         this.curBillID = curBillID;
     }
 
-    public int getCurBillID() {
-        return curBillID;
-    }
-
-    //    void loadBillData(int billid) {
-//        String query = "select*from billdetails where BillID=?";
-//        try {
-//            PreparedStatement stmt=C.prepareStatement(query);
-//            stmt.setInt(1,billid);
-//            ResultSet resultSet=stmt.executeQuery();
-//
-//            while (resultSet.next()){
-//                Vector<String> data= new Vector<>();
-//
-//            }
-//        } catch (SQLException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
     int curBillID;
 
     int loadBillData(int billid) {
 
-        String query = "SELECT * FROM billdetails WHERE BillID = ?";
-        try {
-            PreparedStatement stmt = C.prepareStatement(query);
-            stmt.setInt(1, billid);
-            ResultSet rs = stmt.executeQuery();
-            if (!rs.next()) {
-                JOptionPane.showMessageDialog(viewBackendBill, "empty resultset returned");
-                return -1;
-            }
-            DefaultTableModel model = (DefaultTableModel) billTable.getModel();
-            model.setRowCount(0); // Clear existing data
-            String customer_name = "";
-            do {
+        String query1 = "SELECT * FROM billdetails WHERE BillID = ?";
+        String query2 = "select customer_name,date from bills where billid =?";
+        String customer_name = "";
 
-                Vector<String> row = new Vector<>();
-                row.add(rs.getString("SNo") == null ? "" : rs.getString("SNo")); // SNo
-                row.add(rs.getString("OrderSlipNumber") == null ? "" : rs.getString("OrderSlipNumber")); // OrderSlip/quantity
-                row.add(rs.getString("ItemName") == null ? "" : rs.getString("ItemName")); // ItemName
-                row.add(rs.getString("Quantity") == null ? "0" : rs.getString("Quantity")); // Quantity
-                row.add(rs.getString("DesignID") == null ? "" : rs.getString("DesignID")); // DesignID
-                row.add(rs.getString("LabourCost") == null ? "0" : rs.getString("LabourCost")); // L
-                row.add(rs.getString("RawCost") == null ? "0" : rs.getString("RawCost")); // Raw
-                row.add(rs.getString("DullChillaiCost") == null ? "0" : rs.getString("DullChillaiCost")); // DC
-                row.add(rs.getString("MeenaColorMeenaCost") == null ? "0" : rs.getString("MeenaColorMeenaCost")); // M/CM
-                row.add(rs.getString("RhodiumCost") == null ? "0" : rs.getString("RhodiumCost")); // Rh
-                row.add(rs.getString("NagSettingCost") == null ? "0" : rs.getString("NagSettingCost")); // Nag
-                row.add(rs.getString("OtherBaseCosts") == null ? "0" : rs.getString("OtherBaseCosts")); // Other
-                row.add(rs.getString("OtherBaseCostNotes") == null ? "" : rs.getString("OtherBaseCostNotes")); // OtherDetails
-                row.add(rs.getString("TotalBaseCosting") == null ? "0" : rs.getString("TotalBaseCosting")); // +G
-                row.add(rs.getString("GoldPlatingWeight") == null ? "0" : rs.getString("GoldPlatingWeight")); // Gold(g)
-                row.add(rs.getString("GoldRate") == null ? "0" : rs.getString("GoldRate")); // Gold Rate
-                row.add(rs.getString("TotalFinalCost") == null ? "0" : rs.getString("TotalFinalCost")); // Total
+        try (Connection con = MyClass.getConnection(); PreparedStatement stmt1 = con.prepareStatement(query1); PreparedStatement stmt2 = con.prepareStatement(query2)) {
+            stmt1.setInt(1, billid);
+            try (ResultSet rs = stmt1.executeQuery()) {
+                if (!rs.next()) {
+                    JOptionPane.showMessageDialog(viewBackendBill, "empty resultset returned");
+                    return -1;
+                }
+                DefaultTableModel model = (DefaultTableModel) billTable.getModel();
+                model.setRowCount(0); // Clear existing data
+                do {
 
-                model.addRow(row);
-            } while (rs.next());
-            query = "select customer_name,date from bills where billid =?";
-            stmt.close();
-            stmt = C.prepareStatement(query);
-            stmt.setInt(1, billid);
-            rs.close();
-            rs = stmt.executeQuery();
-            if (rs.next()) {
-                customer_name = rs.getString(1);
-                dateLabel.setText(UtilityMethods.parseDateString(rs.getDate(2)));
+                    Vector<String> row = new Vector<>();
+                    row.add(rs.getString("SNo") == null ? "" : rs.getString("SNo")); // SNo
+                    row.add(rs.getString("OrderSlipNumber") == null ? "" : rs.getString("OrderSlipNumber")); // OrderSlip/quantity
+                    row.add(rs.getString("ItemName") == null ? "" : rs.getString("ItemName")); // ItemName
+                    row.add(rs.getString("Quantity") == null ? "0" : rs.getString("Quantity")); // Quantity
+                    row.add(rs.getString("DesignID") == null ? "" : rs.getString("DesignID")); // DesignID
+                    row.add(rs.getString("LabourCost") == null ? "0" : rs.getString("LabourCost")); // L
+                    row.add(rs.getString("RawCost") == null ? "0" : rs.getString("RawCost")); // Raw
+                    row.add(rs.getString("DullChillaiCost") == null ? "0" : rs.getString("DullChillaiCost")); // DC
+                    row.add(rs.getString("MeenaColorMeenaCost") == null ? "0" : rs.getString("MeenaColorMeenaCost")); // M/CM
+                    row.add(rs.getString("RhodiumCost") == null ? "0" : rs.getString("RhodiumCost")); // Rh
+                    row.add(rs.getString("NagSettingCost") == null ? "0" : rs.getString("NagSettingCost")); // Nag
+                    row.add(rs.getString("OtherBaseCosts") == null ? "0" : rs.getString("OtherBaseCosts")); // Other
+                    row.add(rs.getString("OtherBaseCostNotes") == null ? "" : rs.getString("OtherBaseCostNotes")); // OtherDetails
+                    row.add(rs.getString("TotalBaseCosting") == null ? "0" : rs.getString("TotalBaseCosting")); // +G
+                    row.add(rs.getString("GoldPlatingWeight") == null ? "0" : rs.getString("GoldPlatingWeight")); // Gold(g)
+                    row.add(rs.getString("GoldRate") == null ? "0" : rs.getString("GoldRate")); // Gold Rate
+                    row.add(rs.getString("TotalFinalCost") == null ? "0" : rs.getString("TotalFinalCost")); // Total
+
+                    model.addRow(row);
+                } while (rs.next());
             }
-            billIDLabel.setText("bill id:" + billid);
-            customerNameLabel.setText(customer_name);
-            curBillID = billid;
+//            stmt2 = C.prepareStatement(query1);
+            stmt2.setInt(1, billid);
+            try (ResultSet rs = stmt2.executeQuery()) {
+                if (rs.next()) {
+                    customer_name = rs.getString(1);
+                    dateLabel.setText(UtilityMethods.parseDateString(rs.getDate(2)));
+                }
+                billIDLabel.setText("bill id:" + billid);
+                customerNameLabel.setText(customer_name);
+                curBillID = billid;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Error loading bill data: " + e.getMessage(), e);
@@ -244,8 +225,7 @@ public class ViewBackendBill extends JFrame {
 
     int minBillID() {
         String query = "SELECT MIN(BillID) FROM billdetails";
-        try (PreparedStatement stmt = C.prepareStatement(query);
-             ResultSet rs = stmt.executeQuery()) {
+        try (PreparedStatement stmt = C.prepareStatement(query); ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) {
                 return rs.getInt(1);
             }

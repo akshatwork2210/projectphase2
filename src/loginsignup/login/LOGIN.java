@@ -72,7 +72,7 @@ public class LOGIN extends JFrame {
                      database="sample";
                     String port="3306";
                     url = "jdbc:mysql://" + host + ":"+port+"/" + database;
-                    Connection c= MyClass.getConnection(url,user.getText(),pass.getText());
+                    Connection c= MyClass.getConnection();
                     MyClass.C=c;
                     loginID=user.getText();
                     password=pass.getText();
