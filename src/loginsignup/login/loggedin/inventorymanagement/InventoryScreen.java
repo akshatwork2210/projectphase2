@@ -6,11 +6,12 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class InventoryScreen extends  JFrame {
+public class InventoryScreen extends JFrame {
     private JPanel panel;
     private JButton backButton;
     private JTable inventoryTable;
@@ -38,37 +39,38 @@ public class InventoryScreen extends  JFrame {
             }
         });
     }
-    public void refresh(){
+
+    public void refresh() {
         init();
     }
-    public void init(){
-setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    public void init() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         DefaultTableModel m = new DefaultTableModel(
                 new Object[][]{}, // Empty initial data
                 new String[]{"Design ID", "Total Quantity"} // Column names
-        ){
+        ) {
             public boolean isCellEditable(int row, int column) {
                 return false; // Prevent all cells from being editable
             }
         };
         inventoryTable.setModel(m);
-       try {
+        try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
             String query = "SELECT `DesignID`, `TotalQuantity` FROM inventory";
-           Statement stmt = MyClass.C.createStatement();
-            ResultSet resultSet=stmt.executeQuery(query);
 
-            while (resultSet.next()) {
-                String designId = resultSet.getString("DesignID");
-                int totalQuantity = resultSet.getInt("TotalQuantity");
+            try (ResultSet resultSet = stmt.executeQuery(query)) {
+                while (resultSet.next()) {
+                    String designId = resultSet.getString("DesignID");
+                    int totalQuantity = resultSet.getInt("TotalQuantity");
 
-                m.addRow(new Object[]{designId, totalQuantity});
+                    m.addRow(new Object[]{designId, totalQuantity});
+                }
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
         inventoryTable.setModel(m);
-    pack();
+        pack();
     }
 }

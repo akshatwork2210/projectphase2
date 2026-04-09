@@ -29,8 +29,7 @@ public class ViewOrders extends JFrame {
         pack();
         customerComboBox.addActionListener(e -> {
             id = 1;
-            try {
-                Statement stmt = MyClass.C.createStatement();
+            try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
                 String query;
                 query = "SELECT MIN(slip_id) FROM order_slips ";
                 if (!(customerComboBox.getSelectedIndex() == 0)) {
@@ -46,14 +45,15 @@ public class ViewOrders extends JFrame {
                 } else query += ";";
 
 
-                ResultSet rs = stmt.executeQuery(query);
-                if (rs.next()) {
-                    if (null != rs.getObject(1)) {
-                        System.out.println(id + " from if block");
-                        id = rs.getInt(1);
-                    } else {
-                        setCurrentBill(-1);
-                        return;
+                try (ResultSet rs = stmt.executeQuery(query)) {
+                    if (rs.next()) {
+                        if (null != rs.getObject(1)) {
+                            System.out.println(id + " from if block");
+                            id = rs.getInt(1);
+                        } else {
+                            setCurrentBill(-1);
+                            return;
+                        }
                     }
                 }
 
@@ -67,8 +67,7 @@ public class ViewOrders extends JFrame {
         });
         panaTypeComboBox.addActionListener(e -> {
             id = 1;
-            try {
-                Statement stmt = MyClass.C.createStatement();
+            try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
                 String query = "SELECT MIN(slip_id) FROM order_slips ";
                 if (!(customerComboBox.getSelectedIndex() == 0)) {
                     query += "WHERE customer_name = \"" + (customerComboBox.getSelectedItem() != null ? customerComboBox.getSelectedItem().toString() : "") + "\" ";
@@ -82,15 +81,14 @@ public class ViewOrders extends JFrame {
 
                 } else query += ";";
 
-
-                ResultSet rs = stmt.executeQuery(query);
-
-                if (rs.next()) {
-                    if (rs.getObject(1) != null)
-                        id = rs.getInt(1);
-                    else {
-                        setCurrentBill(-1);
-                        return;
+                try (ResultSet rs = stmt.executeQuery(query);) {
+                    if (rs.next()) {
+                        if (rs.getObject(1) != null)
+                            id = rs.getInt(1);
+                        else {
+                            setCurrentBill(-1);
+                            return;
+                        }
                     }
                 }
                 System.out.println("id is " + id);
@@ -110,16 +108,13 @@ public class ViewOrders extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int id = getCurrentBillID();
-                try {
-                    Statement stmt = MyClass.C.createStatement();
-                    String query = getNextPrevQuery(id);
-
+                try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+                    String query = getNextQuery(id);
                     System.out.println("Generated Query: " + query);
-
-                    ResultSet resultSet = stmt.executeQuery(query);
-
-                    if (resultSet.next()) {
-                        setCurrentBill(Integer.parseInt(resultSet.getString("slip_id")));
+                    try (ResultSet resultSet = stmt.executeQuery(query)) {
+                        if (resultSet.next()) {
+                            setCurrentBill(Integer.parseInt(resultSet.getString("slip_id")));
+                        }
                     }
                 } catch (SQLException ex) {
                     ex.printStackTrace();
@@ -128,12 +123,12 @@ public class ViewOrders extends JFrame {
 
             }
 
-            private String getNextPrevQuery(int id) {
+            private String getNextQuery(int id) {
                 String query = "SELECT * FROM order_slips WHERE slip_id > " + id;
 
                 // Check if a customer is selected
                 if (customerComboBox.getSelectedIndex() != 0) {
-                    query += " AND customer_name = '" + Objects.toString(customerComboBox.getSelectedItem(), "")+ "'";
+                    query += " AND customer_name = '" + Objects.toString(customerComboBox.getSelectedItem(), "") + "'";
                 }
 
                 // Check if a slip type is selected
@@ -148,31 +143,9 @@ public class ViewOrders extends JFrame {
         prevButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                int id = getCurrentBillID();
-//                try {
-//                    Statement stmt = MyClass.C.createStatement();
-//                    ResultSet resultSet;
-//String query
-//                    if (!(customerComboBox.getSelectedIndex() == 0)) {
-//                        if(!(panaTypeComboBox.getSelectedIndex()==0)){
-//
-//                        }
-//                    } else {
-//                        resultSet = stmt.executeQuery("SELECT * FROM order_slips WHERE slip_id < " + id + " ORDER BY slip_id DESC LIMIT 1;");
-//                    }
-//                    resultSet = stmt.executeQuery("SELECT * FROM order_slips WHERE slip_id < " + id + " AND customer_name = '" + customerComboBox.getSelectedItem().toString() + "'");
-//
-//                    System.out.println("prev id finding, current id is " + id);
-//
-//                    if (resultSet.next()) {
-//                        setCurrentBill(Integer.parseInt(resultSet.getString("slip_id")));
-//                    }
-//                } catch (SQLException ex) {
-//                    ex.printStackTrace();
-//                }
                 int id = getCurrentBillID();
-                try {
-                    Statement stmt = MyClass.C.createStatement();
+                try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+
                     String query = "SELECT * FROM order_slips WHERE slip_id < " + id; // Get previous slips
 
                     // Check if a customer is selected
@@ -186,14 +159,10 @@ public class ViewOrders extends JFrame {
                     }
 
                     query += " ORDER BY slip_id DESC LIMIT 1;"; // Ensuring we get the previous slip_id
-
-                    System.out.println("Generated Query: " + query);
-
-                    ResultSet resultSet = stmt.executeQuery(query);
-
-                    if (resultSet.next()) {
-                        setCurrentBill(Integer.parseInt(resultSet.getString("slip_id"))); // Set previous slip_id
-                    } else {
+                    try (ResultSet resultSet = stmt.executeQuery(query)) {
+                        if (resultSet.next()) {
+                            setCurrentBill(Integer.parseInt(resultSet.getString("slip_id"))); // Set previous slip_id
+                        }
                     }
                 } catch (SQLException ex) {
                     ex.printStackTrace();
@@ -223,12 +192,13 @@ public class ViewOrders extends JFrame {
             }
 
             private boolean IDExists(int id) {
-                try {
-                    Statement stmt = MyClass.C.createStatement();
-                    ResultSet rs = stmt.executeQuery("select slip_id from order_slips where slip_id=" + id + ";");
-                    if (rs.next())
-                        return true;
-                    else return false;
+                try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+                    String query = "select slip_id from order_slips where slip_id=" + id + ";";
+                    try (ResultSet rs = stmt.executeQuery(query);) {
+                        if (rs.next())
+                            return true;
+                        else return false;
+                    }
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
@@ -367,7 +337,7 @@ public class ViewOrders extends JFrame {
         ActionListener[] panas = panaTypeComboBox.getActionListeners();
         ActionListener[] customers = customerComboBox.getActionListeners();
 
-        try {
+        try (Connection con = MyClass.getConnection(); Statement stmt1 = con.createStatement(); Statement stmt2 = con.createStatement()) {
             for (ActionListener pana : panas) {
                 panaTypeComboBox.removeActionListener(pana);
             }
@@ -376,9 +346,6 @@ public class ViewOrders extends JFrame {
             }
             // Query to fetch data based on slip_id
             String query = "SELECT design_id, item_name, quantity, plating_grams, raw_material_price, other_details, customer_name, slip_id,slip_type,billed_quantity FROM order_slips WHERE slip_id = " + id;
-            Statement stmt = MyClass.C.createStatement();
-            ResultSet rs = stmt.executeQuery(query);
-
             DefaultTableModel model = new DefaultTableModel() {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -390,14 +357,16 @@ public class ViewOrders extends JFrame {
             int slipId = 1;
             BigDecimal totalPlating = BigDecimal.ZERO;
             int count = 0;
-            while (rs.next()) {
-                count++;
-                customerName = rs.getString("customer_name");
-                slipId = rs.getInt("slip_id");
-                panaType = rs.getString("slip_type");
-                totalPlating = totalPlating.add(BigDecimal.valueOf(Double.parseDouble(rs.getString("plating_grams"))));
-                totalPlatingField.setText("total plating: " + totalPlating.setScale(3, RoundingMode.HALF_UP));
-                model.addRow(new Object[]{rs.getString("design_id"), rs.getString("item_name"), rs.getInt("billed_quantity") + "/" + rs.getInt("quantity"), rs.getBigDecimal("plating_grams"), rs.getBigDecimal("raw_material_price"), rs.getString("other_details")});
+            try (ResultSet rs = stmt1.executeQuery(query)) {
+                while (rs.next()) {
+                    count++;
+                    customerName = rs.getString("customer_name");
+                    slipId = rs.getInt("slip_id");
+                    panaType = rs.getString("slip_type");
+                    totalPlating = totalPlating.add(BigDecimal.valueOf(Double.parseDouble(rs.getString("plating_grams"))));
+                    totalPlatingField.setText("total plating: " + totalPlating.setScale(3, RoundingMode.HALF_UP));
+                    model.addRow(new Object[]{rs.getString("design_id"), rs.getString("item_name"), rs.getInt("billed_quantity") + "/" + rs.getInt("quantity"), rs.getBigDecimal("plating_grams"), rs.getBigDecimal("raw_material_price"), rs.getString("other_details")});
+                }
             }
             if (count == 0) {
                 JOptionPane.showMessageDialog(MyClass.viewOrders, "slip not found error", "error", JOptionPane.ERROR_MESSAGE);
@@ -410,11 +379,9 @@ public class ViewOrders extends JFrame {
             billIDLabel.setText(String.valueOf(slipId));
             this.id = slipId;
             query = "SELECT DATE_FORMAT(created_at, '%d-%m-%y') AS formatted_date FROM order_slips WHERE slip_id = " + id + ";";
-            Statement stmt2 = MyClass.C.createStatement();
-            ResultSet rs2 = stmt2.executeQuery(query);
-            System.out.println();
-            if (rs2.next()) dateLabel.setText("date: " + rs2.getString(1));
-
+            try (ResultSet rs = stmt2.executeQuery(query);) {
+                if (rs.next()) dateLabel.setText("date: " + rs.getString(1));
+            }
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error fetching bill details: " + e.getMessage());
@@ -441,17 +408,21 @@ public class ViewOrders extends JFrame {
         PromptSupport.setPrompt("Go to id", searchField);
         customerComboBox.addItem("Select Customer");
         panaTypeComboBox.addItem("All Slips");
-        try {
-            Statement stmt1 = MyClass.C.createStatement();
-            ResultSet rs1 = stmt1.executeQuery("select type_name from ordertype;");
+        System.out.println();
+        try (Connection con = MyClass.getConnection();
+             Statement stmt1 = con.createStatement();
+             Statement stmt2 = con.createStatement())
+        {
 
-            while (rs1.next()) {
-                panaTypeComboBox.addItem(rs1.getString("type_name"));
+            try (ResultSet rs1 = stmt1.executeQuery("select type_name from ordertype;");) {
+                while (rs1.next()) {
+                    panaTypeComboBox.addItem(rs1.getString("type_name"));
+                }
             }
-            Statement stmt2 = MyClass.C.createStatement();
-            ResultSet rs2 = stmt2.executeQuery("select customer_name from customers;");
-            while (rs2.next()) {
-                customerComboBox.addItem(rs2.getString("customer_name"));
+            try (ResultSet rs2 = stmt2.executeQuery("select customer_name from customers;");) {
+                while (rs2.next()) {
+                    customerComboBox.addItem(rs2.getString("customer_name"));
+                }
             }
 
 
@@ -476,17 +447,15 @@ public class ViewOrders extends JFrame {
         } else if (!(panaTypeComboBox.getSelectedIndex() == 0)) {
             query += "WHERE slip_type =\"" + Objects.requireNonNull(panaTypeComboBox.getSelectedItem()) + "\";";
         } else query += ";";
-        try {
-            Statement stmt = MyClass.C.createStatement();
-            System.out.println(id + " this is id");
-            ResultSet rs = stmt.executeQuery(query);
-
-            if (rs.next()) {
-                if (rs.getObject(1) != null)
-                    id = rs.getInt(1);
-                else setCurrentBill(-1);
-            } else {
-                throw new RuntimeException();
+        try (Connection con= MyClass.getConnection();Statement stmt=con.createStatement()){
+           try( ResultSet rs = stmt.executeQuery(query);) {
+                if (rs.next()) {
+                    if (rs.getObject(1) != null)
+                        id = rs.getInt(1);
+                    else setCurrentBill(-1);
+                } else {
+                    throw new RuntimeException();
+                }
             }
 
         } catch (SQLException e) {

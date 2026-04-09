@@ -131,24 +131,27 @@ public class UtilityMethods {
     }
     public static double[] balance(int billID) {
         double lastbillTotal = 0;
-        String openingBalanceStatement="select openingaccount from customers where customer_name=(select customer_name from bills where billid=?)";
+        String openingBalanceQuery="select openingaccount from customers where customer_name=(select customer_name from bills where billid=?)";
         String billQuery = "select billid from bills where customer_name=(select customer_name from bills where billid=?) and date <= (select date from bills where billid=?) and billid<?";
 //        String transactionQuery="Select *from transactions where date<=()"
         String transactionQuery = "SELECT sum(amount) FROM transactions " +
                 "WHERE customer_name = (SELECT customer_name FROM bills WHERE billid = ?) " +
                 "AND (date <=(SELECT date FROM bills WHERE billid = ?) and (billid<?))";
         double grandTotalBill = 0;//contains total till previous bills
-        try {
-            PreparedStatement statement = MyClass.C.prepareStatement(billQuery);
+        try (Connection con=MyClass.getConnection();
+             PreparedStatement billStatement=con.prepareStatement(billQuery);PreparedStatement transacStatement=con.prepareStatement(transactionQuery)){
+
             ArrayList<Integer> billIDList = new ArrayList<>();
-            statement.setInt(1, billID);
-            statement.setInt(2, billID);
-            statement.setInt(3, billID);
-            ResultSet rs = statement.executeQuery();
+            billStatement.setInt(1, billID);
+            billStatement.setInt(2, billID);
+            billStatement.setInt(3, billID);
             StringBuilder placeholders = new StringBuilder();
-            while (rs.next()) {
-                billIDList.add(rs.getInt(1));
-                placeholders.append(rs.getInt(1)).append(",");
+            try(ResultSet rs = billStatement.executeQuery();
+            ) {
+                while (rs.next()) {
+                    billIDList.add(rs.getInt(1));
+                    placeholders.append(rs.getInt(1)).append(",");
+                }
             }
             placeholders.append(billID);
 
@@ -167,48 +170,43 @@ public class UtilityMethods {
                     "WHERE billid in ( " + placeholders + ")" +
                     "GROUP BY billid;";
             System.out.println("placeholders are" + placeholders);
-            statement.close();
+
             if (!placeholders.isEmpty()) {
-                statement = MyClass.C.prepareStatement(billQuery);
+                try(PreparedStatement stmt = con.prepareStatement(billQuery);
+                ResultSet rs = stmt.executeQuery())
 //            statement.setInt(1, billID);
-                rs.close();
-                rs = statement.executeQuery();
-                lastbillTotal = 0;
-                while (rs.next()) {
-                    if (rs.getInt(3) == billID) lastbillTotal += rs.getDouble(1);
-                    grandTotalBill += rs.getDouble(1);
+                {
+                    lastbillTotal = 0;
+                    while (rs.next()) {
+                        if (rs.getInt(3) == billID) lastbillTotal += rs.getDouble(1);
+                        grandTotalBill += rs.getDouble(1);
 //                    System.out.println(rs.getDouble(1) + "   from sql" + rs.getDouble(2));
-                }
-                System.out.println(grandTotalBill+ " value of grand total bill");
+                    }
+                }System.out.println(grandTotalBill+ " value of grand total bill");
 
             }
-            statement.close();
-            statement = MyClass.C.prepareStatement(transactionQuery);
-            statement.setInt(1, billID);
-            statement.setInt(2, billID);
-            statement.setInt(3, billID);
-            rs.close();
-            rs = statement.executeQuery();
+            transacStatement.setInt(1, billID);
+            transacStatement.setInt(2, billID);
+            transacStatement.setInt(3, billID);
+
             double transactionSum = 0;
-            if (rs.next()) {
-                transactionSum = rs.getDouble(1);
-                System.out.println("transaction sum is " + rs.getInt(1));
-            }
-            System.out.println("\n\n\ntotal is " + grandTotalBill);
+            try(ResultSet rs = transacStatement.executeQuery();) {
+                if (rs.next()) {
+                    transactionSum = rs.getDouble(1);
+                    System.out.println("transaction sum is " + rs.getInt(1));
+                }
+            }System.out.println("\n\n\ntotal is " + grandTotalBill);
             double[] result = new double[2];
-            rs.close();
-            statement.close();
-            statement=MyClass.C.prepareStatement(openingBalanceStatement);
-            statement.setInt(1,billID);
+            try(PreparedStatement openingBalanceStatement=con.prepareStatement(openingBalanceQuery)) {
+                openingBalanceStatement.setInt(1, billID);
+                double openingBalance = 0;
+                try(ResultSet rs = openingBalanceStatement.executeQuery();) {
+                    if (rs.next()) openingBalance = rs.getDouble(1);
+                }
+                result[0] = openingBalance + grandTotalBill - lastbillTotal - transactionSum;
+                result[1] = openingBalance + grandTotalBill - transactionSum;
 
-            rs=statement.executeQuery();
-            double openingBalance=0;
-            if(rs.next())openingBalance=rs.getDouble(1);
-
-            result[0] =openingBalance+ grandTotalBill - lastbillTotal - transactionSum;
-            result[1] = openingBalance+  grandTotalBill - transactionSum;
-
-            return result;
+            }            return result;
 
         } catch (SQLException e) {
             e.printStackTrace();
