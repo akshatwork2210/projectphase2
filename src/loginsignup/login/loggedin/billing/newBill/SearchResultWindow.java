@@ -24,7 +24,7 @@ public class SearchResultWindow extends JFrame {
         return searchFlag;
     }
 
-    private boolean searchFlag=false;
+    private boolean searchFlag = false;
 
     private JButton backButton;
     private JButton button2;
@@ -40,14 +40,14 @@ public class SearchResultWindow extends JFrame {
 
     public String getCutomerName() {
         String name;
-        try {
-            Statement stmt = MyClass.C.createStatement();
-            ResultSet rs = stmt.executeQuery("select customer_name from order_slips where slip_id=" + ID + ";");
-            if (rs.next()) {
-                name = rs.getString(1);
-                return name;
-            } else {
-                throw new SQLException();
+        try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+            try (ResultSet rs = stmt.executeQuery("select customer_name from order_slips where slip_id=" + ID + ";");) {
+                if (rs.next()) {
+                    name = rs.getString(1);
+                    return name;
+                } else {
+                    throw new SQLException();
+                }
             }
         } catch (SQLException e) {
             throw new RuntimeException();
@@ -131,14 +131,14 @@ public class SearchResultWindow extends JFrame {
     }
 
     public String getPanaType() {
-        try {
-            Statement statement = MyClass.C.createStatement();
-            ResultSet rs = statement.executeQuery("select slip_type from order_slips where slip_id=" + ID + ";");
-            if (rs.next()) {
-                return rs.getString(1);
-            } else {
-                JOptionPane.showMessageDialog(this, "error occured panatype not found");
-                return null;
+        try (Connection con = MyClass.getConnection(); Statement statement = con.createStatement()) {
+            try (ResultSet rs = statement.executeQuery("select slip_type from order_slips where slip_id=" + ID + ";");) {
+                if (rs.next()) {
+                    return rs.getString(1);
+                } else {
+                    JOptionPane.showMessageDialog(this, "error occured panatype not found");
+                    return null;
+                }
             }
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "SQL EXCEPTION OCCURED");

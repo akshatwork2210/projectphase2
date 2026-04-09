@@ -7,6 +7,7 @@ import javax.swing.*;
 import javax.swing.text.AbstractDocument;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -55,8 +56,8 @@ public class AddParty extends JFrame {
                 JOptionPane.showMessageDialog(addParty,"please enter valid balance");
                 return;
                 }
-                try {
-                    PreparedStatement preparedStatement = MyClass.C.prepareStatement(query);
+                try(Connection con=MyClass.getConnection();PreparedStatement preparedStatement=con.prepareStatement(query)) {
+//                    PreparedStatement preparedStatement = MyClass.C.prepareStatement(query);
                     preparedStatement.setString(1, name);
                     preparedStatement.setDouble(2, openingaccount);
                     preparedStatement.executeUpdate();

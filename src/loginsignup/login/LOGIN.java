@@ -77,7 +77,7 @@ public class LOGIN extends JFrame {
                 database = databaseField.getText();
                 String port = "3306";
                 url = "jdbc:mysql://" + host + ":" + port + "/" + database;
-                MyClass.C = MyClass.getConnection(url, user.getText(), passwordField.getText());
+                MyClass.C = MyClass.getConnection();
                 loginID = user.getText();
                 password = passwordField.getText();
                 MyClass.mainScreen= new MainScreen();

@@ -34,7 +34,7 @@ import java.util.Map;
 public class MyClass {
     // 1. Create the mapping once (you can do this statically or in constructor)
     public static Map<String, String> codeToItemName;
-public final static String TITLE="GURUKRIPA JEWELLERS";
+    public final static String TITLE = "GURUKRIPA JEWELLERS";
     public static final String PORT = "jdbc:mysql://localhost:3306/";
 
     public static void main(String[] args) {
@@ -141,7 +141,7 @@ public final static String TITLE="GURUKRIPA JEWELLERS";
     public static ViewBackendBill viewBackendBill;
     public static LedgerWindow ledgerWindow;
 
-    public static Connection getConnection(String url, String user, String password) {
+    public static Connection getConnection() {
         Connection conn;
         try {
             // Construct the full JDBC URL
@@ -150,7 +150,7 @@ public final static String TITLE="GURUKRIPA JEWELLERS";
             Class.forName("com.mysql.cj.jdbc.Driver");
 
             // Establish Connection
-            conn = DriverManager.getConnection(url, user, password);
+            conn = DriverManager.getConnection(login.getUrl(), login.getLoginID(), login.getPassword());
             conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 
             System.out.println("✅ Database Connected Successfully to: ");
@@ -163,10 +163,10 @@ public final static String TITLE="GURUKRIPA JEWELLERS";
 
             System.out.println("❌ Database Connection Failed!");
             System.out.println(e.getMessage());
-            if(e.getMessage().contentEquals("Unknown database '"+login.getDatabase()+"'")){
-                JOptionPane.showMessageDialog(login,"database not found error "+e.getErrorCode());
-            e.printStackTrace();
-            return null;
+            if (e.getMessage().contentEquals("Unknown database '" + login.getDatabase() + "'")) {
+                JOptionPane.showMessageDialog(login, "database not found error " + e.getErrorCode());
+                e.printStackTrace();
+                return null;
             }
             e.printStackTrace();
             throw new RuntimeException(e);

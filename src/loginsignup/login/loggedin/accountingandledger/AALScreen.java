@@ -4,10 +4,12 @@ import loginsignup.login.loggedin.accountingandledger.ledgerwindows.LedgerWindow
 import mainpack.MyClass;
 
 import javax.swing.*;
+import javax.swing.plaf.nimbus.State;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -114,13 +116,12 @@ public class AALScreen extends JFrame {
     private void getListOfItem() {
         String query = "select designid,itemname from inventory";
         DefaultListModel<String> model = new DefaultListModel<>();
-        try {
-            Statement statement = MyClass.C.createStatement();
-            ResultSet rs = statement.executeQuery(query);
-            while (rs.next()) {
-                model.addElement(rs.getString("DesignID") + "->" + rs.getString("itemname"));
-            }
-            itemList.setModel(model);
+        try(Connection con=MyClass.getConnection(); Statement statement=con.createStatement()) {
+          try (ResultSet rs = statement.executeQuery(query)){
+                while (rs.next()) {
+                    model.addElement(rs.getString("DesignID") + "->" + rs.getString("itemname"));
+                }
+            }itemList.setModel(model);
 
 
         } catch (SQLException e) {
@@ -133,11 +134,12 @@ public class AALScreen extends JFrame {
         String query = "select customer_name from customers";
         DefaultListModel<String> model = new DefaultListModel<>();
 
-        try {
-            Statement statement = MyClass.C.createStatement();
-            ResultSet rs = statement.executeQuery(query);
-            while (rs.next()) {
-                model.addElement(rs.getString(1));
+        try(Connection con = MyClass.getConnection();Statement statement=con.createStatement()) {
+            try(ResultSet rs = statement.executeQuery(query))
+            {
+                while (rs.next()) {
+                    model.addElement(rs.getString(1));
+                }
             }
             customerList.setModel(model);
         } catch (SQLException e) {
