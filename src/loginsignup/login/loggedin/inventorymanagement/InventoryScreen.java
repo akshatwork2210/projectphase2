@@ -56,7 +56,7 @@ public class InventoryScreen extends JFrame {
             }
         };
         inventoryTable.setModel(m);
-        try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+        try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
             String query = "SELECT `DesignID`, `TotalQuantity` FROM inventory";
 
             try (ResultSet resultSet = stmt.executeQuery(query)) {

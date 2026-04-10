@@ -1,9 +1,11 @@
 package loginsignup.login.loggedin.transactionsandaccounts.newtransaction;
 
+import com.mysql.cj.x.protobuf.MysqlxPrepare;
 import mainpack.MyClass;
 import testpackage.UtilityMethods;
 
 import javax.swing.*;
+import javax.swing.plaf.nimbus.State;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
@@ -142,49 +144,40 @@ public class NewTransaction extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
 //                String query = "SELECT COALESCE(SUM(bd.totalfinalcost), 0) - COALESCE(SUM(t.amount), 0) AS outstanding FROM billdetails bd LEFT JOIN transactions t ON t.customer_name = bd.customer_name WHERE bd.customer_name = ?";
-                String query = "SELECT (coalesce(sum(totalfinalcost),0) - (SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE customer_name = ?) + (SELECT IFNULL(openingaccount, 0) FROM customers WHERE customer_name = ?)) AS outstanding FROM billdetails bd JOIN bills b ON b.billid = bd.billid WHERE b.customer_name = ?";
 
                 String customerName = partyNameComboBox.getSelectedItem() != null ? partyNameComboBox.getSelectedItem().toString() : "";
-                PreparedStatement statement=null;
-                try {
-                    statement= MyClass.C.prepareStatement(query);
+                String query = "SELECT (coalesce(sum(totalfinalcost),0) - (SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE customer_name = ?) + (SELECT IFNULL(openingaccount, 0) FROM customers WHERE customer_name = ?)) AS outstanding FROM billdetails bd JOIN bills b ON b.billid = bd.billid WHERE b.customer_name = ?";
+                try (Connection con = MyClass.createConnection(); PreparedStatement statement = con.prepareStatement(query)) {
                     statement.setString(1, customerName);
                     statement.setString(2, customerName);
                     statement.setString(3, customerName);
-                    ResultSet rs=statement.executeQuery();
-                    double balance=0;
-                    if(rs.next()){
-                        balance+=rs.getDouble(1);
+                    ResultSet rs = statement.executeQuery();
+                    double balance = 0;
+                    if (rs.next()) {
+                        balance += rs.getDouble(1);
 
                     }
 
-                    balance=(double)(Math.round(balance*100))/100;
+                    balance = (double) (Math.round(balance * 100)) / 100;
 
-                    if(balance==0) {
-                        JOptionPane.showMessageDialog(MyClass.newTransaction,"no advances or dues found");
+                    if (balance == 0) {
+                        JOptionPane.showMessageDialog(MyClass.newTransaction, "no advances or dues found");
 
                         return;
                     }
-                    if(balance<0){
-                        balance*=(-1);
+                    if (balance < 0) {
+                        balance *= (-1);
                         outRadioButton.setSelected(true);
-                    }else {
+                    } else {
                         inRadioButton.setSelected(true);
                     }
-                    amountTextField.setText(balance+"");
+                    amountTextField.setText(balance + "");
 
 
                 } catch (SQLException ex) {
                     ex.printStackTrace();
-                    return;
                 }
-                finally {
-                    try {
-                       if(statement!=null) statement.close();
-                    } catch (SQLException ex) {
-                        throw new RuntimeException(ex);
-                    }
-                }
+
             }
         });
     }
@@ -195,11 +188,11 @@ public class NewTransaction extends JFrame {
         if (comboBox.getItemCount() != 0) comboBox.removeAllItems();
         comboBox.addItem("Select Customer");
 
-        try {
-            Statement stmt = MyClass.C.prepareStatement(Query);
-            ResultSet rs = stmt.executeQuery(Query);
-            while (rs.next()) {
-                comboBox.addItem(rs.getString(1));
+        try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
+            try (ResultSet rs = stmt.executeQuery(Query);) {
+                while (rs.next()) {
+                    comboBox.addItem(rs.getString(1));
+                }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);

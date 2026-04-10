@@ -4,7 +4,6 @@ import loginsignup.login.loggedin.accountingandledger.ledgerwindows.LedgerWindow
 import mainpack.MyClass;
 
 import javax.swing.*;
-import javax.swing.plaf.nimbus.State;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -116,7 +115,7 @@ public class AALScreen extends JFrame {
     private void getListOfItem() {
         String query = "select designid,itemname from inventory";
         DefaultListModel<String> model = new DefaultListModel<>();
-        try(Connection con=MyClass.getConnection(); Statement statement=con.createStatement()) {
+        try(Connection con=MyClass.createConnection(); Statement statement=con.createStatement()) {
           try (ResultSet rs = statement.executeQuery(query)){
                 while (rs.next()) {
                     model.addElement(rs.getString("DesignID") + "->" + rs.getString("itemname"));
@@ -134,7 +133,7 @@ public class AALScreen extends JFrame {
         String query = "select customer_name from customers";
         DefaultListModel<String> model = new DefaultListModel<>();
 
-        try(Connection con = MyClass.getConnection();Statement statement=con.createStatement()) {
+        try(Connection con = MyClass.createConnection(); Statement statement=con.createStatement()) {
             try(ResultSet rs = statement.executeQuery(query))
             {
                 while (rs.next()) {

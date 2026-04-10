@@ -40,7 +40,7 @@ public class SearchResultWindow extends JFrame {
 
     public String getCutomerName() {
         String name;
-        try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+        try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
             try (ResultSet rs = stmt.executeQuery("select customer_name from order_slips where slip_id=" + ID + ";");) {
                 if (rs.next()) {
                     name = rs.getString(1);
@@ -131,7 +131,7 @@ public class SearchResultWindow extends JFrame {
     }
 
     public String getPanaType() {
-        try (Connection con = MyClass.getConnection(); Statement statement = con.createStatement()) {
+        try (Connection con = MyClass.createConnection(); Statement statement = con.createStatement()) {
             try (ResultSet rs = statement.executeQuery("select slip_type from order_slips where slip_id=" + ID + ";");) {
                 if (rs.next()) {
                     return rs.getString(1);

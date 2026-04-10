@@ -91,9 +91,9 @@ public class ViewTransactions extends JFrame {
         }
 
 
-        try {
-            PreparedStatement stmt = MyClass.C.prepareStatement(query,
-                    ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        try (Connection con=MyClass.createConnection();PreparedStatement stmt=con.prepareStatement(query,
+                ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)){
+
             if (dateNotZero || nameNotZero) {
                 if (dateNotZero) {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yy");

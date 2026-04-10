@@ -29,30 +29,26 @@ public class AddedTransactions extends JFrame {
 
         String query = "SELECT transaction_id, date, customer_name, amount FROM transactions WHERE date = ?";
 
-        try  {
-            Connection conn = MyClass.C;
-            PreparedStatement stmt = conn.prepareStatement(query);
+        try (Connection con = MyClass.createConnection(); PreparedStatement stmt = con.prepareStatement(query);) {
             stmt.setDate(1, java.sql.Date.valueOf(date));  // Convert LocalDate to java.sql.Date
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    int id = rs.getInt("transaction_id");
+                    java.sql.Date sqlDate = rs.getDate("date");
+                    String party = rs.getString("customer_name");
+                    double amount = rs.getDouble("amount");
 
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                int id = rs.getInt("transaction_id");
-                java.sql.Date sqlDate = rs.getDate("date");
-                String party = rs.getString("customer_name");
-                double amount = rs.getDouble("amount");
-
-                // Depending on whether it's incoming or outgoing
-                Object[] row = new Object[]{
-                        id,
-                        sqlDate.toLocalDate(),  // back to LocalDate if needed
-                        party,
-                        amount >= 0 ? amount : null,
-                        amount < 0 ? -amount : null
-                };
-                model.addRow(row);
+                    // Depending on whether it's incoming or outgoing
+                    Object[] row = new Object[]{
+                            id,
+                            sqlDate.toLocalDate(),  // back to LocalDate if needed
+                            party,
+                            amount >= 0 ? amount : null,
+                            amount < 0 ? -amount : null
+                    };
+                    model.addRow(row);
+                }
             }
-
             // At this point, you can set the model to your JTable
             transactionTable.setModel(model);
 

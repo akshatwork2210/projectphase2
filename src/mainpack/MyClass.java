@@ -141,7 +141,7 @@ public class MyClass {
     public static ViewBackendBill viewBackendBill;
     public static LedgerWindow ledgerWindow;
 
-    public static Connection getConnection() {
+    public static Connection createConnection() {
         Connection conn;
         try {
             // Construct the full JDBC URL
@@ -173,8 +173,6 @@ public class MyClass {
         }
         return conn;
     }
-
-    public static Connection C;
 
     public static NewBill newBill;
     public static Transactions transactions;

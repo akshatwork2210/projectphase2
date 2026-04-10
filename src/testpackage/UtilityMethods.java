@@ -138,8 +138,8 @@ public class UtilityMethods {
                 "WHERE customer_name = (SELECT customer_name FROM bills WHERE billid = ?) " +
                 "AND (date <=(SELECT date FROM bills WHERE billid = ?) and (billid<?))";
         double grandTotalBill = 0;//contains total till previous bills
-        try (Connection con=MyClass.getConnection();
-             PreparedStatement billStatement=con.prepareStatement(billQuery);PreparedStatement transacStatement=con.prepareStatement(transactionQuery)){
+        try (Connection con=MyClass.createConnection();
+             PreparedStatement billStatement=con.prepareStatement(billQuery); PreparedStatement transacStatement=con.prepareStatement(transactionQuery)){
 
             ArrayList<Integer> billIDList = new ArrayList<>();
             billStatement.setInt(1, billID);
@@ -436,23 +436,14 @@ public class UtilityMethods {
         if (comboBox == null) return;
         comboBox.removeAllItems();
         comboBox.addItem("Select Customer");
-        Statement stmt1 = null;
-        ResultSet rs = null;
-        try {
-            stmt1 = MyClass.C.createStatement();
-            rs = stmt1.executeQuery("SELECT customer_name FROM customers");
-            while (rs.next()) comboBox.addItem(rs.getString(1));
+//        Statement stmt1 = null;
+//        ResultSet rs = null;
+        try (Connection con= MyClass.createConnection(); Statement stmt=con.createStatement()){
+            try(ResultSet rs = stmt.executeQuery("SELECT customer_name FROM customers");) {
+                while (rs.next()) comboBox.addItem(rs.getString(1));
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
-        } finally {
-            try {
-                if (rs != null)
-                    rs.close();
-                if (stmt1 != null)
-                    stmt1.close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
         }
     }
 

@@ -111,7 +111,7 @@ public class ViewCustomerBill extends JFrame {
                     String selectedCustomer = customerNameComboBox.getSelectedItem() == null ? "" : customerNameComboBox.getSelectedItem().toString();
                     query = "SELECT BillID FROM bills WHERE BillID > " + currentBillID + " AND customer_name = '" + selectedCustomer + "' ORDER BY BillID ASC LIMIT 1";
                 }
-                try (Connection con=MyClass.getConnection();Statement stmt=con.createStatement()){
+                try (Connection con=MyClass.createConnection(); Statement stmt=con.createStatement()){
                     try(ResultSet rs = stmt.executeQuery(query);){
                         if (rs.next()) loadBillData(billTable, rs.getInt(1));
                     }
@@ -133,7 +133,7 @@ public class ViewCustomerBill extends JFrame {
                     query = "SELECT BillID FROM bills WHERE BillID < " + getBillID() + " AND customer_name = '" + selectedCustomer + "' ORDER BY BillID DESC LIMIT 1";
                 }
 
-                try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+                try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
                     try (ResultSet rs = stmt.executeQuery(query)) {
                         if (rs.next()) {
                             loadBillData(billTable, rs.getInt(1));  // Load previous bill data
@@ -144,7 +144,7 @@ public class ViewCustomerBill extends JFrame {
                 }
             });
             billIDTextField.addActionListener(e -> {
-                try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+                try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
                     if (billIDTextField.getText().trim().isEmpty()) return;
                     int inputBillID = Integer.parseInt(billIDTextField.getText().trim()); // Get and parse BillID
                     String query = "SELECT BillID FROM bills WHERE BillID = " + inputBillID;
@@ -180,7 +180,7 @@ public class ViewCustomerBill extends JFrame {
         if (customerNameComboBox.getSelectedIndex() != 0) {
             query = "select min(billid) from bills where customer_name =?;";
         } else query = "select min(billid) from bills;";
-        try (Connection con = MyClass.getConnection(); PreparedStatement stmt = con.prepareStatement(query)) {
+        try (Connection con = MyClass.createConnection(); PreparedStatement stmt = con.prepareStatement(query)) {
             if (customerNameComboBox.getSelectedIndex() != 0) {
                 customerName = customerNameComboBox.getSelectedItem() == null ? "" : customerNameComboBox.getSelectedItem().toString();
                 stmt.setString(1, customerName);
@@ -199,7 +199,7 @@ public class ViewCustomerBill extends JFrame {
         String query = "select customer_name from customers;";
         customerNameComboBox.removeAllItems();
 
-        try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+        try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
             ResultSet rs = stmt.executeQuery(query);
             customerNameComboBox.addItem("Select Customer");
             while (rs.next()) customerNameComboBox.addItem(rs.getString(1));
@@ -214,7 +214,7 @@ public class ViewCustomerBill extends JFrame {
         String query2 = "select billid,amount , date from transactions where billid=?";
         String query3 = "select *from bills where billid=?;";
 
-        try (Connection con = MyClass.getConnection(); PreparedStatement pstmt1 = con.prepareStatement(query1); PreparedStatement pstmt2 = con.prepareStatement(query3); PreparedStatement pstmt3 = con.prepareStatement(query2)) {
+        try (Connection con = MyClass.createConnection(); PreparedStatement pstmt1 = con.prepareStatement(query1); PreparedStatement pstmt2 = con.prepareStatement(query3); PreparedStatement pstmt3 = con.prepareStatement(query2)) {
             pstmt1.setInt(1, billID);
             DefaultTableModel model = (DefaultTableModel) table.getModel();
             model.setRowCount(0);

@@ -6,9 +6,6 @@ import mainpack.MyClass;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 
 public class LOGIN extends JFrame {
     private JTextField user;
@@ -77,7 +74,6 @@ public class LOGIN extends JFrame {
                 database = databaseField.getText();
                 String port = "3306";
                 url = "jdbc:mysql://" + host + ":" + port + "/" + database;
-                MyClass.C = MyClass.getConnection();
                 loginID = user.getText();
                 password = passwordField.getText();
                 MyClass.mainScreen= new MainScreen();

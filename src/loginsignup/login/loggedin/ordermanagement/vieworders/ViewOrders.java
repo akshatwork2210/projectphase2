@@ -29,7 +29,7 @@ public class ViewOrders extends JFrame {
         pack();
         customerComboBox.addActionListener(e -> {
             id = 1;
-            try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+            try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
                 String query;
                 query = "SELECT MIN(slip_id) FROM order_slips ";
                 if (!(customerComboBox.getSelectedIndex() == 0)) {
@@ -67,7 +67,7 @@ public class ViewOrders extends JFrame {
         });
         panaTypeComboBox.addActionListener(e -> {
             id = 1;
-            try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+            try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
                 String query = "SELECT MIN(slip_id) FROM order_slips ";
                 if (!(customerComboBox.getSelectedIndex() == 0)) {
                     query += "WHERE customer_name = \"" + (customerComboBox.getSelectedItem() != null ? customerComboBox.getSelectedItem().toString() : "") + "\" ";
@@ -108,7 +108,7 @@ public class ViewOrders extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int id = getCurrentBillID();
-                try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+                try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
                     String query = getNextQuery(id);
                     System.out.println("Generated Query: " + query);
                     try (ResultSet resultSet = stmt.executeQuery(query)) {
@@ -144,7 +144,7 @@ public class ViewOrders extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int id = getCurrentBillID();
-                try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+                try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
 
                     String query = "SELECT * FROM order_slips WHERE slip_id < " + id; // Get previous slips
 
@@ -192,7 +192,7 @@ public class ViewOrders extends JFrame {
             }
 
             private boolean IDExists(int id) {
-                try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+                try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
                     String query = "select slip_id from order_slips where slip_id=" + id + ";";
                     try (ResultSet rs = stmt.executeQuery(query);) {
                         if (rs.next())
@@ -337,7 +337,7 @@ public class ViewOrders extends JFrame {
         ActionListener[] panas = panaTypeComboBox.getActionListeners();
         ActionListener[] customers = customerComboBox.getActionListeners();
 
-        try (Connection con = MyClass.getConnection(); Statement stmt1 = con.createStatement(); Statement stmt2 = con.createStatement()) {
+        try (Connection con = MyClass.createConnection(); Statement stmt1 = con.createStatement(); Statement stmt2 = con.createStatement()) {
             for (ActionListener pana : panas) {
                 panaTypeComboBox.removeActionListener(pana);
             }
@@ -409,7 +409,7 @@ public class ViewOrders extends JFrame {
         customerComboBox.addItem("Select Customer");
         panaTypeComboBox.addItem("All Slips");
         System.out.println();
-        try (Connection con = MyClass.getConnection();
+        try (Connection con = MyClass.createConnection();
              Statement stmt1 = con.createStatement();
              Statement stmt2 = con.createStatement())
         {
@@ -447,7 +447,7 @@ public class ViewOrders extends JFrame {
         } else if (!(panaTypeComboBox.getSelectedIndex() == 0)) {
             query += "WHERE slip_type =\"" + Objects.requireNonNull(panaTypeComboBox.getSelectedItem()) + "\";";
         } else query += ";";
-        try (Connection con= MyClass.getConnection();Statement stmt=con.createStatement()){
+        try (Connection con= MyClass.createConnection(); Statement stmt=con.createStatement()){
            try( ResultSet rs = stmt.executeQuery(query);) {
                 if (rs.next()) {
                     if (rs.getObject(1) != null)

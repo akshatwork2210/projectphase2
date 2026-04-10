@@ -129,16 +129,7 @@ public class MainScreen extends JFrame {
         logoutButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
-                    if (MyClass.C != null && !MyClass.C.isClosed()) {
-                        MyClass.C.close();
-                    }
-                    MyClass.login.nullLoginParameters();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(MyClass.mainScreen, "could ont close connection error code:" + ex.getErrorCode() + ":" + ex.getMessage());
-                    return;
-                }
+                MyClass.login.nullLoginParameters();
                 MyClass.login.setVisible(true);
                 dispose();
             }

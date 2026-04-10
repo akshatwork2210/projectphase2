@@ -83,7 +83,7 @@ public class ViewBackendBill extends JFrame {
                 query1 += " AND DATE(date) = ?";
             }
 
-            try (Connection con = MyClass.getConnection(); PreparedStatement stmt = con.prepareStatement(query1)) {
+            try (Connection con = MyClass.createConnection(); PreparedStatement stmt = con.prepareStatement(query1)) {
                 stmt.setInt(1, curBillID);
                 int paramIndex = 2;
                 if (customerComboBox.getSelectedIndex() != 0) {
@@ -120,7 +120,7 @@ public class ViewBackendBill extends JFrame {
                 query += " AND DATE(date) = ?";
             }
 
-            try (Connection con= MyClass.getConnection();PreparedStatement stmt=con.prepareStatement(query)){
+            try (Connection con= MyClass.createConnection(); PreparedStatement stmt=con.prepareStatement(query)){
                 stmt.setInt(1, curBillID);
                 int paramIndex = 2;
                 if (customerComboBox.getSelectedIndex() != 0) {
@@ -178,7 +178,7 @@ public class ViewBackendBill extends JFrame {
         String  query2 = "select customer_name,date from bills where billid =?";
         String customer_name = "";
 
-        try (Connection con= MyClass.getConnection();PreparedStatement stmt1=con.prepareStatement(query1);PreparedStatement stmt2= con.prepareStatement(query2)){
+        try (Connection con= MyClass.createConnection(); PreparedStatement stmt1=con.prepareStatement(query1); PreparedStatement stmt2= con.prepareStatement(query2)){
             stmt1.setInt(1, billid);
            try( ResultSet rs = stmt1.executeQuery();){
                 if (!rs.next()) {
@@ -231,7 +231,7 @@ public class ViewBackendBill extends JFrame {
 
     int minBillID() {
         String query = "SELECT MIN(BillID) FROM billdetails";
-        try (Connection con=MyClass.getConnection(); PreparedStatement stmt = con.prepareStatement(query);
+        try (Connection con=MyClass.createConnection(); PreparedStatement stmt = con.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) {
                 return rs.getInt(1);

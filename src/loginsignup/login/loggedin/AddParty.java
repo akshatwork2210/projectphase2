@@ -1,10 +1,8 @@
 package loginsignup.login.loggedin;
 
 import mainpack.MyClass;
-import testpackage.UtilityMethods;
 
 import javax.swing.*;
-import javax.swing.text.AbstractDocument;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
@@ -56,7 +54,7 @@ public class AddParty extends JFrame {
                 JOptionPane.showMessageDialog(addParty,"please enter valid balance");
                 return;
                 }
-                try(Connection con=MyClass.getConnection();PreparedStatement preparedStatement=con.prepareStatement(query)) {
+                try(Connection con=MyClass.createConnection(); PreparedStatement preparedStatement=con.prepareStatement(query)) {
 //                    PreparedStatement preparedStatement = MyClass.C.prepareStatement(query);
                     preparedStatement.setString(1, name);
                     preparedStatement.setDouble(2, openingaccount);

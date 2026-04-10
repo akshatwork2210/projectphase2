@@ -12,7 +12,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.io.FileOutputStream;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -304,10 +303,10 @@ public class OrderGenerateForm extends JFrame {
         });
 
         Vector<String> orderSlipType = new Vector<>();
-        try {
-            Statement statement = MyClass.C.createStatement();
-            ResultSet rs = statement.executeQuery("select type_name from ordertype;");
-            while (rs.next()) orderSlipType.add(rs.getString("type_name"));
+        try (Connection con = MyClass.createConnection(); Statement statement=con.createStatement()){
+            try(ResultSet rs = statement.executeQuery("select type_name from ordertype;")) {
+                while (rs.next()) orderSlipType.add(rs.getString("type_name"));
+            }
         } catch (SQLException e) {
             Thread.dumpStack();
         }

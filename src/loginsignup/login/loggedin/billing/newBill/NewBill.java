@@ -8,7 +8,6 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.TableModelListener;
-import javax.swing.plaf.nimbus.State;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.AbstractDocument;
 import java.awt.*;
@@ -101,7 +100,7 @@ public class NewBill extends JFrame {
 
         String query = "UPDATE transactions SET billid = ? WHERE customer_name = ? AND billid IS NULL";
 
-        try (Connection con = MyClass.getConnection(); PreparedStatement pstmt = con.prepareStatement(query)) {
+        try (Connection con = MyClass.createConnection(); PreparedStatement pstmt = con.prepareStatement(query)) {
 
             pstmt.setInt(1, billID);
             pstmt.setString(2, customerName);
@@ -450,7 +449,7 @@ public class NewBill extends JFrame {
             } else
                 query = "SELECT slip_id FROM order_slips WHERE slip_id=" + slipNumberField.getText() + " AND customer_name='" + getCustomerName() + "';";
 
-            try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+            try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
 
 
                 try (ResultSet rs = stmt.executeQuery(query);) {
@@ -541,7 +540,7 @@ public class NewBill extends JFrame {
 
         try {
             if (transacTemp != null && !transacTemp.isClosed()) transacTemp.close();
-            transacTemp = getConnection();
+            transacTemp = createConnection();
             transacTemp.setAutoCommit(false);
         } catch (SQLException e) {
             Thread.dumpStack();
@@ -674,7 +673,7 @@ public class NewBill extends JFrame {
                 if (!designID.isEmpty()) {
                     String query = "SELECT itemname,getBuyPrice FROM inventory WHERE DesignID = ?";
 
-                    try (Connection con = MyClass.getConnection(); PreparedStatement stmt = con.prepareStatement(query)) {
+                    try (Connection con = MyClass.createConnection(); PreparedStatement stmt = con.prepareStatement(query)) {
 
                         stmt.setString(1, designID);
                         ResultSet rs = stmt.executeQuery();
@@ -716,7 +715,7 @@ public class NewBill extends JFrame {
 
                 Object designID = tableModel.getValueAt(row, designIdIndex);
                 if (notThroughOrderSlip && designID != null && !designID.toString().contentEquals("")) {
-                    try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+                    try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
                         String query = "select totalquantity from inventory where designid='" + designID + "';";
                         try (ResultSet resultSet = stmt.executeQuery(query);) {
                             if (resultSet.next()) if (resultSet.getInt("totalquantity") < quantity)
@@ -729,7 +728,7 @@ public class NewBill extends JFrame {
 
                 }
                 if (snoToItemIdMap.containsKey(snoValue)) {
-                    try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+                    try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
                         String query = "select * from order_slips where item_id=" + snoToItemIdMap.get(snoValue);
                         int item_id = snoToItemIdMap.get(snoValue);
                         int netQuantity = 0;
@@ -809,7 +808,7 @@ public class NewBill extends JFrame {
         });
 
 
-        try (Connection con = MyClass.getConnection(); Statement stmt = con.createStatement()) {
+        try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
             try (ResultSet rs = stmt.executeQuery("select type_name from ordertype;")) {
                 while (rs.next()) {
                     slipDetailComboBox.addItem(rs.getString(1));
