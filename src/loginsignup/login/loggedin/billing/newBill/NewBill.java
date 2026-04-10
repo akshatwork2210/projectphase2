@@ -126,9 +126,6 @@ public class NewBill extends JFrame {
         int rowCount = model.getRowCount();
 
         // Database connection setup
-        String url = MyClass.PORT + login.getDatabase();
-        String user = login.getLoginID();
-        String password = login.getPassword();
         int billID = -1;
         Connection conn = getTransacTemp();
         PreparedStatement billDetailsStatement = null;
