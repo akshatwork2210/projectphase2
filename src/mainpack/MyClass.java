@@ -169,26 +169,28 @@ public class MyClass {
                 return null;
             }
             e.printStackTrace();
-            throw new RuntimeException(e);
-        }
+            throw new RuntimeException(e);}
         return conn;
     }
-
     public static NewBill newBill;
     public static Transactions transactions;
-
-
     public static LOGIN login;
     public static BillingScreen billingScreen;
-
     public static ViewCustomerBill viewCustomerBill;
-
     public static MainScreen mainScreen;
-
     public static LOGIN_SIGNUP login_signup;
     public static OrderScreen orderScreen;
     public static OrderGenerateForm orderGenerateForm;
     public static InventoryScreen inventoryScreen;
     public static AddInventory addInventory;
 
+    public static Connection createConnection(String s) {
+
+        try {
+            return DriverManager.getConnection("jdbc:mysql://localhost:3306/sample","root","m!n8W74bLc#Iwt");
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null,"error in testing");
+            return null;
+        }
+    }
 }

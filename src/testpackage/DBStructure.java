@@ -104,6 +104,12 @@ public class DBStructure {
     public static final String TRANSACTIONS_CUSTOMER_NAME = "customer_name";
     public static final String TRANSACTIONS_REMARK = "remark";
 
+    //users table for signup and login structure:
+    public static final String USER_ACCOUNT_TABLE="users";
+    public static final String user_name="user";
+    public static final String password="password";
+    public static final String authority="authority";
+
 
 
 
