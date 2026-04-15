@@ -19,8 +19,8 @@ public class LOGIN extends JFrame {
     private String loginID;
     private String password;
     private String host;
-    private String database;
-    private String port;
+    private String database="";
+    private String port="3306";
 
     public String getPort() {
         return port;
@@ -72,7 +72,6 @@ public class LOGIN extends JFrame {
                 host = "localhost";
 
                 database = databaseField.getText();
-                String port = "3306";
                 url = "jdbc:mysql://" + host + ":" + port + "/" + database;
                 loginID = user.getText();
                 password = passwordField.getText();
