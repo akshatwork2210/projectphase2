@@ -1,10 +1,13 @@
 package loginsignup.signup;
 
+import loginsignup.LOGIN_SIGNUP;
 import mainpack.MyClass;
 import testpackage.DBStructure;
 import testpackage.UtilityMethods;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -17,14 +20,23 @@ public class SignUp extends JFrame {
     private JButton SUBMITButton;
     private JPanel panel;
     private JTextField rootPasswordTextField;
+    private JButton backButton;
 
     public static void main(String args[]) {
         new SignUp().setVisible(true);
     }
 
-    SignUp() {
+    public SignUp() {
         init();
 
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+                MyClass.login_signup.setVisible(true);
+
+            }
+        });
     }
 
     void init() {

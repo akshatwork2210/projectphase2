@@ -37,8 +37,12 @@ pack();
         SIGNUPButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                MyClass.signUp.setVisible(true);
+                setVisible(false);
 
             }
         });
+
+
     }
 }

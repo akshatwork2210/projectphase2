@@ -20,6 +20,7 @@ import loginsignup.login.loggedin.ordermanagement.vieworders.ViewOrders;
 import loginsignup.login.loggedin.transactionsandaccounts.Transactions;
 import loginsignup.login.loggedin.transactionsandaccounts.newtransaction.NewTransaction;
 import loginsignup.login.loggedin.transactionsandaccounts.viewTransactions.ViewTransactions;
+import loginsignup.signup.SignUp;
 import testpackage.UtilityMethods;
 
 import javax.swing.*;
@@ -78,6 +79,7 @@ public class MyClass {
         {
             purchaseBill = new PurchaseBill();
             login = new LOGIN();
+            signUp=new SignUp();
             ledgerWindow = new LedgerWindow();
             login_signup = new LOGIN_SIGNUP();
             billingScreen = new BillingScreen();
@@ -175,6 +177,8 @@ public class MyClass {
     public static NewBill newBill;
     public static Transactions transactions;
     public static LOGIN login;
+    public static SignUp signUp;
+
     public static BillingScreen billingScreen;
     public static ViewCustomerBill viewCustomerBill;
     public static MainScreen mainScreen;
