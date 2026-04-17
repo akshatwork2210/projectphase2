@@ -64,16 +64,23 @@ public class LOGIN extends JFrame {
 
             }
         });
+        LOGIN temp=this;
         LOGINButton.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                host = "localhost";
-
-                database = databaseField.getText();
-                url = "jdbc:mysql://" + host + ":" + port + "/" + database;
                 loginID = user.getText();
+               if(!"root".contentEquals(loginID) && !databaseField.getText().isEmpty()) {
+                   JOptionPane.showMessageDialog(temp, "please do not enter database name for  a non root user");
+                return;
+               }
+                host = "localhost";
+                if(loginID.contentEquals("root"))
+                    database = databaseField.getText();
+                else
+                    database=loginID;
+                url = "jdbc:mysql://" + host + ":" + port + "/" + database;
                 password = passwordField.getText();
                 MyClass.mainScreen= new MainScreen();
                 MyClass.mainScreen.setVisible(true);
