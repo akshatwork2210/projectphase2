@@ -806,6 +806,18 @@ public class UtilityMethods {
             throw new IllegalArgumentException("Date format should be dd-MM-yy", e);
         }
     }
+
+    public static  Process pBuilder(String command){
+        ProcessBuilder processBuilder=new ProcessBuilder("cmd.exe","/c",command);
+
+        try {
+            Process p= processBuilder.start();
+            return  p;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
 }
 
 class DecimalDocumentFilter extends DocumentFilter {
