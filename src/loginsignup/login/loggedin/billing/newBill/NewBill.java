@@ -668,7 +668,7 @@ public class NewBill extends JFrame {
                 String designID = tableModel.getValueAt(row, designIdIndex) == null ? "" : tableModel.getValueAt(row, designIdIndex).toString().trim();
 
                 if (!designID.isEmpty()) {
-                    String query = "SELECT itemname,getBuyPrice FROM inventory WHERE DesignID = ?";
+                    String query = "SELECT itemname,price FROM inventory WHERE DesignID = ?";
 
                     try (Connection con = MyClass.createConnection(); PreparedStatement stmt = con.prepareStatement(query)) {
 
@@ -679,7 +679,7 @@ public class NewBill extends JFrame {
 
                             listOfNonEditableCells.add(new Integer[]{row, ITEM_NAME_INDEX});
                             String itemName = rs.getString("itemname");
-                            String price = rs.getString("getBuyPrice");
+                            String price = rs.getString("price");
                             tableModel.setValueAt(itemName, row, ITEM_NAME_INDEX);
                             tableModel.setValueAt(price, row, RAW_INDEX);
                         } else {
@@ -695,8 +695,10 @@ public class NewBill extends JFrame {
                         billTable.setModel(newModel);
                         tableModel = newModel;
                     } catch (SQLException ex) {
-                        Thread.dumpStack();
+//                        Thread.dumpStack();
+                        ex.printStackTrace();
                         JOptionPane.showMessageDialog(null, "Database error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                        System.exit(1);
                     }
                 } else {
                     // If designID field is empty, clear ItemName as well

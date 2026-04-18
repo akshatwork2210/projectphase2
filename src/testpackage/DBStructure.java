@@ -66,6 +66,7 @@ public class DBStructure {
     public static final String INVENTORY_BUY_PRICE = "price";
     public static final String INVENTORY_OPENING_STOCK = "openingstock";
     public static final String INVENTORY_SELL_PRICE = "sellPrice";
+    public static final String INVENTORY_SUPPLIER_NAME = "SupplierName";
 
     // ====================== order_slips ======================
     public static final String ORDER_SLIPS_TABLE = "order_slips";

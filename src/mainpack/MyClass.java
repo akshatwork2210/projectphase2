@@ -177,7 +177,7 @@ public class MyClass {
     public static NewBill newBill;
     public static Transactions transactions;
     public static LOGIN login;
-    public static SignUp signUp;
+    public   static SignUp signUp;
 
     public static BillingScreen billingScreen;
     public static ViewCustomerBill viewCustomerBill;
