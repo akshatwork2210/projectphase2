@@ -5,6 +5,8 @@ import testpackage.UtilityMethods;
 
 import javax.lang.model.util.ElementScanner6;
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -28,7 +30,7 @@ public class AddInventory extends JFrame {
                 if ((returnCode == DUPLICATE_SQL_ENTRY)) {
                     int answer = JOptionPane.showConfirmDialog(panel, "design id duplicate, press yes to add to the quantity and change item names and prices");
                     if (answer == JOptionPane.YES_OPTION)
-                        returnCode = updateData();
+                        returnCode = updateData(); else return;
                     if (returnCode == SUCCESS) JOptionPane.showMessageDialog(panel, "succesfully updated data");
                     else {
                         JOptionPane.showMessageDialog(panel, "sql error occured");
@@ -44,8 +46,8 @@ public class AddInventory extends JFrame {
             MyClass.inventoryScreen.refresh();
         });
         pack();
-        backButton.addActionListener(_ -> {
-            setVisible(false);
+        backButton.addActionListener(e -> {
+            AddInventory.this.setVisible(false);
             MyClass.inventoryScreen.setVisible(true);
         });
     }
@@ -56,7 +58,7 @@ public class AddInventory extends JFrame {
              PreparedStatement stmt = con.prepareStatement(inventoryAddQuery)) {
             stmt.setString(1, designID.getText());
             stmt.setInt(2, Integer.parseInt(openingStockField.getText()));
-            stmt.setString(3, supplierComboBox.getSelectedItem().toString());
+            stmt.setString(3, "hi   ");
             try {
                 stmt.setDouble(4, Double.parseDouble(buyPriceField.getText()));
             } catch (NumberFormatException ex) {
@@ -100,7 +102,8 @@ public class AddInventory extends JFrame {
                 + INVENTORY_TOTAL_QUANTITY + " = " + INVENTORY_TOTAL_QUANTITY + " + ?, "
                 + INVENTORY_ITEM_NAME + " = ?, "
                 + INVENTORY_BUY_PRICE + " = ?, "
-                + INVENTORY_SELL_PRICE + " = ? "
+                + INVENTORY_SELL_PRICE + " = ? ,"
+                + INVENTORY_SUPPLIER_NAME + " =? "
                 + "WHERE " + INVENTORY_DESIGN_ID + " = ?";
 
         try (Connection con = MyClass.createConnection(); PreparedStatement inventoryUpdateStmt = con.prepareStatement(inventoryUpdateQuery)) {
@@ -108,7 +111,8 @@ public class AddInventory extends JFrame {
             inventoryUpdateStmt.setString(2, itemNameField.getText()); // assuming you have this field
             inventoryUpdateStmt.setDouble(3, Double.parseDouble(buyPriceField.getText())); // buy price
             inventoryUpdateStmt.setDouble(4, Double.parseDouble(sellPriceField.getText())); // sell price
-            inventoryUpdateStmt.setString(5, designID.getText()); // WHERE condition
+            inventoryUpdateStmt.setString(5, supplierComboBox.getSelectedItem().toString()); // WHERE condition
+            inventoryUpdateStmt.setString(6, designID.getText()); // WHERE condition
             inventoryUpdateStmt.executeUpdate();
             return SUCCESS;
         } catch (SQLException e) {
