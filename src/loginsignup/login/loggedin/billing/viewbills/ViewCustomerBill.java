@@ -44,20 +44,6 @@ public class ViewCustomerBill extends JFrame {
     private JLabel totalLabel;
 
     public ViewCustomerBill() {
-        setContentPane(panel);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        backButton.addActionListener(e -> {
-            dispose();
-            MyClass.billingScreen.setVisible(true);
-        });
-        printButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                printQueue.offer(() -> printWithDefaultSettings((DefaultTableModel) billTable.getModel(), getBillID(), getDate(), getCustomerName(), UtilityMethods.CUSTOMER_BILL));
-
-            }
-        });
     }
 
     private String getCustomerName() {
@@ -80,98 +66,113 @@ public class ViewCustomerBill extends JFrame {
     }
 
     private Date date;
+//    public void init(){
+//
+//    }
+    public void init() {
+        setContentPane(panel);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-    public void init(String mode) {
+        backButton.addActionListener(e -> {
+            dispose();
+            MyClass.billingScreen.setVisible(true);
+        });
+        printButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                printQueue.offer(() -> printWithDefaultSettings((DefaultTableModel) billTable.getModel(), getBillID(), getDate(), getCustomerName(), UtilityMethods.CUSTOMER_BILL));
+
+            }
+        });
+
         setListOfCustomer();// sets the list of customers in jcombobox
         setExtendedState(JFrame.MAXIMIZED_BOTH);
-        if (mode.contentEquals("customer")) {
-            String[] model = new String[]{"S.No", "item", "Gold (g)", "Plus G", "TGC", "Total"};
-            DefaultTableModel tableModel = new DefaultTableModel(model, 1) {
-                @Override
-                public boolean isCellEditable(int row, int column) {
-                    return false;
-                }
-            };
-            billTable.setModel(tableModel);
-            loadBillData(billTable, getMinBillID());
+        String[] model = new String[]{"S.No", "item", "Gold (g)", "Plus G", "TGC", "Total"};
+        DefaultTableModel tableModel = new DefaultTableModel(model, 1) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        billTable.setModel(tableModel);
+        loadBillData(billTable, getMinBillID());
 
-            customerNameComboBox.addActionListener(e -> {
-                int billid = getMinBillID();
-                loadBillData(billTable, billid);
-            });
+        customerNameComboBox.addActionListener(e -> {
+            int billid = getMinBillID();
+            loadBillData(billTable, billid);
+        });
 
-            nextButton.addActionListener(e -> {
-                int currentBillID = getBillID();  // Function to get the current BillID
-                String query;
-                if (customerNameComboBox.getSelectedIndex() == 0) {
-                    // No customer filter
-                    query = "SELECT BillID FROM bills WHERE BillID > " + currentBillID + " ORDER BY BillID ASC LIMIT 1";
-                } else {
-                    // Get selected customer
-                    String selectedCustomer = customerNameComboBox.getSelectedItem() == null ? "" : customerNameComboBox.getSelectedItem().toString();
-                    query = "SELECT BillID FROM bills WHERE BillID > " + currentBillID + " AND customer_name = '" + selectedCustomer + "' ORDER BY BillID ASC LIMIT 1";
+        nextButton.addActionListener(e -> {
+            int currentBillID = getBillID();  // Function to get the current BillID
+            String query;
+            if (customerNameComboBox.getSelectedIndex() == 0) {
+                // No customer filter
+                query = "SELECT BillID FROM bills WHERE BillID > " + currentBillID + " ORDER BY BillID ASC LIMIT 1";
+            } else {
+                // Get selected customer
+                String selectedCustomer = customerNameComboBox.getSelectedItem() == null ? "" : customerNameComboBox.getSelectedItem().toString();
+                query = "SELECT BillID FROM bills WHERE BillID > " + currentBillID + " AND customer_name = '" + selectedCustomer + "' ORDER BY BillID ASC LIMIT 1";
+            }
+            try (Connection con=MyClass.createConnection(); Statement stmt=con.createStatement()){
+                try(ResultSet rs = stmt.executeQuery(query);){
+                    if (rs.next()) loadBillData(billTable, rs.getInt(1));
                 }
-                try (Connection con=MyClass.createConnection(); Statement stmt=con.createStatement()){
-                    try(ResultSet rs = stmt.executeQuery(query);){
-                        if (rs.next()) loadBillData(billTable, rs.getInt(1));
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+
+        });
+        previousButton.addActionListener(e -> {
+            int currentBillID = getBillID();  // Function to get the current BillID
+            String query;
+
+            if (customerNameComboBox.getSelectedIndex() == 0) {
+                // No customer filter
+                query = "SELECT BillID FROM bills WHERE BillID < " + getBillID() + " ORDER BY BillID DESC LIMIT 1";
+            } else {
+                // Get selected customer
+                String selectedCustomer = customerNameComboBox.getSelectedItem() == null ? "" : customerNameComboBox.getSelectedItem().toString();
+                query = "SELECT BillID FROM bills WHERE BillID < " + getBillID() + " AND customer_name = '" + selectedCustomer + "' ORDER BY BillID DESC LIMIT 1";
+            }
+
+            try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
+                try (ResultSet rs = stmt.executeQuery(query)) {
+                    if (rs.next()) {
+                        loadBillData(billTable, rs.getInt(1));  // Load previous bill data
                     }
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
                 }
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+        billIDTextField.addActionListener(e -> {
+            try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
+                if (billIDTextField.getText().trim().isEmpty()) return;
+                int inputBillID = Integer.parseInt(billIDTextField.getText().trim()); // Get and parse BillID
+                String query = "SELECT BillID FROM bills WHERE BillID = " + inputBillID;
+                try (ResultSet rs = stmt.executeQuery(query)) {
+                    if (rs.next()) {
+                        loadBillData(billTable, inputBillID);
 
-            });
-            previousButton.addActionListener(e -> {
-                int currentBillID = getBillID();  // Function to get the current BillID
-                String query;
+                        billIDTextField.setText("");
 
-                if (customerNameComboBox.getSelectedIndex() == 0) {
-                    // No customer filter
-                    query = "SELECT BillID FROM bills WHERE BillID < " + getBillID() + " ORDER BY BillID DESC LIMIT 1";
-                } else {
-                    // Get selected customer
-                    String selectedCustomer = customerNameComboBox.getSelectedItem() == null ? "" : customerNameComboBox.getSelectedItem().toString();
-                    query = "SELECT BillID FROM bills WHERE BillID < " + getBillID() + " AND customer_name = '" + selectedCustomer + "' ORDER BY BillID DESC LIMIT 1";
-                }
-
-                try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
-                    try (ResultSet rs = stmt.executeQuery(query)) {
-                        if (rs.next()) {
-                            loadBillData(billTable, rs.getInt(1));  // Load previous bill data
-                        }
+                        // Load bill data if found
+                    } else {
+                        billIDTextField.setText("");
+                        JOptionPane.showMessageDialog(null, "Bill ID not found!", "Error", JOptionPane.ERROR_MESSAGE);
                     }
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
                 }
-            });
-            billIDTextField.addActionListener(e -> {
-                try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
-                    if (billIDTextField.getText().trim().isEmpty()) return;
-                    int inputBillID = Integer.parseInt(billIDTextField.getText().trim()); // Get and parse BillID
-                    String query = "SELECT BillID FROM bills WHERE BillID = " + inputBillID;
-                    try (ResultSet rs = stmt.executeQuery(query)) {
-                        if (rs.next()) {
-                            loadBillData(billTable, inputBillID);
 
-                            billIDTextField.setText("");
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(null, "Invalid Bill ID!", "Error", JOptionPane.ERROR_MESSAGE);
+                billIDTextField.setText("");
 
-                            // Load bill data if found
-                        } else {
-                            billIDTextField.setText("");
-                            JOptionPane.showMessageDialog(null, "Bill ID not found!", "Error", JOptionPane.ERROR_MESSAGE);
-                        }
-                    }
-
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(null, "Invalid Bill ID!", "Error", JOptionPane.ERROR_MESSAGE);
-                    billIDTextField.setText("");
-
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                }
-            });
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
 
-        }
     }
 
     private int getMinBillID() {

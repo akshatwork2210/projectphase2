@@ -46,6 +46,10 @@ public class LOGIN extends JFrame {
     }
 
     public LOGIN() {
+        init();
+    }
+
+    public void init() {
         setContentPane(panel);
         setTitle(MyClass.TITLE + ": LOGIN WINDOW");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -93,10 +97,12 @@ public class LOGIN extends JFrame {
                     return;
                 }
                 MyClass.mainScreen = new MainScreen();
+                MyClass.mainScreen.init();
                 MyClass.mainScreen.setVisible(true);
                 setVisible(false);
             }
         });
+
     }
 
     public JButton getLOGINButton() {

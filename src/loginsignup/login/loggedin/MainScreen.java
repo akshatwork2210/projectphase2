@@ -3,7 +3,6 @@ package loginsignup.login.loggedin;
 import java.io.*;
 
 import loginsignup.login.loggedin.accountingandledger.AALScreen;
-import loginsignup.login.loggedin.billing.BillingScreen;
 import loginsignup.login.loggedin.billing.newBill.NewBill;
 import loginsignup.login.loggedin.inventorymanagement.InventoryScreen;
 import loginsignup.login.loggedin.ordermanagement.OrderScreen;
@@ -113,6 +112,9 @@ public class MainScreen extends JFrame {
     }
 
     public MainScreen() {
+    }
+
+    public void init() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 
@@ -122,7 +124,8 @@ public class MainScreen extends JFrame {
         billingButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                MyClass.billingScreen = new BillingScreen();
+//                MyClass.billingScreen = new BillingScreen();
+                MyClass.billingScreen.init();
                 MyClass.billingScreen.setVisible(true);
             }
         });
@@ -138,6 +141,7 @@ public class MainScreen extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 MyClass.orderScreen = new OrderScreen();
+                MyClass.orderScreen.init();
                 MyClass.orderScreen.setVisible(true);
             }
         });
@@ -145,8 +149,8 @@ public class MainScreen extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 MyClass.inventoryScreen = new InventoryScreen();
+                MyClass.inventoryScreen.load();
                 MyClass.inventoryScreen.setVisible(true);
-                MyClass.inventoryScreen.init();
             }
         });
         backUpDataButton.addActionListener(new ActionListener() {
@@ -196,7 +200,7 @@ public class MainScreen extends JFrame {
                     }
 
                 }
-                if (text.startsWith("randomGenerationOfBills "))        {
+                if (text.startsWith("randomGenerationOfBills ")) {
                     int numberofDays = Integer.parseInt(text.substring(24));
                     generateBillsAndTransaction(numberofDays);
                 }
@@ -211,8 +215,8 @@ public class MainScreen extends JFrame {
             ex.printStackTrace();
         }
 
-    }
 
+    }
 
     private void generateBillsAndTransaction(int numberOfDays) {
 

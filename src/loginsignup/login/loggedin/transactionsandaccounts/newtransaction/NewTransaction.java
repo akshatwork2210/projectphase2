@@ -41,6 +41,72 @@ public class NewTransaction extends JFrame {
     }
 
     public NewTransaction() {
+
+    }
+
+    private void appendListOfCustomers(JComboBox comboBox) {
+
+        String Query = "Select customer_name from  customers;";
+        if (comboBox.getItemCount() != 0) comboBox.removeAllItems();
+        comboBox.addItem("Select Customer");
+
+        try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
+            try (ResultSet rs = stmt.executeQuery(Query);) {
+                while (rs.next()) {
+                    comboBox.addItem(rs.getString(1));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+
+    }
+
+    public void generateTransactions(int x, int date) {
+        Random random = new Random();
+        String[] remarks = {
+                "Payment received", "Advance given", "Final settlement", "Partial payment", "Refund",
+                "Adjustment", "Bonus", "Penalty", "Service charge", "Extra work"
+        };
+
+        for (int i = 0; i < x; i++) {
+            // 1. Set a random date (index from 1 to 50)
+            int dateCount = dateComboBox.getItemCount();
+            if (date == -1) {
+                if (dateCount > 1) {
+                    dateComboBox.setSelectedIndex(1 + random.nextInt(Math.min(50, dateCount - 1)));
+                }
+            } else {
+                dateComboBox.setSelectedIndex(date);
+            }
+            // 2. Set a random party name
+            int partyCount = partyNameComboBox.getItemCount();
+            if (partyCount > 0) {
+                partyNameComboBox.setSelectedIndex(1 + random.nextInt(partyCount - 1));
+            }
+
+            // 3. Set a random amount between 400000 and 500000
+            int amount = 400000 + random.nextInt(100000); // (100000 - 5000 + 1)
+            amountTextField.setText(String.valueOf(amount));
+
+            // 4. Randomly select in or out radio button
+
+            inRadioButton.setSelected(true);
+
+
+            // 5. Set random remark
+            remarkTextField.setText(remarks[random.nextInt(remarks.length)]);
+
+            // 6. Click submit
+            submitButton.doClick();
+        }
+    }
+
+    AddedTransactions addedTransactions;
+
+    public void init() {
+
         setContentPane(panel);
 
         pack();
@@ -180,70 +246,7 @@ public class NewTransaction extends JFrame {
 
             }
         });
-    }
 
-    private void appendListOfCustomers(JComboBox comboBox) {
-
-        String Query = "Select customer_name from  customers;";
-        if (comboBox.getItemCount() != 0) comboBox.removeAllItems();
-        comboBox.addItem("Select Customer");
-
-        try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery(Query);) {
-                while (rs.next()) {
-                    comboBox.addItem(rs.getString(1));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-
-    }
-
-    public void generateTransactions(int x, int date) {
-        Random random = new Random();
-        String[] remarks = {
-                "Payment received", "Advance given", "Final settlement", "Partial payment", "Refund",
-                "Adjustment", "Bonus", "Penalty", "Service charge", "Extra work"
-        };
-
-        for (int i = 0; i < x; i++) {
-            // 1. Set a random date (index from 1 to 50)
-            int dateCount = dateComboBox.getItemCount();
-            if (date == -1) {
-                if (dateCount > 1) {
-                    dateComboBox.setSelectedIndex(1 + random.nextInt(Math.min(50, dateCount - 1)));
-                }
-            } else {
-                dateComboBox.setSelectedIndex(date);
-            }
-            // 2. Set a random party name
-            int partyCount = partyNameComboBox.getItemCount();
-            if (partyCount > 0) {
-                partyNameComboBox.setSelectedIndex(1 + random.nextInt(partyCount - 1));
-            }
-
-            // 3. Set a random amount between 400000 and 500000
-            int amount = 400000 + random.nextInt(100000); // (100000 - 5000 + 1)
-            amountTextField.setText(String.valueOf(amount));
-
-            // 4. Randomly select in or out radio button
-
-            inRadioButton.setSelected(true);
-
-
-            // 5. Set random remark
-            remarkTextField.setText(remarks[random.nextInt(remarks.length)]);
-
-            // 6. Click submit
-            submitButton.doClick();
-        }
-    }
-
-    AddedTransactions addedTransactions;
-
-    public void init() {
         appendListOfCustomers(partyNameComboBox);
         UtilityMethods.generateAndAddDates(dateComboBox, false);
 

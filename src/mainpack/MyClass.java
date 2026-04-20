@@ -84,9 +84,9 @@ public class MyClass {
             signUp=new SignUp();
             ledgerWindow = new LedgerWindow();
             login_signup = new LOGIN_SIGNUP();
+
             billingScreen = new BillingScreen();
             mainScreen = new MainScreen();
-            login_signup.setVisible(true);
             newBill = new NewBill();
             orderScreen = new OrderScreen();
             orderGenerateForm = new OrderGenerateForm();
@@ -99,7 +99,6 @@ public class MyClass {
             viewTransactions = new ViewTransactions();
             newTransaction = new NewTransaction();
             searchResultWindow = new SearchResultWindow();
-            transactions = new Transactions();
             viewOrders = new ViewOrders();
             viewCustomerBill = new ViewCustomerBill();
 
@@ -116,15 +115,12 @@ public class MyClass {
             }, "PrintingThread");
 
         }
-        login_signup.setVisible(false);
-        mainScreen.setVisible(false);
-        login.setVisible(true);
 
-//        billingScreen.getPurchaseBillButton().doClick();
-        //        billingScreen.getViewBillButton().doClick();
         UtilityMethods.printStartUp();
         UtilityMethods.printingThread.setDaemon(true);  // optional: will not block app from closing
         UtilityMethods.printingThread.start();
+        login_signup.init();
+        login_signup.setVisible(true);
     }
 
     public static PurchaseBill purchaseBill;

@@ -16,41 +16,7 @@ import static testpackage.ERROR_CODES.*;
 
 public class AddInventory extends JFrame {
     public AddInventory() {
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setContentPane(panel);
-
-        submitQueryButton.addActionListener(e -> {
-            if (
-                    !designID.getText().trim().isEmpty() &&
-                            !openingStockField.getText().trim().isEmpty() &&
-                            !itemNameField.getText().trim().isEmpty() &&
-                            !buyPriceField.getText().trim().isEmpty() &&
-                            !sellPriceField.getText().trim().isEmpty()) {
-                int returnCode = addData();
-                if ((returnCode == DUPLICATE_SQL_ENTRY)) {
-                    int answer = JOptionPane.showConfirmDialog(panel, "design id duplicate, press yes to add to the quantity and change item names and prices");
-                    if (answer == JOptionPane.YES_OPTION)
-                        returnCode = updateData(); else return;
-                    if (returnCode == SUCCESS) JOptionPane.showMessageDialog(panel, "succesfully updated data");
-                    else {
-                        JOptionPane.showMessageDialog(panel, "sql error occured");
-                        return;
-                    }
-                } else if (returnCode != SUCCESS) {
-                    JOptionPane.showMessageDialog(panel, "an error has occured, exiting the system program");
-                    System.exit(FAIL_CODE);
-                }
-            } else {
-                JOptionPane.showMessageDialog(MyClass.addInventory, "Please fill all fields.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-            MyClass.inventoryScreen.refresh();
-        });
-        pack();
-        backButton.addActionListener(e -> {
-            AddInventory.this.setVisible(false);
-            MyClass.inventoryScreen.setVisible(true);
-        });
-    }
+        }
 
     private int addData() {
         String inventoryAddQuery = "INSERT INTO " + INVENTORY_TABLE + " (" + INVENTORY_DESIGN_ID + ", " + INVENTORY_TOTAL_QUANTITY + ", " + INVENTORY_SUPPLIER_NAME + "," + INVENTORY_BUY_PRICE + ", " + INVENTORY_SELL_PRICE + ", " + INVENTORY_ITEM_NAME + ") VALUES (?, ?, ?,? ,?,? )";
@@ -132,8 +98,42 @@ public class AddInventory extends JFrame {
 
     public void init() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        UtilityMethods.generateAndAddNames(supplierComboBox);
+        setContentPane(panel);
 
+        submitQueryButton.addActionListener(e -> {
+            if (
+                    !designID.getText().trim().isEmpty() &&
+                            !openingStockField.getText().trim().isEmpty() &&
+                            !itemNameField.getText().trim().isEmpty() &&
+                            !buyPriceField.getText().trim().isEmpty() &&
+                            !sellPriceField.getText().trim().isEmpty()) {
+                int returnCode = addData();
+                if ((returnCode == DUPLICATE_SQL_ENTRY)) {
+                    int answer = JOptionPane.showConfirmDialog(panel, "design id duplicate, press yes to add to the quantity and change item names and prices");
+                    if (answer == JOptionPane.YES_OPTION)
+                        returnCode = updateData(); else return;
+                    if (returnCode == SUCCESS) JOptionPane.showMessageDialog(panel, "succesfully updated data");
+                    else {
+                        JOptionPane.showMessageDialog(panel, "sql error occured");
+                        return;
+                    }
+                } else if (returnCode != SUCCESS) {
+                    JOptionPane.showMessageDialog(panel, "an error has occured, exiting the system program");
+                    System.exit(FAIL_CODE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(MyClass.addInventory, "Please fill all fields.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+            MyClass.inventoryScreen.load();
+        });
+        pack();
+        backButton.addActionListener(e -> {
+            AddInventory.this.setVisible(false);
+            MyClass.inventoryScreen.setVisible(true);
+        });
+
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        UtilityMethods.generateAndAddNames(supplierComboBox);
     }
 
     private JButton submitQueryButton;

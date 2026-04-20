@@ -23,6 +23,90 @@ public class ViewOrders extends JFrame {
 
 
     public ViewOrders() {
+    }
+
+    int id;
+
+    public int getCurrentBillID() {
+        return id;
+    }
+
+    private void setCurrentBill(int id) {
+        if (id == -1) {
+            DefaultTableModel model = (DefaultTableModel) orderSlipTable.getModel();
+            dateLabel.setText("");
+            billIDLabel.setText("");
+            nameLabel.setText("");
+
+            this.id = id;
+            model.setRowCount(0);
+            return;
+        }
+
+        ActionListener[] panas = panaTypeComboBox.getActionListeners();
+        ActionListener[] customers = customerComboBox.getActionListeners();
+
+        try (Connection con = MyClass.createConnection(); Statement stmt1 = con.createStatement(); Statement stmt2 = con.createStatement()) {
+            for (ActionListener pana : panas) {
+                panaTypeComboBox.removeActionListener(pana);
+            }
+            for (ActionListener customer : customers) {
+                customerComboBox.removeActionListener(customer);
+            }
+            // Query to fetch data based on slip_id
+            String query = "SELECT design_id, item_name, quantity, plating_grams, raw_material_price, other_details, customer_name, slip_id,slip_type,billed_quantity FROM order_slips WHERE slip_id = " + id;
+            DefaultTableModel model = new DefaultTableModel() {
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            };
+            model.setColumnIdentifiers(new String[]{"Design ID", "Item Name", "Quantity", "Plating", "Raw Material Cost", "Other Details"});
+
+            int slipId = 1;
+            BigDecimal totalPlating = BigDecimal.ZERO;
+            int count = 0;
+            try (ResultSet rs = stmt1.executeQuery(query)) {
+                while (rs.next()) {
+                    count++;
+                    customerName = rs.getString("customer_name");
+                    slipId = rs.getInt("slip_id");
+                    panaType = rs.getString("slip_type");
+                    totalPlating = totalPlating.add(BigDecimal.valueOf(Double.parseDouble(rs.getString("plating_grams"))));
+                    totalPlatingField.setText("total plating: " + totalPlating.setScale(3, RoundingMode.HALF_UP));
+                    model.addRow(new Object[]{rs.getString("design_id"), rs.getString("item_name"), rs.getInt("billed_quantity") + "/" + rs.getInt("quantity"), rs.getBigDecimal("plating_grams"), rs.getBigDecimal("raw_material_price"), rs.getString("other_details")});
+                }
+            }
+            if (count == 0) {
+                JOptionPane.showMessageDialog(MyClass.viewOrders, "slip not found error", "error", JOptionPane.ERROR_MESSAGE);
+                setCurrentBill(-1);
+                throw new RuntimeException();
+            }
+            orderSlipTable.setModel(model);
+            nameLabel.setText(customerName + "-> " + panaType);
+
+            billIDLabel.setText(String.valueOf(slipId));
+            this.id = slipId;
+            query = "SELECT DATE_FORMAT(created_at, '%d-%m-%y') AS formatted_date FROM order_slips WHERE slip_id = " + id + ";";
+            try (ResultSet rs = stmt2.executeQuery(query);) {
+                if (rs.next()) dateLabel.setText("date: " + rs.getString(1));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error fetching bill details: " + e.getMessage());
+        }
+        for (ActionListener pana : panas) {
+            panaTypeComboBox.addActionListener(pana);
+        }
+        for (ActionListener customer : customers) {
+            customerComboBox.addActionListener(customer);
+        }
+
+    }
+
+    String customerName = "", panaType = "";
+
+    public void init() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         setContentPane(panel);
@@ -183,9 +267,10 @@ public class ViewOrders extends JFrame {
                     searchField.setText("");
                     return;
                 }
-                searchField.setText("");
                 if (!IDExists(id)) {
                     JOptionPane.showMessageDialog(MyClass.viewOrders, "id not found from field", "error", JOptionPane.ERROR_MESSAGE);
+                    searchField.setText("");
+
                     return;
                 }
                 setCurrentBill(id);
@@ -314,90 +399,7 @@ public class ViewOrders extends JFrame {
 
 
         });
-    }
 
-    int id;
-
-    public int getCurrentBillID() {
-        return id;
-    }
-
-    private void setCurrentBill(int id) {
-        if (id == -1) {
-            DefaultTableModel model = (DefaultTableModel) orderSlipTable.getModel();
-            dateLabel.setText("");
-            billIDLabel.setText("");
-            nameLabel.setText("");
-
-            this.id = id;
-            model.setRowCount(0);
-            return;
-        }
-
-        ActionListener[] panas = panaTypeComboBox.getActionListeners();
-        ActionListener[] customers = customerComboBox.getActionListeners();
-
-        try (Connection con = MyClass.createConnection(); Statement stmt1 = con.createStatement(); Statement stmt2 = con.createStatement()) {
-            for (ActionListener pana : panas) {
-                panaTypeComboBox.removeActionListener(pana);
-            }
-            for (ActionListener customer : customers) {
-                customerComboBox.removeActionListener(customer);
-            }
-            // Query to fetch data based on slip_id
-            String query = "SELECT design_id, item_name, quantity, plating_grams, raw_material_price, other_details, customer_name, slip_id,slip_type,billed_quantity FROM order_slips WHERE slip_id = " + id;
-            DefaultTableModel model = new DefaultTableModel() {
-                @Override
-                public boolean isCellEditable(int row, int column) {
-                    return false;
-                }
-            };
-            model.setColumnIdentifiers(new String[]{"Design ID", "Item Name", "Quantity", "Plating", "Raw Material Cost", "Other Details"});
-
-            int slipId = 1;
-            BigDecimal totalPlating = BigDecimal.ZERO;
-            int count = 0;
-            try (ResultSet rs = stmt1.executeQuery(query)) {
-                while (rs.next()) {
-                    count++;
-                    customerName = rs.getString("customer_name");
-                    slipId = rs.getInt("slip_id");
-                    panaType = rs.getString("slip_type");
-                    totalPlating = totalPlating.add(BigDecimal.valueOf(Double.parseDouble(rs.getString("plating_grams"))));
-                    totalPlatingField.setText("total plating: " + totalPlating.setScale(3, RoundingMode.HALF_UP));
-                    model.addRow(new Object[]{rs.getString("design_id"), rs.getString("item_name"), rs.getInt("billed_quantity") + "/" + rs.getInt("quantity"), rs.getBigDecimal("plating_grams"), rs.getBigDecimal("raw_material_price"), rs.getString("other_details")});
-                }
-            }
-            if (count == 0) {
-                JOptionPane.showMessageDialog(MyClass.viewOrders, "slip not found error", "error", JOptionPane.ERROR_MESSAGE);
-                setCurrentBill(-1);
-                throw new RuntimeException();
-            }
-            orderSlipTable.setModel(model);
-            nameLabel.setText(customerName + "-> " + panaType);
-
-            billIDLabel.setText(String.valueOf(slipId));
-            this.id = slipId;
-            query = "SELECT DATE_FORMAT(created_at, '%d-%m-%y') AS formatted_date FROM order_slips WHERE slip_id = " + id + ";";
-            try (ResultSet rs = stmt2.executeQuery(query);) {
-                if (rs.next()) dateLabel.setText("date: " + rs.getString(1));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error fetching bill details: " + e.getMessage());
-        }
-        for (ActionListener pana : panas) {
-            panaTypeComboBox.addActionListener(pana);
-        }
-        for (ActionListener customer : customers) {
-            customerComboBox.addActionListener(customer);
-        }
-
-    }
-
-    String customerName = "", panaType = "";
-
-    public void init() {
         String[] columnNames = {"design id", "Item Name", "Quantity", "Plating", "Raw Material Cost", "Other Details"};//jtable content
         ActionListener[] panas = panaTypeComboBox.getActionListeners();
         ActionListener[] customers = customerComboBox.getActionListeners();
@@ -411,8 +413,7 @@ public class ViewOrders extends JFrame {
         System.out.println();
         try (Connection con = MyClass.createConnection();
              Statement stmt1 = con.createStatement();
-             Statement stmt2 = con.createStatement())
-        {
+             Statement stmt2 = con.createStatement()) {
 
             try (ResultSet rs1 = stmt1.executeQuery("select type_name from ordertype;");) {
                 while (rs1.next()) {
@@ -447,8 +448,8 @@ public class ViewOrders extends JFrame {
         } else if (!(panaTypeComboBox.getSelectedIndex() == 0)) {
             query += "WHERE slip_type =\"" + Objects.requireNonNull(panaTypeComboBox.getSelectedItem()) + "\";";
         } else query += ";";
-        try (Connection con= MyClass.createConnection(); Statement stmt=con.createStatement()){
-           try( ResultSet rs = stmt.executeQuery(query);) {
+        try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
+            try (ResultSet rs = stmt.executeQuery(query);) {
                 if (rs.next()) {
                     if (rs.getObject(1) != null)
                         id = rs.getInt(1);

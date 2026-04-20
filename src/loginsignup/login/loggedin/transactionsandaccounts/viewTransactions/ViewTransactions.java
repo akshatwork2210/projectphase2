@@ -21,11 +21,12 @@ public class ViewTransactions extends JFrame {
     DefaultTableModel tableModel;
 
     public ViewTransactions() {
-        setContentPane(panel);
 
     }
 
     public void init() {
+        setContentPane(panel);
+
         UtilityMethods.generateAndAddDates(dateComboBox, true);
         UtilityMethods.generateAndAddNames(partyNameComboBox);
         dateComboBox.addActionListener(new ActionListener() {

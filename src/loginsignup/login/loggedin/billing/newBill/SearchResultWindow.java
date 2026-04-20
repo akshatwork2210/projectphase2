@@ -57,29 +57,31 @@ public class SearchResultWindow extends JFrame {
     }
 
     public SearchResultWindow() {
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+      }
+public void init(){
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        setContentPane(panel1);
+    setContentPane(panel1);
 
-        backButton.addActionListener(e -> {
-            MyClass.newBill.setExtendedState(JFrame.MAXIMIZED_BOTH);
-            MyClass.newBill.getBackButton().setEnabled(true);
-            MyClass.newBill.getSubmitButton().setEnabled(true);
+    backButton.addActionListener(e -> {
+        MyClass.newBill.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        MyClass.newBill.getBackButton().setEnabled(true);
+        MyClass.newBill.getSubmitButton().setEnabled(true);
 
-            dispose();
-        });
-        orderSlipTable.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+        dispose();
+    });
+    orderSlipTable.addKeyListener(new KeyAdapter() {
+        @Override
+        public void keyPressed(KeyEvent e) {
+            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 
-                    pushDetails(doSqlUpadates(ID));
+                pushDetails(doSqlUpadates(ID));
 
-                }
             }
-        });
-    }
+        }
+    });
 
+}
     private Vector<Integer> doSqlUpadates(int BID) //this will also writen values to append to the bill
     {
         Vector<Integer> detailsToPush = new Vector<>();
@@ -149,7 +151,7 @@ public class SearchResultWindow extends JFrame {
     }
 
     public SearchResultWindow(int bID) {
-        this();
+       init();
         this.ID = bID;
         slipID.setText("order slip id: " + ID);
         cutomerName.setText(getCutomerName());

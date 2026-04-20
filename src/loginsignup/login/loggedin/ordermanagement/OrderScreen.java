@@ -1,5 +1,6 @@
 package loginsignup.login.loggedin.ordermanagement;
 
+import loginsignup.login.loggedin.ordermanagement.generateorder.OrderGenerateForm;
 import mainpack.MyClass;
 
 import javax.swing.*;
@@ -13,10 +14,15 @@ public class OrderScreen extends JFrame {
     private JButton backButton;
     private JButton viewOrdersButton;
     private JButton analyseLateOrderAndButton;
-public JButton getViewOrdersButton(){
-    return viewOrdersButton;
-}
-    public OrderScreen(){
+
+    public JButton getViewOrdersButton() {
+        return viewOrdersButton;
+    }
+
+    public OrderScreen() {
+    }
+
+    public void init() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         setContentPane(panel);
@@ -32,8 +38,10 @@ public JButton getViewOrdersButton(){
             @Override
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
-                MyClass.orderGenerateForm.setVisible(true);
+                MyClass.orderGenerateForm=new OrderGenerateForm();
                 MyClass.orderGenerateForm.init();
+                MyClass.orderGenerateForm.refresh();
+                MyClass.orderGenerateForm.setVisible(true);
             }
         });
 
@@ -45,9 +53,11 @@ public JButton getViewOrdersButton(){
                 setVisible(false);
             }
         });
+
     }
-public JButton getGenerateANewOrderButton(){
+
+    public JButton getGenerateANewOrderButton() {
         return generateANewOrderButton;
 
-}
+    }
 }

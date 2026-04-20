@@ -50,13 +50,15 @@ public class OrderGenerateForm extends JFrame {
 
 
     public OrderGenerateForm() {
+    }
+
+    public void init(){
         backupModel = null;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         setContentPane(panel);
 
-        pack();
 
         backButton.addActionListener(e -> {
             setVisible(false);
@@ -71,7 +73,7 @@ public class OrderGenerateForm extends JFrame {
 
         resetFormButton.addActionListener(e -> {
             backupModel = (DefaultTableModel) orderSlip.getModel();
-            init();
+            refresh();
         });
         undoResetButton.addActionListener(e -> {
             if (backupModel != null) {
@@ -187,11 +189,13 @@ public class OrderGenerateForm extends JFrame {
                     dispose();
                     MyClass.orderGenerateForm = new OrderGenerateForm();
                     MyClass.orderGenerateForm.init();
+                    MyClass.orderGenerateForm.refresh();
                     MyClass.orderGenerateForm.setVisible(true);
                 } catch (SQLException ex) {
                     System.out.println("could not close connection");
                     MyClass.orderGenerateForm = new OrderGenerateForm();
                     MyClass.orderGenerateForm.init();
+                    MyClass.orderGenerateForm.refresh();
                     MyClass.orderGenerateForm.setVisible(true);
                     ex.printStackTrace();
                     return;
@@ -199,8 +203,9 @@ public class OrderGenerateForm extends JFrame {
             }
 
         });
-    }
+        pack();
 
+    }
     private Double getDoubleValue(Object string) {
         if (string == null) return null;
 
@@ -215,7 +220,7 @@ public class OrderGenerateForm extends JFrame {
     DefaultTableModel model;
     Vector<String> columnNames;
 
-    public void init() {
+    public void refresh() {
         columnNames = new Vector<>(Arrays.asList(new String[]{"design id", "Item Name", "Quantity", "Plating", "Raw Material Cost", "Other Details"}));
         listOfDisabledcolumn = new Vector<>();
 
@@ -335,7 +340,7 @@ public class OrderGenerateForm extends JFrame {
         DefaultComboBoxModel<String> panaTypeModel = new DefaultComboBoxModel<>(orderSlipType);
         orderSlipTypeComboBox.setModel(panaTypeModel);
         orderSlip.setModel(model);
-
+        pack();
     }
 
     private void refreshListOfDisabledCells() {

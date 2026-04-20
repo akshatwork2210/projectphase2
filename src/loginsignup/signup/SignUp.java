@@ -22,24 +22,14 @@ public class SignUp extends JFrame {
     private JTextField rootPasswordTextField;
     private JButton backButton;
 
-    public static void main(String args[]) {
-        new SignUp().setVisible(true);
-    }
+
 
     public SignUp() {
-        init();
 
-        backButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dispose();
-                MyClass.login_signup.setVisible(true);
 
-            }
-        });
     }
 
-    void init() {
+    public void init() {
         setContentPane(panel);
         JFrame temp = this;
         SUBMITButton.addActionListener(e -> {
@@ -77,6 +67,14 @@ public class SignUp extends JFrame {
                 userTextField.setText("");
             } catch (SQLException ex) {
                 throw new RuntimeException(ex);
+            }
+        });
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+                MyClass.login_signup.setVisible(true);
+
             }
         });
         pack();

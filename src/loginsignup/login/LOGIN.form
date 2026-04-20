@@ -15,7 +15,7 @@
           </grid>
         </constraints>
         <properties>
-          <text value="root"/>
+          <text value="raj"/>
         </properties>
       </component>
       <component id="5730c" class="javax.swing.JTextField" binding="passwordField">
@@ -25,7 +25,7 @@
           </grid>
         </constraints>
         <properties>
-          <text value="m!n8W74bLc#Iwt"/>
+          <text value="akshat"/>
         </properties>
       </component>
       <component id="b0dc4" class="javax.swing.JLabel">

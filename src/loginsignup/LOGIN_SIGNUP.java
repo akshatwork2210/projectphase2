@@ -15,8 +15,11 @@ public class LOGIN_SIGNUP extends JFrame{
     private JButton QUITButton;
 
     public LOGIN_SIGNUP() {
+
+    }
+    public void init(){
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-       setContentPane(panel);
+        setContentPane(panel);
         setTitle(MyClass.TITLE+": login/signup");
         LOGIN login= MyClass.login;
 
@@ -33,10 +36,11 @@ public class LOGIN_SIGNUP extends JFrame{
                 setVisible(false);
             }
         });
-pack();
+        pack();
         SIGNUPButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                MyClass.signUp.init();
                 MyClass.signUp.setVisible(true);
                 setVisible(false);
 

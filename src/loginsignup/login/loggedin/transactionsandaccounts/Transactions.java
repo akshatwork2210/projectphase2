@@ -1,6 +1,7 @@
 package loginsignup.login.loggedin.transactionsandaccounts;
 
 import loginsignup.login.loggedin.transactionsandaccounts.newtransaction.NewTransaction;
+import loginsignup.login.loggedin.transactionsandaccounts.viewTransactions.ViewTransactions;
 import mainpack.MyClass;
 
 import javax.swing.*;
@@ -23,6 +24,9 @@ public class Transactions extends JFrame {
     }
 
     public Transactions() {
+}
+
+    public void init() {
 
         setContentPane(panel);
         pack();
@@ -48,12 +52,11 @@ public class Transactions extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
-                MyClass.viewTransactions.setVisible(true);
+                MyClass.viewTransactions=new ViewTransactions();
                 MyClass.viewTransactions.init();
+                MyClass.viewTransactions.setVisible(true);
             }
         });
-    }
 
-    public void init() {
     }
 }

@@ -32,6 +32,12 @@ public class ViewBackendBill extends JFrame {
 
     public ViewBackendBill() {
 
+
+    }
+
+    Vector<String> billDetails;
+
+    public void init() {
         searchID.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -43,11 +49,6 @@ public class ViewBackendBill extends JFrame {
                 searchID.setText("");
             }
         });
-    }
-
-    Vector<String> billDetails;
-
-    public void init() {
         setContentPane(panel);
         generateAndAddDates(dateComboBox, true);
         generateAndAddNames(customerComboBox);

@@ -1,5 +1,6 @@
 package loginsignup.login.loggedin.inventorymanagement;
 
+import loginsignup.login.loggedin.inventorymanagement.addinventory.AddInventory;
 import mainpack.MyClass;
 
 import javax.swing.*;
@@ -34,43 +35,67 @@ public class InventoryScreen extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
-                MyClass.addInventory.setVisible(true);
+                MyClass.addInventory = new AddInventory();
                 MyClass.addInventory.init();
+                MyClass.addInventory.setVisible(true);
             }
         });
     }
 
-    public void refresh() {
-        init();
-    }
-
-    public void init() {
+    public void load() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         DefaultTableModel m = new DefaultTableModel(
-                new Object[][]{}, // Empty initial data
-                new String[]{"Design ID", "Total Quantity"} // Column names
+                new Object[][]{},
+                new String[]{
+                        "Design ID",
+                        "Total Quantity",
+                        "Item Name",
+                        "Price",
+                        "Opening Stock",
+                        "Sell Price",
+                        "Supplier Name"
+                }
         ) {
             public boolean isCellEditable(int row, int column) {
-                return false; // Prevent all cells from being editable
+                return false;
             }
         };
+
         inventoryTable.setModel(m);
-        try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
-            String query = "SELECT `DesignID`, `TotalQuantity` FROM inventory";
 
-            try (ResultSet resultSet = stmt.executeQuery(query)) {
-                while (resultSet.next()) {
-                    String designId = resultSet.getString("DesignID");
-                    int totalQuantity = resultSet.getInt("TotalQuantity");
+        try (Connection con = MyClass.createConnection();
+             Statement stmt = con.createStatement()) {
 
-                    m.addRow(new Object[]{designId, totalQuantity});
+            String query = "SELECT DESIGNID, TotalQuantity, itemname, price, openingstock, sellPrice, SupplierName FROM inventory";
+
+            try (ResultSet rs = stmt.executeQuery(query)) {
+                while (rs.next()) {
+
+                    String designId = rs.getString("DESIGNID");
+                    int totalQuantity = rs.getInt("TotalQuantity");
+                    String itemName = rs.getString("itemname");
+                    int price = rs.getInt("price");
+                    int openingStock = rs.getInt("openingstock");
+                    int sellPrice = rs.getInt("sellPrice");
+                    String supplierName = rs.getString("SupplierName");
+
+                    m.addRow(new Object[]{
+                            designId,
+                            totalQuantity,
+                            itemName,
+                            price,
+                            openingStock,
+                            sellPrice,
+                            supplierName
+                    });
                 }
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        inventoryTable.setModel(m);
+
         pack();
     }
 }

@@ -49,7 +49,7 @@ public class LedgerWindow extends JFrame {
             columnNames = new String[]{"id", "date", "debit", "credit", "balance"};
 
         } else if (mode == PURCHASE_MODE) {
-            columnNames = new String[]{"id", "date", "Party Name", "debit",  "credit"};
+            columnNames = new String[]{"id", "date", "Party Name", "debit", "credit"};
         }
         DefaultTableModel defaultTableModel = new DefaultTableModel(columnNames, 0) {
             @Override
@@ -122,9 +122,13 @@ class GetData {
                 while (rs.next()) {
                     String[] values = new String[columnNames.length];
                     String dateValue = rs.getString("date");
-                    if (!dateValue.isEmpty())
+                    if (!dateValue.isEmpty()) {
+                    try {
                         values[DATE_COLUMN_INDEX] = LocalDate.parse(dateValue, DateTimeFormatter.ofPattern("yyyy-MM-dd")).format(DateTimeFormatter.ofPattern("dd-MM-yy"));
-                    else values[DATE_COLUMN_INDEX] = "";
+                    }catch (java.time.format.DateTimeParseException e){
+                        values[DATE_COLUMN_INDEX] = LocalDate.parse(dateValue, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")).format(DateTimeFormatter.ofPattern("dd-MM-yy"));
+                    }
+                    } else values[DATE_COLUMN_INDEX] = "";
                     BigDecimal amount = rs.getBigDecimal("amount");
                     System.out.println(amount);
                     boolean debitCredit;//false->debit,true ->credit
