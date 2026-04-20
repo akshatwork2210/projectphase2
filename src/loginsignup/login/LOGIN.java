@@ -6,6 +6,7 @@ import mainpack.MyClass;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
 
 public class LOGIN extends JFrame {
     private JTextField user;
@@ -19,8 +20,8 @@ public class LOGIN extends JFrame {
     private String loginID;
     private String password;
     private String host;
-    private String database="";
-    private String port="3306";
+    private String database = "";
+    private String port = "3306";
 
     public String getPort() {
         return port;
@@ -46,7 +47,7 @@ public class LOGIN extends JFrame {
 
     public LOGIN() {
         setContentPane(panel);
-        setTitle(MyClass.TITLE+": LOGIN WINDOW");
+        setTitle(MyClass.TITLE + ": LOGIN WINDOW");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         QUITButton.addActionListener(new ActionListener() {
@@ -64,25 +65,34 @@ public class LOGIN extends JFrame {
 
             }
         });
-        LOGIN temp=this;
+        LOGIN temp = this;
         LOGINButton.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
 
                 loginID = user.getText();
-               if(!"root".contentEquals(loginID) && !databaseField.getText().isEmpty()) {
-                   JOptionPane.showMessageDialog(temp, "please do not enter database name for  a non root user");
-                return;
-               }
+                if (!"root".contentEquals(loginID) && !databaseField.getText().isEmpty()) {
+                    JOptionPane.showMessageDialog(temp, "please do not enter database name for  a non root user");
+                    return;
+                }
                 host = "localhost";
-                if(loginID.contentEquals("root"))
+                if (loginID.contentEquals("root"))
                     database = databaseField.getText();
                 else
-                    database=loginID;
+                    database = loginID;
                 url = "jdbc:mysql://" + host + ":" + port + "/" + database;
                 password = passwordField.getText();
-                MyClass.mainScreen= new MainScreen();
+                if(database.trim().isEmpty()){
+                    JOptionPane.showMessageDialog(panel,"please enter database name");
+                    return;
+                }
+                Connection con = MyClass.createConnection();
+                if (con == null) {
+                    nullLoginParameters();
+                    return;
+                }
+                MyClass.mainScreen = new MainScreen();
                 MyClass.mainScreen.setVisible(true);
                 setVisible(false);
             }

@@ -30,6 +30,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static testpackage.ERROR_CODES.*;
+
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class MyClass {
@@ -123,14 +125,6 @@ public class MyClass {
         UtilityMethods.printStartUp();
         UtilityMethods.printingThread.setDaemon(true);  // optional: will not block app from closing
         UtilityMethods.printingThread.start();
-
-        //        transactions.getViewTransactionsButton().doClick();
-
-//        orderScreen.getGenerateANewOrderButton().doClick();
-//        orderScreen.getViewOrdersButton().doClick();
-//        billingScreen.getNewBillButton().doClick();
-
-
     }
 
     public static PurchaseBill purchaseBill;
@@ -147,7 +141,6 @@ public class MyClass {
         Connection conn;
         try {
             // Construct the full JDBC URL
-
             // Load MySQL JDBC Driver
             Class.forName("com.mysql.cj.jdbc.Driver");
 
@@ -164,10 +157,15 @@ public class MyClass {
         } catch (SQLException e) {
 
             System.out.println("❌ Database Connection Failed!");
-            System.out.println(e.getMessage());
-            if (e.getMessage().contentEquals("Unknown database '" + login.getDatabase() + "'")) {
+//            System.out.println(e.getMessage()+" code "+e.getErrorCode());
+            if(e.getErrorCode()== SQL_INVALID_CREDENTIALS_ERROR){
+                JOptionPane.showMessageDialog(null, "invalid userid/password");
+                e.printStackTrace();
+                return null;
+            } else if (e.getErrorCode()==SQL_INVALID_DATABASE_ERROR) {
                 JOptionPane.showMessageDialog(login, "database not found error " + e.getErrorCode());
                 e.printStackTrace();
+
                 return null;
             }
             e.printStackTrace();

@@ -6,4 +6,6 @@ public class ERROR_CODES {
     public static int SQL_ERROR=1;
     public static int NUMBER_FORMAT_ERROR=2;
     public static int DUPLICATE_SQL_ENTRY=1062;
+    public static int SQL_INVALID_CREDENTIALS_ERROR =1045;
+    public static int SQL_INVALID_DATABASE_ERROR =1045;
 }

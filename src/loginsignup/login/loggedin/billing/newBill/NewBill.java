@@ -555,7 +555,8 @@ public class NewBill extends JFrame {
 
         } catch (SQLException exception) {
             JOptionPane.showMessageDialog(newBill, "error");
-            Thread.dumpStack();
+//            Thread.dumpStack();
+            exception.printStackTrace();
             throw new RuntimeException();
         }
 

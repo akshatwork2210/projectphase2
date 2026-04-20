@@ -196,7 +196,7 @@ public class MainScreen extends JFrame {
                     }
 
                 }
-                if (text.startsWith("randomGenerationOfBills ")) {
+                if (text.startsWith("randomGenerationOfBills "))        {
                     int numberofDays = Integer.parseInt(text.substring(24));
                     generateBillsAndTransaction(numberofDays);
                 }
