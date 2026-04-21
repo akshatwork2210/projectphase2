@@ -8,7 +8,6 @@ import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -21,7 +20,6 @@ public class OrderGenerateForm extends JFrame {
 
     HashMap<Integer, String> snoToDetailsMap;
     private JPanel panel;
-    DefaultTableModel backupModel;
     private JButton backButton;
     TableModelListener modelListener;
     private JComboBox<String> customerNameComboBox;
@@ -53,7 +51,7 @@ public class OrderGenerateForm extends JFrame {
     }
 
     public void init(){
-        backupModel = null;
+//        backupModel = null;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -72,25 +70,15 @@ public class OrderGenerateForm extends JFrame {
         });
 
         resetFormButton.addActionListener(e -> {
-            backupModel = (DefaultTableModel) orderSlip.getModel();
-            refresh();
-        });
-        undoResetButton.addActionListener(e -> {
-            if (backupModel != null) {
-                int columnCount = model.getColumnCount();
-                Vector<String> columnName = new Vector<>();
-                for (int i = 0; i < columnCount; i++) {
-                    columnName.add(model.getColumnName(i));
-                }
-                DefaultTableModel temp = new DefaultTableModel(model.getDataVector(), columnName);
-                TableModelListener[] listeners = model.getTableModelListeners();
-                for (TableModelListener listener : listeners) {
-                    temp.addTableModelListener(listener);
-                }
-                model = backupModel;
-                orderSlip.setModel(model);
-                backupModel = temp;
-            }
+//            backupModel = (DefaultTableModel) orderSlip.getModel();
+            int answer=JOptionPane.showConfirmDialog(OrderGenerateForm.this,"are you sure you want to reset the form, data will be lost?");
+            if(answer!=JOptionPane.YES_OPTION)return;
+            dispose();
+            MyClass.inventorySelect.dispose();
+            MyClass.orderGenerateForm=new OrderGenerateForm();
+            MyClass.orderGenerateForm.init();
+            MyClass.orderGenerateForm.refresh();
+            MyClass.orderGenerateForm.setVisible(true);
         });
         submitButton.addActionListener(e -> {
 
@@ -211,6 +199,7 @@ public class OrderGenerateForm extends JFrame {
                 MyClass.inventorySelect=new InventorySelect();
                 MyClass.inventorySelect.init(OrderGenerateForm.this);
                 MyClass.inventorySelect.setVisible(true);
+                UtilityMethods.splitFrame(OrderGenerateForm.this,MyClass.inventorySelect, VERTI_SPLIT);
             }
         });
         MyClass.inventorySelect=new InventorySelect();

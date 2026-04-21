@@ -5,10 +5,7 @@ import testpackage.DBStructure;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.lang.classfile.attribute.PermittedSubclassesAttribute;
 import java.sql.*;
 import java.util.List;
@@ -29,11 +26,22 @@ public class InventorySelect extends JFrame {
     }
 
     public InventorySelect() {
+
     }
 
     public void init(OrderGenerateForm orderGenerateForm) {
 
         setContentPane(panel);
+        inventoryTable.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                super.keyPressed(e);
+                if(e.getKeyCode()==KeyEvent.VK_SHIFT){
+                    pushDataToGenerator(inventoryTable.getSelectedRow(),orderGenerateForm);
+                    fetchData((DefaultTableModel) inventoryTable.getModel());
+                }
+            }
+        });
         backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -57,7 +65,7 @@ public class InventorySelect extends JFrame {
                     int selectedRow=inventoryTable.getSelectedRow();
                     System.out.println("hi");
                     pushDataToGenerator(selectedRow,orderGenerateForm);
-
+                    fetchData((DefaultTableModel) inventoryTable.getModel());
                 }
             }
 
@@ -87,8 +95,15 @@ public class InventorySelect extends JFrame {
     private void pushDataToGenerator(int selectedRow,OrderGenerateForm orderGenerateForm) {
         String designID=inventoryTable.getModel().getValueAt(selectedRow,DESIGNID_INDEX).toString();
         int lastRow= orderGenerateForm.model.getRowCount()-1;
-        orderGenerateForm.model.setValueAt(designID, lastRow,orderGenerateForm.DESIGN_ID_INDEX);
-
+        int quantity=0;
+        try {
+        quantity= Integer.parseInt(JOptionPane.showInputDialog("enter quantity"));
+        }catch (NumberFormatException e){
+            JOptionPane.showMessageDialog(InventorySelect.this,"please enter valid quantity");
+            return;
+        }
+        orderGenerateForm.model.setValueAt(designID, lastRow,OrderGenerateForm.DESIGN_ID_INDEX);
+        orderGenerateForm.model.setValueAt(quantity,lastRow,OrderGenerateForm.QUANTITY_INDEX);
     }
 
     public void fetchData(DefaultTableModel model) {
