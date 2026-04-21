@@ -184,10 +184,12 @@ public void init(){
     }
 
     private void pushDetails(Vector<Integer> detailsToPush) {//detailstopush-> item id at index 0 and quantity at index 1
-        if (detailsToPush == null || detailsToPush.size() < 2) {
+        if(detailsToPush==null)return;
+        if ( detailsToPush.size() < 2) {
             JOptionPane.showMessageDialog(null, "Invalid details to push!");
             return;
         }
+
         Connection con = MyClass.newBill.getTransacTemp();
         int itemId = detailsToPush.get(0);
         int quantity = detailsToPush.get(1);

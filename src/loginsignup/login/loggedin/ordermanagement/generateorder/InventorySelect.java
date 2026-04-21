@@ -5,6 +5,8 @@ import testpackage.DBStructure;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.lang.classfile.attribute.PermittedSubclassesAttribute;
@@ -26,13 +28,26 @@ public class InventorySelect extends JFrame {
         inventorySelect.setVisible(true);
     }
 
-    InventorySelect() {
+    public InventorySelect() {
     }
 
     public void init(OrderGenerateForm orderGenerateForm) {
+
         setContentPane(panel);
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+
+            }
+        });
         Vector<String> data = new Vector<>(List.of(new String[]{"design id", "item name", "total quantity available"}));
-        DefaultTableModel model = new DefaultTableModel(data, 0);
+        DefaultTableModel model = new DefaultTableModel(data, 0){
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         inventoryTable.setModel(model);
         fetchData(model);
         inventoryTable.addMouseListener(new MouseListener() {
@@ -40,6 +55,7 @@ public class InventorySelect extends JFrame {
             public void mouseClicked(MouseEvent e) {
                 if(e.getClickCount()==2){
                     int selectedRow=inventoryTable.getSelectedRow();
+                    System.out.println("hi");
                     pushDataToGenerator(selectedRow,orderGenerateForm);
 
                 }

@@ -8,10 +8,8 @@ import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
-import java.awt.event.ActionEvent;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.*;
+import java.awt.event.*;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -34,6 +32,7 @@ public class OrderGenerateForm extends JFrame {
     private JButton undoResetButton;
     private JComboBox<String> dateComboBox;
     private JLabel slipIDLabel;
+    private JButton inventorySelectButton;
     //THE BELOW CODE IS FOR COLUMN NAMES CONSTANTS
     public static final int DESIGN_ID_INDEX = 0;
     public static final int ITEM_NAME_INDEX = 1;
@@ -50,6 +49,7 @@ public class OrderGenerateForm extends JFrame {
 
 
     public OrderGenerateForm() {
+
     }
 
     public void init(){
@@ -203,7 +203,21 @@ public class OrderGenerateForm extends JFrame {
             }
 
         });
-        pack();
+        OrderGenerateForm orderGenerateForm=this;
+        inventorySelectButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(MyClass.inventorySelect.isVisible())return;
+                MyClass.inventorySelect=new InventorySelect();
+                MyClass.inventorySelect.init(OrderGenerateForm.this);
+                MyClass.inventorySelect.setVisible(true);
+            }
+        });
+        MyClass.inventorySelect=new InventorySelect();
+        MyClass.inventorySelect.init(this);
+        UtilityMethods.splitFrame(this,MyClass.inventorySelect, VERTI_SPLIT);
+        MyClass.inventorySelect.setVisible(true);
+
 
     }
     private Double getDoubleValue(Object string) {
@@ -340,7 +354,7 @@ public class OrderGenerateForm extends JFrame {
         DefaultComboBoxModel<String> panaTypeModel = new DefaultComboBoxModel<>(orderSlipType);
         orderSlipTypeComboBox.setModel(panaTypeModel);
         orderSlip.setModel(model);
-        pack();
+//        pack();
     }
 
     private void refreshListOfDisabledCells() {

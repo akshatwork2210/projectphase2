@@ -65,8 +65,6 @@ public class AddParty extends JFrame {
 //                    throw new RuntimeException(ex);
                     JOptionPane.showMessageDialog(addParty, "Part Name already exists");
                     ex.printStackTrace();
-
-                    return;
                 } catch (SQLException ex) {
                     throw new RuntimeException(ex);
                 }

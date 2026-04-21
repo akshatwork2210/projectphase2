@@ -15,6 +15,7 @@ import loginsignup.login.loggedin.billing.viewbills.ViewCustomerBill;
 import loginsignup.login.loggedin.inventorymanagement.InventoryScreen;
 import loginsignup.login.loggedin.inventorymanagement.addinventory.AddInventory;
 import loginsignup.login.loggedin.ordermanagement.OrderScreen;
+import loginsignup.login.loggedin.ordermanagement.generateorder.InventorySelect;
 import loginsignup.login.loggedin.ordermanagement.generateorder.OrderGenerateForm;
 import loginsignup.login.loggedin.ordermanagement.vieworders.ViewOrders;
 import loginsignup.login.loggedin.transactionsandaccounts.Transactions;
@@ -39,6 +40,7 @@ public class MyClass {
     public static Map<String, String> codeToItemName;
     public final static String TITLE = "GURUKRIPA JEWELLERS";
     public static final String PORT = "jdbc:mysql://localhost:3306/";
+    public static InventorySelect inventorySelect;
 
     public static void main(String[] args) {
 
@@ -101,6 +103,7 @@ public class MyClass {
             searchResultWindow = new SearchResultWindow();
             viewOrders = new ViewOrders();
             viewCustomerBill = new ViewCustomerBill();
+            inventorySelect=new InventorySelect();
 
             UtilityMethods.printingThread = new Thread(() -> {
                 while (true) {
