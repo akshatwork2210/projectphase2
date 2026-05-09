@@ -40,7 +40,7 @@ public class OrderScreen extends JFrame {
                 setVisible(false);
                 MyClass.orderGenerateForm=new OrderGenerateForm();
                 MyClass.orderGenerateForm.init();
-                MyClass.orderGenerateForm.refresh();
+//                MyClass.orderGenerateForm.refresh();
                 MyClass.orderGenerateForm.setVisible(true);
             }
         });

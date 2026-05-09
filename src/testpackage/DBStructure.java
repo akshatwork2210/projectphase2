@@ -1,5 +1,6 @@
 package testpackage;
 
+import com.mysql.cj.x.protobuf.MysqlxPrepare;
 import mainpack.MyClass;
 
 import javax.swing.*;
@@ -10,14 +11,9 @@ public class DBStructure {
     //starting inventory table defination
 
 
-
-
-
-
     public static final int NOT_FOUND = -18 * 1;
     private static final int SQLEXCEPTIONOCCURED = -18 * 2;
     private static final int CONNECTION_NOT_CLOSE_ERROR = -18 * 3;
-
 
 
     // ====================== billdetails ======================
@@ -106,102 +102,54 @@ public class DBStructure {
     public static final String TRANSACTIONS_REMARK = "remark";
 
     //users table for signup and login structure:
-    public static final String USER_ACCOUNT_TABLE="users";
-    public static final String user_name="user";
-    public static final String password="password";
-    public static final String authority="authority";
-
-
-
-
+    public static final String USER_ACCOUNT_TABLE = "users";
+    public static final String user_name = "user";
+    public static final String password = "password";
+    public static final String authority = "authority";
 
 
     static int getStock(String designID) {
+        String query = "select " + INVENTORY_TOTAL_QUANTITY + "+" + INVENTORY_OPENING_STOCK + " FROM " + INVENTORY_TABLE + " WHERE " + INVENTORY_DESIGN_ID + " = ?";
 
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        try {
-            con = DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
-
-            String query = "select " + INVENTORY_TOTAL_QUANTITY + "+" + INVENTORY_OPENING_STOCK + " FROM " + INVENTORY_TABLE + " WHERE " + INVENTORY_DESIGN_ID + " = ?";
-            pstmt = con.prepareStatement(query);
-            pstmt.setString(1, designID);
-            rs = pstmt.executeQuery();
-            if (rs.next()) return rs.getInt(1);
-            else return NOT_FOUND;
+        try (Connection con = MyClass.createConnection(); PreparedStatement preparedStatement = con.prepareStatement(query)) {
+            preparedStatement.setString(1, designID);
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+                else return NOT_FOUND;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
             return SQLEXCEPTIONOCCURED;
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (con != null) con.close();
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(null, "contact technical xpert and restart the programm", "ERROR", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
-                return CONNECTION_NOT_CLOSE_ERROR;
-            }
         }
     }
 
     public static String getInventoryItemName(String designID) {
         String query = "select " + INVENTORY_ITEM_NAME + " from " + INVENTORY_TABLE + " where " + INVENTORY_DESIGN_ID + " = ?";
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        try {
-            con = DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
-            pstmt = con.prepareStatement(query);
+        try (Connection con = MyClass.createConnection(); PreparedStatement pstmt = con.prepareStatement(query)) {
             pstmt.setString(1, designID);
-            rs = pstmt.executeQuery();
-            if (rs.next()) return rs.getString(1);
-            else return String.valueOf(NOT_FOUND);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) return rs.getString(1);
+                else return String.valueOf(NOT_FOUND);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, e.getMessage() + ": error occured");
             return String.valueOf(SQLEXCEPTIONOCCURED);
-
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (con != null) con.close();
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(null, "contact technical xpert and restart the programm", "ERROR", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
-                return String.valueOf(CONNECTION_NOT_CLOSE_ERROR);
-            }
         }
     }
 
     public static double getSellPrice(String designID) {
         String query = "select " + INVENTORY_SELL_PRICE + " from " + INVENTORY_TABLE + " WHERE " + INVENTORY_DESIGN_ID + " = ?";
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        try {
-            con = DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
-            pstmt = con.prepareStatement(query);
+        try (Connection con = MyClass.createConnection(); PreparedStatement pstmt = con.prepareStatement(query)) {
             pstmt.setString(1, designID);
-            rs = pstmt.executeQuery();
-            if (rs.next()) return rs.getDouble(1);
-            else return NOT_FOUND;
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) return rs.getDouble(1);
+                else return NOT_FOUND;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, e.getMessage() + ": error occured");
             return SQLEXCEPTIONOCCURED;
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (con != null) con.close();
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(null, "contact technical xpert and restart the programm", "ERROR", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
-                return CONNECTION_NOT_CLOSE_ERROR;
-            }
         }
 
 
@@ -209,38 +157,24 @@ public class DBStructure {
 
     public static double getBuyPrice(String designID) {
         String query = "select " + INVENTORY_BUY_PRICE + " from " + INVENTORY_TABLE + " WHERE " + INVENTORY_DESIGN_ID + " = ?";
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        try {
-            con = DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
-            pstmt = con.prepareStatement(query);
+        try (Connection con = MyClass.createConnection(); PreparedStatement pstmt = con.prepareStatement(query)) {
             pstmt.setString(1, designID);
-            rs = pstmt.executeQuery();
-            if (rs.next()) return rs.getDouble(1);
-            else return NOT_FOUND;
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) return rs.getDouble(1);
+                else return NOT_FOUND;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, e.getMessage() + ": error occured");
             return SQLEXCEPTIONOCCURED;
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (con != null) con.close();
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(null, "contact technical xpert and restart the programm", "ERROR", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
-                return CONNECTION_NOT_CLOSE_ERROR;
-            }
         }
 
 
     }
 
     public static void setBuyPrice(String designID, double price) {
-        String query = "update "+INVENTORY_TABLE+" set "+ INVENTORY_BUY_PRICE +" = ? where "+INVENTORY_DESIGN_ID+" = ?";
-        try (Connection con = UtilityMethods.createConnection(); PreparedStatement stmt = con.prepareStatement(query);) {
+        String query = "update " + INVENTORY_TABLE + " set " + INVENTORY_BUY_PRICE + " = ? where " + INVENTORY_DESIGN_ID + " = ?";
+        try (Connection con = MyClass.createConnection(); PreparedStatement stmt = con.prepareStatement(query);) {
             stmt.setDouble(1, price);
             stmt.setString(2, designID);
             stmt.executeUpdate();

@@ -1,20 +1,18 @@
 package loginsignup.login.loggedin.ordermanagement.generateorder;
 
-import mainpack.MyClass;
-import testpackage.DBStructure;
-
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.*;
-import java.lang.classfile.attribute.PermittedSubclassesAttribute;
 import java.sql.*;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 
+import static testpackage.CODES.*;
 import static testpackage.DBStructure.*;
 
 public class InventorySelect extends JFrame {
-    private static final int DESIGNID_INDEX = 0;
+    private static final int COL_DESIGN_ID_INDEX = 0;
+    private static final int COL_ITEM_NAME_INDEX = 1;
+    private static final int COL_TOTAL_QTY_INDEX = 2;
     private JPanel panel;
     private JButton backButton;
     private JTable inventoryTable;
@@ -29,16 +27,19 @@ public class InventorySelect extends JFrame {
 
     }
 
-    public void init(OrderGenerateForm orderGenerateForm) {
+    OrderGenerateForm orderGenerateForm = null;
 
+    public void init(OrderGenerateForm orderGenerateForm) {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        rowDesignIdMap=new HashMap<>();
+        this.orderGenerateForm = orderGenerateForm;
         setContentPane(panel);
         inventoryTable.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 super.keyPressed(e);
-                if(e.getKeyCode()==KeyEvent.VK_SHIFT){
-                    pushDataToGenerator(inventoryTable.getSelectedRow(),orderGenerateForm);
-                    fetchData((DefaultTableModel) inventoryTable.getModel());
+                if (e.getKeyCode() == KeyEvent.VK_SHIFT) {
+                    processSelection();
                 }
             }
         });
@@ -46,11 +47,11 @@ public class InventorySelect extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 dispose();
-
             }
         });
         Vector<String> data = new Vector<>(List.of(new String[]{"design id", "item name", "total quantity available"}));
-        DefaultTableModel model = new DefaultTableModel(data, 0){
+
+        DefaultTableModel model = new DefaultTableModel(data, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -61,11 +62,8 @@ public class InventorySelect extends JFrame {
         inventoryTable.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if(e.getClickCount()==2){
-                    int selectedRow=inventoryTable.getSelectedRow();
-                    System.out.println("hi");
-                    pushDataToGenerator(selectedRow,orderGenerateForm);
-                    fetchData((DefaultTableModel) inventoryTable.getModel());
+                if (e.getClickCount() == 2) {
+                    processSelection();
                 }
             }
 
@@ -92,26 +90,97 @@ public class InventorySelect extends JFrame {
         pack();
     }
 
-    private void pushDataToGenerator(int selectedRow,OrderGenerateForm orderGenerateForm) {
-        String designID=inventoryTable.getModel().getValueAt(selectedRow,DESIGNID_INDEX).toString();
-        int lastRow= orderGenerateForm.model.getRowCount()-1;
-        int quantity=0;
+    private void processSelection() {
+        int quantity;
         try {
-        quantity= Integer.parseInt(JOptionPane.showInputDialog("enter quantity"));
-        }catch (NumberFormatException e){
-            JOptionPane.showMessageDialog(InventorySelect.this,"please enter valid quantity");
+            quantity = Integer.parseInt(JOptionPane.showInputDialog("enter quantity"));
+            if (quantity <= 0) {
+                JOptionPane.showMessageDialog(InventorySelect.this, "please enter valid quantity");
+                return;
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(InventorySelect.this, "please enter valid quantity");
             return;
         }
-        orderGenerateForm.model.setValueAt(designID, lastRow,OrderGenerateForm.DESIGN_ID_INDEX);
-        orderGenerateForm.model.setValueAt(quantity,lastRow,OrderGenerateForm.QUANTITY_INDEX);
+        String designID =Objects.toString( inventoryTable.getModel().getValueAt(inventoryTable.getSelectedRow(), COL_DESIGN_ID_INDEX),"");
+        if(pushDataToGenerator(designID, quantity, orderGenerateForm)==SUCCESS_CODE)fetchData((DefaultTableModel) inventoryTable.getModel());
+
     }
 
+    public int getSqlDataToMemory() {
+
+        return WRITE_CODE_HERE;
+    }
+
+    public int fetchMemoryToTable() {
+
+        return WRITE_CODE_HERE;
+    }
+
+    public int updateTable(int inputQuantity, String designID) {
+        System.out.println("input q is  " + inputQuantity);
+        DefaultTableModel model = (DefaultTableModel) inventoryTable.getModel();
+        Integer rowIndex=rowDesignIdMap.get(designID);
+        if(rowIndex==null)return NOT_FOUND;//TABLE SUCCESFULLY UPDATED(AS NO UPDATION WAS NEEDED... THIS IS A SUCCESS
+        String quantityString= Objects.toString(model.getValueAt(rowIndex, COL_TOTAL_QTY_INDEX),"0");
+        int quantity = Integer.parseInt(quantityString.trim().isEmpty()?"0":quantityString);
+        int updatedQuantity = quantity - inputQuantity;
+
+        model.setValueAt(updatedQuantity, rowIndex, COL_TOTAL_QTY_INDEX);
+        return SUCCESS_CODE;
+    }
+
+//    public int updateSql(int quantity, String designID) {
+//        String inventoryUpdateQuery = "update " + INVENTORY_TABLE + " set " + INVENTORY_TOTAL_QUANTITY + " = " + INVENTORY_TOTAL_QUANTITY + "-? where " + INVENTORY_DESIGN_ID + " = ?";
+//        try (PreparedStatement preparedStatement = orderGenerateForm.getOrderSlipConnectionObject().prepareStatement(inventoryUpdateQuery)) {
+//            preparedStatement.setInt(1, quantity);
+//            preparedStatement.setString(2, designID);
+//            return SUCCESS_CODE;
+//
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//            return SQL_ERROR;
+//        } catch (Exception e) {
+//            return FAIL_CODE;
+//        }
+//
+//
+//    }
+
+    private int pushDataToGenerator(String designID, int quantity, OrderGenerateForm orderGenerateForm) {
+        if(isOutOfStock(quantity,designID)){
+            int confirm = JOptionPane.showConfirmDialog(InventorySelect.this, "out of stock press yes to continue anyways", "out of stock:", JOptionPane.YES_NO_OPTION);
+            if (confirm != JOptionPane.YES_OPTION) {
+                return OUT_OF_STOCK_ERROR;
+            }
+        }
+        int lastRow = orderGenerateForm.model.getRowCount() - 1;
+        orderGenerateForm.model.setValueAt(quantity, lastRow, OrderGenerateForm.QUANTITY_INDEX);
+        orderGenerateForm.model.setValueAt(designID, lastRow, OrderGenerateForm.DESIGN_ID_INDEX);
+        return SUCCESS_CODE;
+    }
+
+    private boolean isOutOfStock(int quantity, String designID) {
+        int row=rowDesignIdMap.get(designID);
+        String oldQuantityObject= Objects.toString(inventoryTable.getValueAt(row, COL_TOTAL_QTY_INDEX).toString(),"");
+        int oldQuantity= Integer.parseInt(oldQuantityObject.trim().equals("")? "0":oldQuantityObject);
+        if(oldQuantity-quantity<0){
+            return true;
+        }
+        return false;
+    }
+
+
+    Map<String, Integer> rowDesignIdMap;
     public void fetchData(DefaultTableModel model) {
         String query = "Select " + INVENTORY_DESIGN_ID + ", " + INVENTORY_ITEM_NAME + ", " + INVENTORY_TOTAL_QUANTITY + " from " + INVENTORY_TABLE;
-        try (Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/raj","raj","akshat"); PreparedStatement preparedStatement = con.prepareStatement(query)) {
+        try (Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/raj", "raj", "akshat"); PreparedStatement preparedStatement = con.prepareStatement(query)) {
             try (ResultSet rs = preparedStatement.executeQuery()) {
+                rowDesignIdMap.clear();
+               int row=0;
                 while (rs.next()) {
                     model.addRow(new String[]{rs.getString(INVENTORY_DESIGN_ID), rs.getString(INVENTORY_ITEM_NAME), rs.getString(INVENTORY_TOTAL_QUANTITY)});
+                    rowDesignIdMap.put(rs.getString(INVENTORY_DESIGN_ID), row++);
                 }
             }
         } catch (SQLException e) {

@@ -1,6 +1,7 @@
 package loginsignup.login.loggedin.billing.viewbills;
 
 import mainpack.MyClass;
+import testpackage.CODES;
 import testpackage.UtilityMethods;
 
 import javax.swing.*;
@@ -153,7 +154,13 @@ public class ViewBackendBill extends JFrame {
             }
         };
         billTable.setModel(tableModel);
-        loadBillData(minBillID());
+        int value=loadBillData(minBillID());
+        System.out.println(value);
+        if(value!=CODES.SUCCESS_CODE) {
+            dispose();
+
+            billingScreen.setVisible(true);
+        }
 
         backButton.addActionListener(e -> {
             setVisible(false);
@@ -164,10 +171,6 @@ public class ViewBackendBill extends JFrame {
 
     public void setCurBillID(int curBillID) {
         this.curBillID = curBillID;
-    }
-
-    public int getCurBillID() {
-        return curBillID;
     }
 
 
@@ -184,7 +187,9 @@ public class ViewBackendBill extends JFrame {
            try( ResultSet rs = stmt1.executeQuery();){
                 if (!rs.next()) {
                     JOptionPane.showMessageDialog(viewBackendBill, "empty resultset returned");
-                    return -1;
+                    Thread.dumpStack();
+                    return CODES.FAIL_CODE;
+
                 }
                 DefaultTableModel model = (DefaultTableModel) billTable.getModel();
                 model.setRowCount(0); // Clear existing data
@@ -227,7 +232,7 @@ public class ViewBackendBill extends JFrame {
             e.printStackTrace();
             throw new RuntimeException("Error loading bill data: " + e.getMessage(), e);
         }
-        return 0;//success
+        return CODES.SUCCESS_CODE;//success
     }
 
     int minBillID() {

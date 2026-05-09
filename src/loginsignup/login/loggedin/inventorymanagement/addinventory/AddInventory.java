@@ -3,16 +3,13 @@ package loginsignup.login.loggedin.inventorymanagement.addinventory;
 import mainpack.MyClass;
 import testpackage.UtilityMethods;
 
-import javax.lang.model.util.ElementScanner6;
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import static testpackage.DBStructure.*;
-import static testpackage.ERROR_CODES.*;
+import static testpackage.CODES.*;
 
 public class AddInventory extends JFrame {
     public AddInventory() {
@@ -43,7 +40,7 @@ public class AddInventory extends JFrame {
             if (rowsAffected > 0) {
                 JOptionPane.showMessageDialog(MyClass.addInventory, "Data added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 clear();
-                return SUCCESS;
+                return SUCCESS_CODE;
             } else {
                 JOptionPane.showMessageDialog(MyClass.addInventory, "Failed to add data.", "Error", JOptionPane.ERROR_MESSAGE);
                 return SQL_ERROR;
@@ -80,7 +77,7 @@ public class AddInventory extends JFrame {
             inventoryUpdateStmt.setString(5, supplierComboBox.getSelectedItem().toString()); // WHERE condition
             inventoryUpdateStmt.setString(6, designID.getText()); // WHERE condition
             inventoryUpdateStmt.executeUpdate();
-            return SUCCESS;
+            return SUCCESS_CODE;
         } catch (SQLException e) {
             e.printStackTrace();
             return SQL_ERROR;
@@ -112,12 +109,12 @@ public class AddInventory extends JFrame {
                     int answer = JOptionPane.showConfirmDialog(panel, "design id duplicate, press yes to add to the quantity and change item names and prices");
                     if (answer == JOptionPane.YES_OPTION)
                         returnCode = updateData(); else return;
-                    if (returnCode == SUCCESS) JOptionPane.showMessageDialog(panel, "succesfully updated data");
+                    if (returnCode == SUCCESS_CODE) JOptionPane.showMessageDialog(panel, "succesfully updated data");
                     else {
                         JOptionPane.showMessageDialog(panel, "sql error occured");
                         return;
                     }
-                } else if (returnCode != SUCCESS) {
+                } else if (returnCode != SUCCESS_CODE) {
                     JOptionPane.showMessageDialog(panel, "an error has occured, exiting the system program");
                     System.exit(FAIL_CODE);
                 }
