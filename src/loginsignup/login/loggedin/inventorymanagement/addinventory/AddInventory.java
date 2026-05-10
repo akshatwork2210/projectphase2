@@ -1,7 +1,7 @@
 package loginsignup.login.loggedin.inventorymanagement.addinventory;
 
 import mainpack.MyClass;
-import testpackage.UtilityMethods;
+import utils.UtilityMethods;
 
 import javax.swing.*;
 import java.sql.Connection;

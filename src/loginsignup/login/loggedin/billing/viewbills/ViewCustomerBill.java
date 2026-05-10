@@ -1,7 +1,7 @@
 package loginsignup.login.loggedin.billing.viewbills;
 
 import mainpack.MyClass;
-import testpackage.UtilityMethods;
+import utils.UtilityMethods;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Vector;
 
-import static testpackage.UtilityMethods.*;
+import static utils.UtilityMethods.*;
 
 public class ViewCustomerBill extends JFrame {
     private int billID;

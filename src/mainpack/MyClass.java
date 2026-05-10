@@ -22,7 +22,7 @@ import loginsignup.login.loggedin.transactionsandaccounts.Transactions;
 import loginsignup.login.loggedin.transactionsandaccounts.newtransaction.NewTransaction;
 import loginsignup.login.loggedin.transactionsandaccounts.viewTransactions.ViewTransactions;
 import loginsignup.signup.SignUp;
-import testpackage.UtilityMethods;
+import utils.UtilityMethods;
 
 import javax.swing.*;
 import java.sql.Connection;

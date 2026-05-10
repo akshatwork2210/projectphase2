@@ -1,4 +1,4 @@
-package testpackage;
+package utils;
 
 import mainpack.MyClass;
 import org.apache.poi.ss.usermodel.*;
@@ -8,16 +8,12 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import javax.swing.*;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import java.awt.*;
 import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
 import java.awt.print.*;
@@ -30,78 +26,42 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Vector;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class UtilityMethods {
-    public static Connection createConnection() throws SQLException {
-        return DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(),MyClass.login.getPassword());
-    }
     public static final int VERTI_SPLIT = 0;
     public static final int HORIZONTAL_SPLIT = 1;
-    //Thread printingThread;
     public static Thread printingThread;
     public final static int ORDER_SLIP = 0;
     public static final int CUSTOMER_BILL = 1;
 
+
+    public static String parseString(Object object) {
+        return Objects.toString(object, "");
+    }
+
+    public static int parseInt(Object object) {
+        String string = Objects.toString(object, "");
+        string = string.trim().isEmpty() ? "0" : string;
+        return Integer.parseInt(string);
+    }
+
+    public static double parseDouble(Object object) {
+        String string = Objects.toString(object, "");
+        string = string.trim().isEmpty() ? "0" : string;
+        return Double.parseDouble(string);
+    }
+
+    public static Connection createConnection() throws SQLException {
+
+        return DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
+    }
+
     public static final BlockingQueue<Runnable> printQueue = new LinkedBlockingQueue<>();
 
-    //    public static int[] balance(int billId) {
-//        int[] balances = new int[2]; // [0] = previous balance, [1] = next balance
-//
-//        try {
-//            Connection con =MyClass.C;
-//            // Step 1: Get bill date and customer
-//            PreparedStatement ps1 = con.prepareStatement("SELECT date, customer_name FROM bills WHERE BillID = ?");
-//            ps1.setInt(1, billId);
-//            ResultSet rs1 = ps1.executeQuery();
-//
-//            if (!rs1.next()) return balances; // Bill not found
-//
-//            java.sql.Timestamp billDate = rs1.getTimestamp("date");
-//            String customer = rs1.getString("customer_name");
-//
-//            // Step 2: Calculate total payments and bills before this bill
-//            PreparedStatement ps2 = con.prepareStatement("SELECT IFNULL(SUM(amount), 0) AS total FROM transactions WHERE customer_name = ? AND date < ?");
-//            ps2.setString(1, customer);
-//            ps2.setTimestamp(2, billDate);
-//            ResultSet rs2 = ps2.executeQuery();
-//            rs2.next();
-//            double paymentsBefore = rs2.getDouble("total");
-//
-//            PreparedStatement ps3 = con.prepareStatement("SELECT IFNULL(SUM(amount), 0) AS total FROM bills WHERE customer_name = ? AND date < ?");
-//            ps3.setString(1, customer);
-//            ps3.setTimestamp(2, billDate);
-//            ResultSet rs3 = ps3.executeQuery();
-//            rs3.next();
-//            double billsBefore = rs3.getDouble("total");
-//
-//            // Step 3: Calculate total payments and bills up to and including this bill
-//            PreparedStatement ps4 = con.prepareStatement("SELECT IFNULL(SUM(amount), 0) AS total FROM transactions WHERE customer_name = ? AND date <= ?");
-//            ps4.setString(1, customer);
-//            ps4.setTimestamp(2, billDate);
-//            ResultSet rs4 = ps4.executeQuery();
-//            rs4.next();
-//            double paymentsUpto = rs4.getDouble("total");
-//
-//            PreparedStatement ps5 = con.prepareStatement("SELECT IFNULL(SUM(amount), 0) AS total FROM bills WHERE customer_name = ? AND date <= ?");
-//            ps5.setString(1, customer);
-//            ps5.setTimestamp(2, billDate);
-//            ResultSet rs5 = ps5.executeQuery();
-//            rs5.next();
-//            double billsUpto = rs5.getDouble("total");
-//
-//            // Step 4: Compute balances
-//            balances[0] = (int) Math.round(paymentsBefore - billsBefore); // Previous Balance
-//            balances[1] = (int) Math.round(paymentsUpto - billsUpto);     // Next Balance
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        return balances;
-//    }
     public static void storeLogs(Exception e) {
         try {
             // Generate timestamp for filename
@@ -129,24 +89,25 @@ public class UtilityMethods {
             System.err.println("Failed to save logs: " + ioEx.getMessage());
         }
     }
+
     public static double[] balance(int billID) {
         double lastbillTotal = 0;
-        String openingBalanceQuery="select openingaccount from customers where customer_name=(select customer_name from bills where billid=?)";
+        String openingBalanceQuery = "select openingaccount from customers where customer_name=(select customer_name from bills where billid=?)";
         String billQuery = "select billid from bills where customer_name=(select customer_name from bills where billid=?) and date <= (select date from bills where billid=?) and billid<?";
 //        String transactionQuery="Select *from transactions where date<=()"
         String transactionQuery = "SELECT sum(amount) FROM transactions " +
                 "WHERE customer_name = (SELECT customer_name FROM bills WHERE billid = ?) " +
                 "AND (date <=(SELECT date FROM bills WHERE billid = ?) and (billid<?))";
         double grandTotalBill = 0;//contains total till previous bills
-        try (Connection con=MyClass.createConnection();
-             PreparedStatement billStatement=con.prepareStatement(billQuery); PreparedStatement transacStatement=con.prepareStatement(transactionQuery)){
+        try (Connection con = MyClass.createConnection();
+             PreparedStatement billStatement = con.prepareStatement(billQuery); PreparedStatement transacStatement = con.prepareStatement(transactionQuery)) {
 
             ArrayList<Integer> billIDList = new ArrayList<>();
             billStatement.setInt(1, billID);
             billStatement.setInt(2, billID);
             billStatement.setInt(3, billID);
             StringBuilder placeholders = new StringBuilder();
-            try(ResultSet rs = billStatement.executeQuery();
+            try (ResultSet rs = billStatement.executeQuery();
             ) {
                 while (rs.next()) {
                     billIDList.add(rs.getInt(1));
@@ -172,8 +133,8 @@ public class UtilityMethods {
             System.out.println("placeholders are" + placeholders);
 
             if (!placeholders.isEmpty()) {
-                try(PreparedStatement stmt = con.prepareStatement(billQuery);
-                ResultSet rs = stmt.executeQuery())
+                try (PreparedStatement stmt = con.prepareStatement(billQuery);
+                     ResultSet rs = stmt.executeQuery())
 //            statement.setInt(1, billID);
                 {
                     lastbillTotal = 0;
@@ -182,7 +143,8 @@ public class UtilityMethods {
                         grandTotalBill += rs.getDouble(1);
 //                    System.out.println(rs.getDouble(1) + "   from sql" + rs.getDouble(2));
                     }
-                }System.out.println(grandTotalBill+ " value of grand total bill");
+                }
+                System.out.println(grandTotalBill + " value of grand total bill");
 
             }
             transacStatement.setInt(1, billID);
@@ -190,29 +152,32 @@ public class UtilityMethods {
             transacStatement.setInt(3, billID);
 
             double transactionSum = 0;
-            try(ResultSet rs = transacStatement.executeQuery();) {
+            try (ResultSet rs = transacStatement.executeQuery();) {
                 if (rs.next()) {
                     transactionSum = rs.getDouble(1);
                     System.out.println("transaction sum is " + rs.getInt(1));
                 }
-            }System.out.println("\n\n\ntotal is " + grandTotalBill);
+            }
+            System.out.println("\n\n\ntotal is " + grandTotalBill);
             double[] result = new double[2];
-            try(PreparedStatement openingBalanceStatement=con.prepareStatement(openingBalanceQuery)) {
+            try (PreparedStatement openingBalanceStatement = con.prepareStatement(openingBalanceQuery)) {
                 openingBalanceStatement.setInt(1, billID);
                 double openingBalance = 0;
-                try(ResultSet rs = openingBalanceStatement.executeQuery();) {
+                try (ResultSet rs = openingBalanceStatement.executeQuery();) {
                     if (rs.next()) openingBalance = rs.getDouble(1);
                 }
                 result[0] = openingBalance + grandTotalBill - lastbillTotal - transactionSum;
                 result[1] = openingBalance + grandTotalBill - transactionSum;
 
-            }            return result;
+            }
+            return result;
 
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
+
     public static double round(double value, int places) {
         if (places < 0) throw new IllegalArgumentException();
 
@@ -221,6 +186,7 @@ public class UtilityMethods {
         long tmp = Math.round(value);
         return (double) tmp / factor;
     }
+
     public static void writeTableToExcel(JTable table, String filename) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Table Data");
@@ -436,10 +402,8 @@ public class UtilityMethods {
         if (comboBox == null) return;
         comboBox.removeAllItems();
         comboBox.addItem("Select Customer");
-//        Statement stmt1 = null;
-//        ResultSet rs = null;
-        try (Connection con= MyClass.createConnection(); Statement stmt=con.createStatement()){
-            try(ResultSet rs = stmt.executeQuery("SELECT customer_name FROM customers");) {
+        try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
+            try (ResultSet rs = stmt.executeQuery("SELECT customer_name FROM customers");) {
                 while (rs.next()) comboBox.addItem(rs.getString(1));
             }
         } catch (SQLException e) {
@@ -468,175 +432,9 @@ public class UtilityMethods {
         }
     }
 
-    private static void printModel(DefaultTableModel model, String title) {
-        PrinterJob job = PrinterJob.getPrinterJob();
-//
-        Printable printable = new Printable() {
-            @Override
-            public int print(Graphics g, PageFormat pageFormat, int pageIndex) throws PrinterException {
-                if (pageIndex > 0) return NO_SUCH_PAGE;
-
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
-
-                int x = 0;
-                int y = 0;
-                int rowHeight = 20;
-                int padding = 5;
-
-                double printableWidth = pageFormat.getImageableWidth();
-                int colCount = model.getColumnCount();
-                int[] colWidths = new int[colCount];
-
-                // Font setup
-                java.awt.Font headerFont = new java.awt.Font("Arial", java.awt.Font.BOLD, 12);
-                java.awt.Font normalFont = new java.awt.Font("Arial", java.awt.Font.PLAIN, 12);
-                g.setFont(normalFont);
-                FontRenderContext frc = new FontRenderContext(new AffineTransform(), true, true);
-
-                // Fixed width for "SNo"
-                colWidths[0] = 50;
-                int usedWidth = colWidths[0];
-
-                // Estimate width for other columns
-                for (int col = 1; col < colCount; col++) {
-                    int maxWidth = (int) headerFont.getStringBounds(model.getColumnName(col), frc).getWidth();
-                    for (int row = 0; row < model.getRowCount(); row++) {
-                        Object val = model.getValueAt(row, col);
-                        if (val != null) {
-                            int width = (int) normalFont.getStringBounds(val.toString(), frc).getWidth();
-                            if (width > maxWidth) maxWidth = width;
-                        }
-                    }
-                    colWidths[col] = maxWidth + padding * 2;
-                    usedWidth += colWidths[col];
-                }
-
-                // Scale down if total width > printable width
-                if (usedWidth > printableWidth) {
-                    double scale = printableWidth / usedWidth;
-                    for (int i = 0; i < colCount; i++) {
-                        colWidths[i] = (int) (colWidths[i] * scale);
-                    }
-                }
-
-                // Draw title
-                g.setColor(Color.BLUE);
-                g.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 18));
-                g.drawString(title, x + 10, y + 20);
-
-                y += 30;
-                g.setColor(Color.BLACK);
-                g2d.setStroke(new BasicStroke(2));
-                g.drawLine(x, y, x + (int) printableWidth, y);
-                y += 10;
-
-                // Column headers
-                g.setFont(headerFont);
-                int colX = x;
-                for (int col = 0; col < colCount; col++) {
-                    g.drawRect(colX, y, colWidths[col], rowHeight);
-                    g.drawString(model.getColumnName(col), colX + padding, y + 15);
-                    colX += colWidths[col];
-                }
-                y += rowHeight;
-
-                // Table rows
-                g.setFont(normalFont);
-                for (int row = 0; row < model.getRowCount(); row++) {
-                    colX = x;
-                    for (int col = 0; col < colCount; col++) {
-                        g.drawRect(colX, y, colWidths[col], rowHeight);
-                        Object val = model.getValueAt(row, col);
-                        if (val != null) {
-                            g.drawString(val.toString(), colX + padding, y + 15);
-                        }
-                        colX += colWidths[col];
-                    }
-                    y += rowHeight;
-
-                    if (y + rowHeight > pageFormat.getImageableHeight()) {
-                        return NO_SUCH_PAGE; // Page break not handled yet
-                    }
-                }
-
-                return PAGE_EXISTS;
-            }
-        };
-
-        // Define ISO A4 paper
-        PageFormat format = job.defaultPage();
-        Paper paper = new Paper();
-        paper.setSize(595.0, 842.0); // A4 in points
-        paper.setImageableArea(40, 40, 515, 762); // Margins: 40pt
-
-        format.setPaper(paper);
-        job.setPrintable(printable, format);
-
-        if (job.printDialog()) {
-            try {
-                job.print();
-            } catch (PrinterException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-
-    public static void printPanel(JPanel panel) {
-        PrinterJob job = PrinterJob.getPrinterJob();
-        job.setJobName("Print Panel");
-
-        job.setPrintable((g, pf, pageIndex) -> {
-            if (pageIndex > 0) {
-                return Printable.NO_SUCH_PAGE;
-            }
-
-            Graphics2D g2d = (Graphics2D) g;
-            g2d.translate(pf.getImageableX(), pf.getImageableY());
-
-            // Panel size
-            double panelWidth = panel.getWidth();
-            double panelHeight = panel.getHeight();
-
-            // Printable area size (A4 imageable area)
-            double printWidth = pf.getImageableWidth();
-            double printHeight = pf.getImageableHeight();
-
-            // Calculate scale to fit the panel within printable area
-            double scaleX = printWidth / panelWidth;
-            double scaleY = printHeight / panelHeight;
-            double scale = Math.min(scaleX, scaleY); // Maintain aspect ratio
-
-            g2d.scale(scale, scale);
-
-            // Paint the panel into the scaled graphics context
-            panel.printAll(g2d);
-
-            return Printable.PAGE_EXISTS;
-        });
-
-        boolean doPrint = job.printDialog();
-        if (doPrint) {
-            try {
-                job.print();
-            } catch (PrinterException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public static TextAreaRenderer getTextAreaRenderer() {
-        return new TextAreaRenderer();
-    }
-
-    public static TextAreaEditor getTextAreaEditor() {
-        return new TextAreaEditor();
-    }
-
     public static void printWithDefaultSettings(DefaultTableModel model, int billID, Date date, String customerName, int type) {
         PrinterJob job = PrinterJob.getPrinterJob();
-//
+
         Printable printable = new Printable() {
             @Override
             public int print(Graphics g, PageFormat pageFormat, int pageIndex) throws PrinterException {
@@ -693,12 +491,12 @@ public class UtilityMethods {
                 }
 
                 // Draw title
-                g.setColor(Color.BLUE);
+                g.setColor(java.awt.Color.BLUE);
                 g.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 18));
                 g.drawString("Gurukripa Jewellers", x + 10, y + 20);
                 y += 70;
                 g.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 12));
-                g.setColor(Color.BLACK);
+                g.setColor(java.awt.Color.BLACK);
                 SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
                 int billtruncatedid = billID % 100 == 0 ? 100 : billID % 100;
                 g.drawString("" + billtruncatedid, x + 10, y);
@@ -783,7 +581,7 @@ public class UtilityMethods {
     }
 
     public static String parseDateString(Date date) {
-        return date.toLocalDate().format( DateTimeFormatter.ofPattern("dd-MM-yy"));
+        return date.toLocalDate().format(DateTimeFormatter.ofPattern("dd-MM-yy"));
     }
 
     public static LocalDateTime getDate(Object selectedItem) {
@@ -807,12 +605,12 @@ public class UtilityMethods {
         }
     }
 
-    public static  Process pBuilder(String command){
-        ProcessBuilder processBuilder=new ProcessBuilder("cmd.exe","/c",command);
+    public static Process pBuilder(String command) {
+        ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe", "/c", command);
 
         try {
-            Process p= processBuilder.start();
-            return  p;
+            Process p = processBuilder.start();
+            return p;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -859,111 +657,3 @@ class DecimalDocumentFilter extends DocumentFilter {
     }
 }
 
-//
-//class TextAreaRenderer extends JTextArea implements TableCellRenderer {
-//    public TextAreaRenderer() {
-//        setLineWrap(true);
-//        setWrapStyleWord(true);
-//        setOpaque(true);
-//    }
-//
-//    @Override
-//    public Component getTableCellRendererComponent(JTable table, Object value,
-//                                                   boolean isSelected, boolean hasFocus,
-//                                                   int row, int column) {
-//        setText(value == null ? "" : value.toString());
-//
-//        if (isSelected) {
-//            setBackground(table.getSelectionBackground());
-//            setForeground(table.getSelectionForeground());
-//        } else {
-//            setBackground(table.getBackground());
-//            setForeground(table.getForeground());
-//        }
-//        return this;
-//    }
-//}
-class TextAreaRenderer extends JTextArea implements TableCellRenderer {
-    public TextAreaRenderer() {
-        setLineWrap(true);
-        setWrapStyleWord(true);
-        setOpaque(true);
-    }
-
-    @Override
-    public Component getTableCellRendererComponent(JTable table, Object value,
-                                                   boolean isSelected, boolean hasFocus,
-                                                   int row, int column) {
-        setText(value == null ? "" : value.toString());
-
-        if (isSelected) {
-            setBackground(table.getSelectionBackground());
-            setForeground(table.getSelectionForeground());
-        } else {
-            setBackground(table.getBackground());
-            setForeground(table.getForeground());
-        }
-
-        // Dynamically adjust row height based on renderer content
-        adjustRowHeight(table, row);
-
-        return this;
-    }
-
-    // Adjust the row height based on content
-//    private void adjustRowHeight(JTable table, int row) {
-//        TableCellRenderer renderer = table.getCellRenderer(row, 1); // Column 1
-//        Component comp = renderer.getTableCellRendererComponent(table, table.getValueAt(row, 1), false, false, row, 1);
-//        int preferredHeight = comp.getPreferredSize().height + table.getRowMargin();
-//        table.setRowHeight(row, preferredHeight);
-//    }
-    private void adjustRowHeight(JTable table, int row) {
-        int defaultHeight = 40; // or table.getRowHeight() if you want dynamic default
-
-        TableCellRenderer renderer = table.getCellRenderer(row, 1); // Column 1
-        Component comp = renderer.getTableCellRendererComponent(table, table.getValueAt(row, 1), false, false, row, 1);
-
-        int preferredHeight = comp.getPreferredSize().height + table.getRowMargin();
-
-        // Set to max of defaultHeight or preferredHeight
-        int finalHeight = Math.max(defaultHeight, preferredHeight);
-
-        table.setRowHeight(row, finalHeight);
-    }
-}
-
-class TextAreaEditor extends AbstractCellEditor implements TableCellEditor {
-
-    private final JScrollPane scrollPane;
-    private final JTextArea textArea;
-
-    public TextAreaEditor() {
-        textArea = new JTextArea();
-        textArea.setLineWrap(true);
-        textArea.setWrapStyleWord(true);
-        scrollPane = new JScrollPane(textArea);
-        InputMap inputMap = textArea.getInputMap(JComponent.WHEN_FOCUSED);
-        ActionMap actionMap = textArea.getActionMap();
-
-// Bind SHIFT+ENTER to inserting a newline
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.SHIFT_DOWN_MASK), "insert-break");
-        actionMap.put("insert-break", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                textArea.append("\n");
-            }
-        });
-    }
-
-    @Override
-    public Component getTableCellEditorComponent(JTable table, Object value,
-                                                 boolean isSelected, int row, int column) {
-        textArea.setText(value == null ? "" : value.toString());
-        return scrollPane;
-    }
-
-    @Override
-    public Object getCellEditorValue() {
-        return textArea.getText();
-    }
-}

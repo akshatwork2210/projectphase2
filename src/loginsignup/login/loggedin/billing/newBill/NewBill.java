@@ -2,7 +2,7 @@ package loginsignup.login.loggedin.billing.newBill;
 
 import mainpack.MyClass;
 import org.jdesktop.swingx.prompt.PromptSupport;
-import testpackage.UtilityMethods;
+import utils.UtilityMethods;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;

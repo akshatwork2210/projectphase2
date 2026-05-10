@@ -1,9 +1,8 @@
 package loginsignup.signup;
 
-import loginsignup.LOGIN_SIGNUP;
 import mainpack.MyClass;
 import testpackage.DBStructure;
-import testpackage.UtilityMethods;
+import utils.UtilityMethods;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;

@@ -86,6 +86,8 @@ public class DBStructure {
     public static final String ORDER_SLIPS_MAIN_SLIP_TYPE = "slip_type";
     public static final String ORDER_SLIPS_MAIN_CREATED_AT = "created_at";
     public static final String ORDER_SLIPS_MAIN_CUSTOMER_NAME = "customer_name";
+    public static final String ORDER_SLIPS_MAIN_STATUS = "STATUS";
+
 
     // ====================== ordertype ======================
     public static final String ORDERTYPE_TABLE = "ordertype";

@@ -2,7 +2,7 @@ package loginsignup.login.loggedin.ordermanagement.vieworders;
 
 import mainpack.MyClass;
 import org.jdesktop.swingx.prompt.PromptSupport;
-import testpackage.UtilityMethods;
+import utils.UtilityMethods;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -13,7 +13,7 @@ import java.math.RoundingMode;
 import java.sql.*;
 import java.util.Objects;
 
-import static testpackage.UtilityMethods.*;
+import static utils.UtilityMethods.*;
 
 public class ViewOrders extends JFrame {
     private static final int DESIGN_ID_INDEX = 0;

@@ -1,11 +1,9 @@
 package loginsignup.login.loggedin.transactionsandaccounts.newtransaction;
 
-import com.mysql.cj.x.protobuf.MysqlxPrepare;
 import mainpack.MyClass;
-import testpackage.UtilityMethods;
+import utils.UtilityMethods;
 
 import javax.swing.*;
-import javax.swing.plaf.nimbus.State;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;

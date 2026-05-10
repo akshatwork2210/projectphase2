@@ -9,15 +9,13 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static testpackage.DBStructure.*;
-import static testpackage.UtilityMethods.*;
+import static utils.UtilityMethods.*;
 
 public class OrderGenerateForm extends JFrame {
 
@@ -49,7 +47,7 @@ public class OrderGenerateForm extends JFrame {
     }
 
     Vector<Integer[]> listOfDisabledCells;
-    private Vector<Integer> listOfDisabledcolumn;
+    private Vector<Integer> listOfDisabledColumn;
 
 
     public OrderGenerateForm() {
@@ -57,7 +55,7 @@ public class OrderGenerateForm extends JFrame {
     }
 
     int oldQuantity;
-    String oldDesignID="";
+    String oldDesignID = "";
 
     public void init() {
 //        backupModel = null;
@@ -66,15 +64,15 @@ public class OrderGenerateForm extends JFrame {
             int row = orderSlipTable.getSelectedRow();
             DefaultTableModel defaultTableModel = (DefaultTableModel) orderSlipTable.getModel();
             if (row == -1) return;
-            String oldQuantityString = Objects.toString(defaultTableModel.getValueAt(row, QUANTITY_INDEX), "0");
-            oldQuantityString = oldQuantityString.trim().isEmpty() ? "0" : oldQuantityString;
-            oldQuantity = Integer.parseInt(oldQuantityString);
-            oldDesignID = Objects.toString(model.getValueAt(row, DESIGN_ID_INDEX), "");
+            try {
+                oldQuantity = parseInt(defaultTableModel.getValueAt(row, QUANTITY_INDEX));
+            }
+            catch (NumberFormatException e) {
+                oldQuantity = 0;
+            }
+            oldDesignID = parseString(model.getValueAt(row, DESIGN_ID_INDEX));
         });
-
         setContentPane(panel);
-
-
         backButton.addActionListener(e -> {
             dispose();
             MyClass.inventorySelect.dispose();
@@ -86,7 +84,6 @@ public class OrderGenerateForm extends JFrame {
                 super.keyTyped(e);
             }
         });
-
         resetFormButton.addActionListener(e -> {
             int answer = JOptionPane.showConfirmDialog(OrderGenerateForm.this, "are you sure you want to reset the form, data will be lost?");
             if (answer != JOptionPane.YES_OPTION) return;
@@ -104,13 +101,36 @@ public class OrderGenerateForm extends JFrame {
             if (pushSlipData() == CODES.SUCCESS_CODE && updateInventory() == CODES.SUCCESS_CODE) {
                 try {
                     orderSlipConnectionObject.commit();
+                    JOptionPane.showMessageDialog(this, "Order has been updated successfully", "success", JOptionPane.INFORMATION_MESSAGE);
+                    try {
+                        orderSlipConnectionObject.close();
+                    }catch (SQLException ex) {
+                        JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "Could not close connection", "error", JOptionPane.ERROR_MESSAGE);
+                        throw new RuntimeException(ex);
+                    }
                     dispose();
                     MyClass.orderGenerateForm = new OrderGenerateForm();
                     MyClass.orderGenerateForm.init();
                     MyClass.orderGenerateForm.setVisible(true);
                 } catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "transaction commit faliur", "error", JOptionPane.ERROR_MESSAGE);
                     throw new RuntimeException(ex);
                 }
+            }
+            else {
+                try {
+                    orderSlipConnectionObject.rollback();
+                    } catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "roll back failed", "error", JOptionPane.ERROR_MESSAGE);
+                    throw new RuntimeException(ex);
+                }
+                try {
+                    orderSlipConnectionObject.close();
+                }catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "closing connection failed", "error", JOptionPane.ERROR_MESSAGE);
+                    throw new RuntimeException(ex);
+                }
+
             }
 
         });
@@ -125,17 +145,28 @@ public class OrderGenerateForm extends JFrame {
         MyClass.inventorySelect.init(this);
         splitFrame(this, MyClass.inventorySelect, VERTI_SPLIT);
         MyClass.inventorySelect.setVisible(true);
-        //refresh method code below
-
-
         columnNames = new Vector<>(Arrays.asList(new String[]{"design id", "Item Name", "Quantity", "Plating", "Raw Material Cost", "Other Details"}));
-        listOfDisabledcolumn = new Vector<>();
+        listOfDisabledColumn = new Vector<>();
         listOfDisabledCells = new Vector<>();
         generateAndAddDates(dateComboBox, false);
         generateAndAddNames(customerNameComboBox);
         orderSlipTable.getTableHeader().setReorderingAllowed(false);
-        // Create a DefaultTableModel with columns and no rows initially
-        model = new DefaultTableModel(columnNames, 1);
+
+        model = new DefaultTableModel( columnNames,1) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                for (Integer[] cell : listOfDisabledCells) {
+                    if (cell[0] == row && cell[1] == column) {
+                        return false;
+                    }
+                }
+                for (Integer col : listOfDisabledColumn) {
+                    if (col == column) return false;
+
+                }
+                return true;
+            }
+        };
         modelListener = e -> {
 
             if (e.getType() == TableModelEvent.UPDATE) {
@@ -143,10 +174,15 @@ public class OrderGenerateForm extends JFrame {
                 TableModelListener[] listeners = removeModelListener(model);
                 int row = e.getFirstRow();
                 int column = e.getColumn();
-                Integer quantity = getIntegerValue(Objects.toString(model.getValueAt(row, QUANTITY_INDEX), String.valueOf(0)));
+                Integer quantity;
+                try {
+                    quantity = parseInt(model.getValueAt(row, QUANTITY_INDEX));
+                }catch (NumberFormatException ex) {
+                    quantity=0;
+                }
                 String cellContent;
                 try {
-                    cellContent = Objects.toString(model.getValueAt(row, column), "");
+                    cellContent = parseString(model.getValueAt(row, column));
                 } catch (ArrayIndexOutOfBoundsException ex) {
                     ex.printStackTrace();
                     addModelListeners(listeners, model);
@@ -177,12 +213,22 @@ public class OrderGenerateForm extends JFrame {
                 }
 
                 if (column == RAW_MATERIAL_COST_INDEX) {
-                    Double rawPrice = getDoubleValue(Objects.toString(model.getValueAt(row, RAW_MATERIAL_COST_INDEX), "0"));
-                    model.setValueAt(rawPrice == null || rawPrice == 0 ? "" : rawPrice, row, RAW_MATERIAL_COST_INDEX);
+                    double rawPrice;
+                    try {
+                        rawPrice = parseDouble((model.getValueAt(row, RAW_MATERIAL_COST_INDEX)));
+                    }catch (NumberFormatException ex) {
+                        rawPrice=0;
+                    }
+                    model.setValueAt(rawPrice == 0 ? "" : rawPrice, row, RAW_MATERIAL_COST_INDEX);
                 }
                 if (column == PLATING_INDEX) {
-                    Double plating = getDoubleValue(Objects.toString(model.getValueAt(row, PLATING_INDEX), "0"));
-                    model.setValueAt(plating == null || plating == 0 ? "" : plating, row, PLATING_INDEX);
+                    double plating;
+                    try {
+                        plating = parseDouble((model.getValueAt(row, PLATING_INDEX)));
+                    }catch (NumberFormatException ex){
+                        plating=0;
+                    }
+                    model.setValueAt(plating == 0 ? "" : plating, row, PLATING_INDEX);
                 }
                 if (row == model.getRowCount() - 1 && !cellContent.isEmpty()) {
                     model.setRowCount(model.getRowCount() + 1);
@@ -191,8 +237,8 @@ public class OrderGenerateForm extends JFrame {
                     model.removeRow(row);
                     refreshListOfDisabledCells();
                 }
-                reBuildModel();
-                String designID = Objects.toString(model.getValueAt(row, DESIGN_ID_INDEX), "").toUpperCase();
+                orderSlipTable.repaint();
+                String designID = parseString(model.getValueAt(row, DESIGN_ID_INDEX)).toUpperCase();
                 System.out.println(oldDesignID.contains(designID));
                 if (oldDesignID.contentEquals(designID)) {
                     System.out.println("design id is not changed");
@@ -200,96 +246,111 @@ public class OrderGenerateForm extends JFrame {
                     MyClass.inventorySelect.updateTable(quantity, designID);
                 } else {
                     System.out.println("design id is changed");
-                    MyClass.inventorySelect.updateTable((-oldQuantity),oldDesignID);
-                    MyClass.inventorySelect.updateTable((quantity),designID);
+                    MyClass.inventorySelect.updateTable((-oldQuantity), oldDesignID);
+                    MyClass.inventorySelect.updateTable((quantity), designID);
                 }
                 addModelListeners(listeners, model);
 
             }
         };
         model.addTableModelListener(modelListener);
-        orderSlipTable.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK), "openPopup");
-        orderSlipTable.getActionMap().put("openPopup", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-            }
-        });
-
         Vector<String> orderSlipType = new Vector<>();
         try (Connection con = MyClass.createConnection(); Statement statement = con.createStatement()) {
-            try (ResultSet rs = statement.executeQuery("select type_name from ordertype;")) {
+            try (ResultSet rs = statement.executeQuery("select " + ORDERTYPE_TYPE_NAME + " from " + ORDERTYPE_TABLE + ";")) {
                 while (rs.next()) orderSlipType.add(rs.getString("type_name"));
             }
-        } catch (SQLException e) {
-            Thread.dumpStack();
-        }
-        String insertMainQuery = "INSERT INTO order_slips_main (slip_type) VALUES (?)";
-        orderSlipConnectionObject = null;
-        try {
-            orderSlipConnectionObject = DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
-            orderSlipConnectionObject.setAutoCommit(false);
-
-            PreparedStatement stmt = orderSlipConnectionObject.prepareStatement(insertMainQuery, Statement.RETURN_GENERATED_KEYS);
-            stmt.setString(1, orderSlipTypeComboBox.getSelectedItem() == null ? "" : orderSlipTypeComboBox.getSelectedItem().toString());
-            stmt.executeUpdate();
-
-            // Get the generated slip_id
-            ResultSet rs = stmt.getGeneratedKeys();
-
-            if (rs.next()) {
-                setSlipID(rs.getInt(1));
-            } else setSlipID(-1);
-
-            rs.close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
 
+
+        //---------------------------------------------order_slip_mmain table data below--------------------------------------------------
+        String insertMainQuery = "INSERT INTO " + ORDER_SLIPS_MAIN_TABLE + " ("+ORDER_SLIPS_MAIN_STATUS+") VALUES (?)";
+        orderSlipConnectionObject = null;
+        try {
+            orderSlipConnectionObject = DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
+            orderSlipConnectionObject.setAutoCommit(false);
+            try(PreparedStatement stmt = orderSlipConnectionObject.prepareStatement(insertMainQuery, Statement.RETURN_GENERATED_KEYS);) {
+                stmt.setInt(1, CODES.DRAFT_STATUS_CODE);
+                stmt.executeUpdate();
+                // Get the generated slip_id
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        setSlipID(rs.getInt(1));
+                    } else setSlipID(-1);
+                }
+            }
+        } catch (SQLException e) {
+            dispose();
+            MyClass.orderScreen.setVisible(true);
+            try {
+                orderSlipConnectionObject.close();
+            }
+            catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                throw new  RuntimeException(ex);
+            }
+            throw new RuntimeException(e);
+        }
         DefaultComboBoxModel<String> panaTypeModel = new DefaultComboBoxModel<>(orderSlipType);
         orderSlipTypeComboBox.setModel(panaTypeModel);
         orderSlipTable.setModel(model);
-//        pack();
-
-
     }
 
     private int updateInventory() {
+        String query="update "+INVENTORY_TABLE+" SET "+INVENTORY_TOTAL_QUANTITY+" ="+INVENTORY_TOTAL_QUANTITY+"- ? WHERE "+INVENTORY_DESIGN_ID+" = ?";
 
+        try(PreparedStatement updateInventoryStatement=orderSlipConnectionObject.prepareStatement(query)){
+            for(int i=0;i<orderSlipTable.getRowCount()-1;i++){
+                updateInventoryStatement.setInt(1,parseInt(orderSlipTable.getValueAt(i,QUANTITY_INDEX)));
+                updateInventoryStatement.setString(2,parseString(orderSlipTable.getValueAt(i,DESIGN_ID_INDEX)));
+                updateInventoryStatement.addBatch();
+            }
+            updateInventoryStatement.executeBatch();
+            return CODES.SUCCESS_CODE;
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            return CODES.SQL_ERROR;
+        }
 
-        return Integer.parseInt(null);
     }
 
-    //    public void
     public int pushSlipData() {
         DefaultTableModel model = (DefaultTableModel) orderSlipTable.getModel();
         int rowCount = model.getRowCount();
-        String updateOrderSlipsMainTableQuery = "update " + ORDER_SLIPS_MAIN_TABLE + " set " + ORDER_SLIPS_CREATED_AT + "=? where " + ORDER_SLIPS_MAIN_SLIP_ID + "=?";
+        String updateOrderSlipsMainTableQuery = "update " + ORDER_SLIPS_MAIN_TABLE + " set " + ORDER_SLIPS_CREATED_AT + "=?, "+ORDER_SLIPS_MAIN_SLIP_TYPE+"=? where " + ORDER_SLIPS_MAIN_SLIP_ID + "=?";
         String slipDataInsertQuery = "INSERT INTO " + ORDER_SLIPS_TABLE + " (" + ORDER_SLIPS_SLIP_TYPE + ", " + ORDER_SLIPS_CUSTOMER_NAME + ", " + ORDER_SLIPS_SLIP_ID + ", " + ORDER_SLIPS_DESIGN_ID + ", " + ORDER_SLIPS_ITEM_NAME + ", " + ORDER_SLIPS_QUANTITY + ", " + ORDER_SLIPS_PLATING_GRAMS + ", "
                 + ORDER_SLIPS_RAW_MATERIAL_PRICE + ", " + ORDER_SLIPS_OTHER_DETAILS + ", " + ORDER_SLIPS_SNO + "," + ORDER_SLIPS_CREATED_AT + ") " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement updateOrderSlipsMainTableStatement = orderSlipConnectionObject.prepareStatement(updateOrderSlipsMainTableQuery);
              PreparedStatement slipDataStatement = orderSlipConnectionObject.prepareStatement(slipDataInsertQuery)
         ) {
-            java.sql.Timestamp timestamp = java.sql.Timestamp.valueOf(LocalDateTime.parse(Objects.toString(dateComboBox.getSelectedItem(), "") + " 00:00:00", DateTimeFormatter.ofPattern("dd-MM-yy HH:mm:ss")));
+            if(!isSlipValid()){
+                JOptionPane.showMessageDialog(this, "Invalid Slip Data!", "Error", JOptionPane.ERROR_MESSAGE);
+                return CODES.FAIL_CODE;
+            }
+            java.sql.Timestamp timestamp = java.sql.Timestamp.valueOf(LocalDateTime.parse(parseString(dateComboBox.getSelectedItem()) + " 00:00:00", DateTimeFormatter.ofPattern("dd-MM-yy HH:mm:ss")));
             updateOrderSlipsMainTableStatement.setTimestamp(1, timestamp);
-            updateOrderSlipsMainTableStatement.setInt(2, getSlipID());
+            updateOrderSlipsMainTableStatement.setString(2, parseString(orderSlipTypeComboBox.getSelectedItem()));
+            updateOrderSlipsMainTableStatement.setInt(3, getSlipID());
             updateOrderSlipsMainTableStatement.executeUpdate();
+
             for (int i = 0; i < rowCount - 1; i++) {
-                if (model.getValueAt(i, ITEM_NAME_INDEX) == null || model.getValueAt(i, ITEM_NAME_INDEX).toString().trim().contentEquals(""))
+                if (parseString(model.getValueAt(i, ITEM_NAME_INDEX)).trim().contentEquals(""))
                     break;
-                String designId = model.getValueAt(i, DESIGN_ID_INDEX) != null ? model.getValueAt(i, DESIGN_ID_INDEX).toString() : "";
+                String designId = parseString(model.getValueAt(i, DESIGN_ID_INDEX));
                 String itemName = (String) model.getValueAt(i, ITEM_NAME_INDEX);
-                int quantity = getIntegerValue(Objects.toString(model.getValueAt(i, QUANTITY_INDEX), "0"));
-                double platingGrams = getDoubleValue(model.getValueAt(i, PLATING_INDEX)) == null ? 0 : getDoubleValue(model.getValueAt(i, PLATING_INDEX));
-                double rawMaterialCost = getDoubleValue(model.getValueAt(i, RAW_MATERIAL_COST_INDEX)) == null ? 0 : getDoubleValue(model.getValueAt(i, RAW_MATERIAL_COST_INDEX));
+                int quantity = parseInt((model.getValueAt(i, QUANTITY_INDEX)));
+                double platingGrams = parseDouble(model.getValueAt(i, PLATING_INDEX));
+                double rawMaterialCost = parseDouble((model.getValueAt(i, RAW_MATERIAL_COST_INDEX)));
                 String otherDetails;
                 try {
-                    otherDetails = model.getValueAt(i, OTHER_DETAILS_INDEX).toString();
+                    otherDetails = parseString(model.getValueAt(i, OTHER_DETAILS_INDEX));
                 } catch (NullPointerException ex) {
                     otherDetails = "";
                 }
-                String customerName = customerNameComboBox.getSelectedItem() == null ? "" : customerNameComboBox.getSelectedItem().toString();
-                String orderSlipType = orderSlipTypeComboBox.getSelectedItem().toString();
+                String customerName = parseString(customerNameComboBox.getSelectedItem());
+                String orderSlipType = parseString(orderSlipTypeComboBox.getSelectedItem());
                 int sno = i + 1;
                 // Insert Query
                 slipDataStatement.setString(1, orderSlipType);
@@ -315,14 +376,13 @@ public class OrderGenerateForm extends JFrame {
 
     }
 
-    private Double getDoubleValue(Object string) {
-        if (string == null) return null;
-
-        try {
-            return Double.parseDouble(string.toString());
-        } catch (NumberFormatException e) {
-            return null;
+    private boolean isSlipValid() {
+        int numberOfRows = orderSlipTable.getRowCount();
+        for (int i = 0; i < numberOfRows-1; i++) {
+            if(parseString(model.getValueAt(i, ITEM_NAME_INDEX)).trim().contentEquals("") || parseString(model.getValueAt(i, QUANTITY_INDEX)).trim().contentEquals(""))
+                return false;
         }
+        return true;
     }
 
     int prevRow = 0;
@@ -332,7 +392,7 @@ public class OrderGenerateForm extends JFrame {
     private void refreshListOfDisabledCells() {
         listOfDisabledCells.clear();
         for (int i = 0; i < model.getRowCount(); i++) {
-            String value = Objects.toString(model.getValueAt(i, DESIGN_ID_INDEX), "");
+            String value = parseString(model.getValueAt(i, DESIGN_ID_INDEX));
             if (!value.isEmpty()) {
                 listOfDisabledCells.add(new Integer[]{i, ITEM_NAME_INDEX});
             }
@@ -353,53 +413,13 @@ public class OrderGenerateForm extends JFrame {
         return slipID;
     }
 
-    private Integer getIntegerValue(Object value) {
-        if (value == null) return null;
-        try {
-            return Integer.valueOf(value.toString().trim());
-        } catch (NumberFormatException ex) {
-            System.out.println(ex.getMessage() + " from getInteger Value function");
-
-            return null;
-        }
-    }
-
 
     private boolean isRowEmpty(int row) {
         for (int i = 0; i < model.getColumnCount(); i++) {
-            String value = model.getValueAt(row, i) == null ? "" : model.getValueAt(row, i).toString();
+            String value =  parseString(model.getValueAt(row, i));
             if (!value.isEmpty()) return false;
         }
         return true;
     }
 
-    private void reBuildModel() {
-        Vector<Vector<Object>> dataVector = new Vector<>();
-        for (int i = 0; i < model.getRowCount(); i++) {
-            Vector<Object> data = new Vector<>();
-            for (int j = 0; j < model.getColumnCount(); j++) {
-                data.add(model.getValueAt(i, j));
-            }
-            dataVector.add(data);
-        }
-
-        model = new DefaultTableModel(dataVector, columnNames) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                for (Integer[] cell : listOfDisabledCells) {
-                    if (cell[0] == row && cell[1] == column) {
-                        return false;
-                    }
-                }
-                for (Integer col : listOfDisabledcolumn) {
-                    if (col == column) return false;
-
-                }
-                return true;
-            }
-        };
-        orderSlipTable.setModel(model);
-
-
-    }
 }

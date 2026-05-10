@@ -1,5 +1,7 @@
 package testpackage;
 
+import utils.UtilityMethods;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;

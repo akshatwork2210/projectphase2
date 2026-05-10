@@ -1,7 +1,7 @@
 package loginsignup.login.loggedin.billing.purcahseBill;
 
 import mainpack.MyClass;
-import testpackage.UtilityMethods;
+import utils.UtilityMethods;
 import static testpackage.DBStructure.*;
 import javax.swing.*;
 import javax.swing.event.TableModelListener;
