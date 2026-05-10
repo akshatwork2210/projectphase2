@@ -3,6 +3,7 @@ package loginsignup.login.loggedin.ordermanagement.generateorder;
 import mainpack.MyClass;
 import testpackage.DBStructure;
 import testpackage.CODES;
+import utils.LogUtils;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
@@ -98,6 +99,9 @@ public class OrderGenerateForm extends JFrame {
                 JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "please select a customer name", "incomplete information", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+            String uniqueID=LogUtils.generateInventorySnapShot("BEFORE","");
+            LogUtils.generateVectorLog(model.getDataVector(),"ORDERSLIP");
+
             if (pushSlipData() == CODES.SUCCESS_CODE && updateInventory() == CODES.SUCCESS_CODE) {
                 try {
                     orderSlipConnectionObject.commit();
@@ -132,7 +136,7 @@ public class OrderGenerateForm extends JFrame {
                 }
 
             }
-
+            LogUtils.generateInventorySnapShot("AFTER",uniqueID);
         });
         inventorySelectButton.addActionListener(e -> {
             if (MyClass.inventorySelect.isVisible()) return;

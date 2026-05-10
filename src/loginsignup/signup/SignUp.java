@@ -30,6 +30,7 @@ public class SignUp extends JFrame {
 
     public void init() {
         setContentPane(panel);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         JFrame temp = this;
         SUBMITButton.addActionListener(e -> {
             String username = userTextField.getText();

@@ -60,6 +60,7 @@ public class UtilityMethods {
         return DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
     }
 
+
     public static final BlockingQueue<Runnable> printQueue = new LinkedBlockingQueue<>();
 
     public static void storeLogs(Exception e) {
