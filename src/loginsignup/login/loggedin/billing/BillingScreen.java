@@ -49,8 +49,9 @@ public class BillingScreen extends JFrame {
         backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-                mainScreen.setVisible(true);
+//                setVisible(false);
+                    dispose();
+                    mainScreen.setVisible(true);
             }
         });
         viewCustomerBillsButton.addActionListener(new ActionListener() {

@@ -1,0 +1,4 @@
+C002,Box Chain,32,3.0,9000.0,BRONZE BASED PLATING,
+E002,Jhumka Small,23,3.0,2600.0,MEENA CHILAI,
+null,RAJWADI RING,12,3.0,620.0,MEENA CHILAI,
+null,null,null,null,null,,

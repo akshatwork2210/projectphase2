@@ -29,7 +29,6 @@ public class OrderGenerateForm extends JFrame {
     private JTable orderSlipTable;
     private JButton submitButton;
     private JButton resetFormButton;
-    private JButton undoResetButton;
     private JComboBox<String> dateComboBox;
     private JLabel slipIDLabel;
     private JButton inventorySelectButton;
@@ -43,10 +42,6 @@ public class OrderGenerateForm extends JFrame {
 
     Connection orderSlipConnectionObject;
 
-    public Connection getOrderSlipConnectionObject() {
-        return orderSlipConnectionObject;
-    }
-
     Vector<Integer[]> listOfDisabledCells;
     private Vector<Integer> listOfDisabledColumn;
 
@@ -59,7 +54,6 @@ public class OrderGenerateForm extends JFrame {
     String oldDesignID = "";
 
     public void init() {
-//        backupModel = null;
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         orderSlipTable.addPropertyChangeListener(evt -> {
             int row = orderSlipTable.getSelectedRow();
@@ -89,6 +83,12 @@ public class OrderGenerateForm extends JFrame {
             int answer = JOptionPane.showConfirmDialog(OrderGenerateForm.this, "are you sure you want to reset the form, data will be lost?");
             if (answer != JOptionPane.YES_OPTION) return;
             dispose();
+            Vector<String> vector1 = new Vector(List.of(new String[]{String.valueOf(OrderGenerateForm.this.getX()),String.valueOf(OrderGenerateForm.this.getY()),String.valueOf(OrderGenerateForm.this.getWidth()),String.valueOf(OrderGenerateForm.this.getHeight())}));
+            Vector<String> vector2 = new Vector(List.of(String.valueOf(MyClass.inventorySelect.getX()),String.valueOf(MyClass.inventorySelect.getY()),String.valueOf(MyClass.inventorySelect.getWidth()),String.valueOf(MyClass.inventorySelect.getHeight())));
+            Vector<Vector> vector=new Vector<>();
+            vector.add(vector1);
+            vector.add(vector2);
+            LogUtils.generateVectorLog(vector,"coordinates" );
             MyClass.inventorySelect.dispose();
             MyClass.orderGenerateForm = new OrderGenerateForm();
             MyClass.orderGenerateForm.init();
@@ -99,9 +99,11 @@ public class OrderGenerateForm extends JFrame {
                 JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "please select a customer name", "incomplete information", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            String uniqueID=LogUtils.generateInventorySnapShot("BEFORE","");
-            LogUtils.generateVectorLog(model.getDataVector(),"ORDERSLIP");
-
+            String uniqueID="";
+            if(MyClass.login.getLoginID().toUpperCase().contentEquals("RAJ")){
+                 uniqueID = LogUtils.generateInventorySnapShot("BEFORE", "");
+                 LogUtils.generateVectorLog(model.getDataVector(), "ORDERSLIP");
+            }
             if (pushSlipData() == CODES.SUCCESS_CODE && updateInventory() == CODES.SUCCESS_CODE) {
                 try {
                     orderSlipConnectionObject.commit();
@@ -113,6 +115,7 @@ public class OrderGenerateForm extends JFrame {
                         throw new RuntimeException(ex);
                     }
                     dispose();
+                    MyClass.inventorySelect.dispose();
                     MyClass.orderGenerateForm = new OrderGenerateForm();
                     MyClass.orderGenerateForm.init();
                     MyClass.orderGenerateForm.setVisible(true);
@@ -136,7 +139,8 @@ public class OrderGenerateForm extends JFrame {
                 }
 
             }
-            LogUtils.generateInventorySnapShot("AFTER",uniqueID);
+            if(MyClass.login.getLoginID().toUpperCase().contentEquals("RAJ"))
+                LogUtils.generateInventorySnapShot("AFTER",uniqueID);
         });
         inventorySelectButton.addActionListener(e -> {
             if (MyClass.inventorySelect.isVisible()) return;

@@ -24,7 +24,7 @@ public class LogUtils {
     //----------------------------------orderslips logigin class-------w----------------------------------------
     public static int generateVectorLog(Vector<Vector> vector, String title)
     {
-        String date=LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss"));
+        String date=LocalDateTime       .now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss"));
         File file=new File("src/logs/"+title+"_"+date+".txt");
         try(FileWriter fileWriter=new FileWriter(file);
         BufferedWriter bufferedWriter=new BufferedWriter(fileWriter);

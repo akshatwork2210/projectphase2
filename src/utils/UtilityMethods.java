@@ -575,8 +575,8 @@ public class UtilityMethods {
             return;
         }
         if (splitType == VERTI_SPLIT) {
-            topLeft.setBounds(0, 0, screenWidth / 2, screenHeight);
-            bottomRight.setBounds(screenWidth / 2, 0, screenWidth / 2, screenHeight);
+            topLeft.setBounds(-6, 0, (652), 678);
+            bottomRight.setBounds(634, 0,  652 , 678);
         }
 
     }

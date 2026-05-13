@@ -3,6 +3,7 @@ package loginsignup.login.loggedin;
 import java.io.*;
 
 import loginsignup.login.loggedin.accountingandledger.AALScreen;
+import loginsignup.login.loggedin.billing.BillingScreen;
 import loginsignup.login.loggedin.billing.newBill.NewBill;
 import loginsignup.login.loggedin.inventorymanagement.InventoryScreen;
 import loginsignup.login.loggedin.ordermanagement.OrderScreen;
@@ -124,7 +125,7 @@ public class MainScreen extends JFrame {
         billingButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                MyClass.billingScreen = new BillingScreen();
+                MyClass.billingScreen = new BillingScreen();
                 MyClass.billingScreen.init();
                 MyClass.billingScreen.setVisible(true);
             }
