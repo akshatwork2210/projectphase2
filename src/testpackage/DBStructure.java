@@ -56,7 +56,7 @@ public class DBStructure {
 
     // ====================== inventory ======================
     public static final String INVENTORY_TABLE = "inventory";
-    public static final String INVENTORY_DESIGN_ID = "DesignID";
+    public static final String INVENTORY_DESIGN_ID = "DESIGNID";
     public static final String INVENTORY_TOTAL_QUANTITY = "TotalQuantity";
     public static final String INVENTORY_ITEM_NAME = "itemname";
     public static final String INVENTORY_BUY_PRICE = "price";

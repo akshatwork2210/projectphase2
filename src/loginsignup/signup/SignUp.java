@@ -7,10 +7,8 @@ import utils.UtilityMethods;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
+import java.io.*;
+import java.sql.*;
 
 public class SignUp extends JFrame {
     private JTextField userTextField;
@@ -20,7 +18,6 @@ public class SignUp extends JFrame {
     private JPanel panel;
     private JTextField rootPasswordTextField;
     private JButton backButton;
-
 
 
     public SignUp() {
@@ -34,40 +31,90 @@ public class SignUp extends JFrame {
         JFrame temp = this;
         SUBMITButton.addActionListener(e -> {
             String username = userTextField.getText();
-            String password = passwordTextField.getText();
             String authority = authorityTextField.getText();
+            String password = passwordTextField.getText();
+            boolean exists = false;
 
-            String q1 = "mysql -u root -p" + rootPasswordTextField.getText() +
-                    " -e \"CREATE DATABASE " + username + ";\"";
+            String query = "SELECT user FROM mysql.user WHERE user = ?";
 
-            String q2 = "mysql -u root -p" + rootPasswordTextField.getText() +
-                    " -e \"CREATE USER '" + username + "'@'%' IDENTIFIED BY '" + password + "';\"";
+            try (
+                    Connection con = DriverManager.getConnection(
+                            "jdbc:mysql://localhost:3306/mysql",
+                            "root",
+                            rootPasswordTextField.getText()
+                    );
+                    PreparedStatement ps = con.prepareStatement(query)
+            ) {
 
-            String q3 = "mysql -u root -p" + rootPasswordTextField.getText() +
-                    " -e \"GRANT ALL PRIVILEGES ON " + username + ".* TO '" + username + "'@'%';\"";
-            String q4 = "mysql -u root -p" + rootPasswordTextField.getText() + " " + username + " < " + "D:/gurukripa/src/resources/structure.sql";
-            Process p1 = UtilityMethods.pBuilder(q1);
-            Process p2 = UtilityMethods.pBuilder(q2);
-            Process p3 = UtilityMethods.pBuilder(q3);
-            Process p4 = UtilityMethods.pBuilder(q4);
-            try {
-                System.out.println("database structure imported with code " + p1.waitFor() + " " + p2.waitFor() + " " + p3.waitFor() + " " + p4.waitFor());
-            } catch (InterruptedException ex) {
-                throw new RuntimeException(ex);
-            }
-            String query = "insert into " + DBStructure.USER_ACCOUNT_TABLE + "( " + DBStructure.user_name + ", " + DBStructure.password + "    , " + DBStructure.authority + ") values(?,?,?);";
-            try (Connection con = MyClass.createConnection(""); PreparedStatement insertStatement = con.prepareStatement(query)) {
-                insertStatement.setString(1, username);
-                insertStatement.setString(2, password);
-                insertStatement.setString(3, authority);
-                insertStatement.executeUpdate();
-
-            } catch (SQLIntegrityConstraintViolationException ex) {
-                JOptionPane.showMessageDialog(temp, "USER NAME ALREADY EXISTS,, PLEASE CHANGE THE USERNAME");
-                userTextField.setText("");
+                ps.setString(1, username);
+                try (ResultSet rs = ps.executeQuery();
+                ) {
+                    exists = rs.next();
+                }
             } catch (SQLException ex) {
                 throw new RuntimeException(ex);
             }
+
+            if (exists) {
+                JOptionPane.showMessageDialog(null,
+                        "USER ALREADY EXISTS");
+                return;
+            }
+            String batContent =
+                    "@echo off\r\n" +
+                            "\r\n" +
+                            "echo Creating database...\r\n" +
+                            "mysql -u root -p" + rootPasswordTextField.getText() +
+                            " -e \"CREATE DATABASE " + username + ";\"\r\n" +
+                            "if errorlevel 1 goto error\r\n" +
+                            "\r\n" +
+                            "echo Creating user...\r\n" +
+                            "mysql -u root -p" + rootPasswordTextField.getText() +
+                            " -e \"CREATE USER '" + username + "'@'%%' IDENTIFIED BY '" + password + "';\"\r\n" +
+                            "if errorlevel 1 goto error\r\n" +
+                            "\r\n" +
+                            "echo Granting privileges...\r\n" +
+                            "mysql -u root -p" + rootPasswordTextField.getText() +
+                            " -e \"GRANT ALL PRIVILEGES ON " + username + ".* TO '" + username + "'@'%%';\"\r\n" +
+                            "if errorlevel 1 goto error\r\n" +
+                            "\r\n" +
+                            "echo Importing structure...\r\n" +
+                            "mysql --binary-mode=1 -u root -p" + rootPasswordTextField.getText() +
+                            " " + username + " < structure.sql\r\n" +
+                            "if errorlevel 1 goto error\r\n" +
+                            "\r\n" +
+                            "echo SUCCESS\r\n" +
+                            "exit /b 0\r\n" +
+                            "\r\n" +
+                            ":error\r\n" +
+                            "echo FAILED\r\n" +
+                            "exit /b 1";
+            File file = new File("src/resources/createUser.bat");
+            try (FileWriter fw = new FileWriter(file)) {
+                fw.write(batContent);
+                fw.flush();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+            try {
+                Process p = new ProcessBuilder("cmd.exe", "/c ", "createUser.bat")
+                        .directory(new File("src/resources"))
+                        .start();
+                System.out.println(p.waitFor() + " is the code");
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+                ) {
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        System.out.println(line);
+                    }
+                }
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+
+
         });
         backButton.addActionListener(new ActionListener() {
             @Override
