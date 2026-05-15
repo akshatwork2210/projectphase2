@@ -61,8 +61,7 @@ public class OrderGenerateForm extends JFrame {
             if (row == -1) return;
             try {
                 oldQuantity = parseInt(defaultTableModel.getValueAt(row, QUANTITY_INDEX));
-            }
-            catch (NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 oldQuantity = 0;
             }
             oldDesignID = parseString(model.getValueAt(row, DESIGN_ID_INDEX));
@@ -83,12 +82,12 @@ public class OrderGenerateForm extends JFrame {
             int answer = JOptionPane.showConfirmDialog(OrderGenerateForm.this, "are you sure you want to reset the form, data will be lost?");
             if (answer != JOptionPane.YES_OPTION) return;
             dispose();
-            Vector<String> vector1 = new Vector(List.of(new String[]{String.valueOf(OrderGenerateForm.this.getX()),String.valueOf(OrderGenerateForm.this.getY()),String.valueOf(OrderGenerateForm.this.getWidth()),String.valueOf(OrderGenerateForm.this.getHeight())}));
-            Vector<String> vector2 = new Vector(List.of(String.valueOf(MyClass.inventorySelect.getX()),String.valueOf(MyClass.inventorySelect.getY()),String.valueOf(MyClass.inventorySelect.getWidth()),String.valueOf(MyClass.inventorySelect.getHeight())));
-            Vector<Vector> vector=new Vector<>();
+            Vector<String> vector1 = new Vector(List.of(new String[]{String.valueOf(OrderGenerateForm.this.getX()), String.valueOf(OrderGenerateForm.this.getY()), String.valueOf(OrderGenerateForm.this.getWidth()), String.valueOf(OrderGenerateForm.this.getHeight())}));
+            Vector<String> vector2 = new Vector(List.of(String.valueOf(MyClass.inventorySelect.getX()), String.valueOf(MyClass.inventorySelect.getY()), String.valueOf(MyClass.inventorySelect.getWidth()), String.valueOf(MyClass.inventorySelect.getHeight())));
+            Vector<Vector> vector = new Vector<>();
             vector.add(vector1);
             vector.add(vector2);
-            LogUtils.generateVectorLog(vector,"coordinates" );
+            LogUtils.generateVectorLog(vector, "coordinates");
             MyClass.inventorySelect.dispose();
             MyClass.orderGenerateForm = new OrderGenerateForm();
             MyClass.orderGenerateForm.init();
@@ -99,18 +98,18 @@ public class OrderGenerateForm extends JFrame {
                 JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "please select a customer name", "incomplete information", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            String uniqueID="";
-            if(MyClass.login.getLoginID().toUpperCase().contentEquals("RAJ")){
-                 uniqueID = LogUtils.generateInventorySnapShot("BEFORE", "");
-                 LogUtils.generateVectorLog(model.getDataVector(), "ORDERSLIP");
-            }
+            String uniqueID = "";
+
+            uniqueID = LogUtils.generateInventorySnapShot("BEFORE", "");
+            LogUtils.generateVectorLog(model.getDataVector(), "ORDERSLIP");
+
             if (pushSlipData() == CODES.SUCCESS_CODE && updateInventory() == CODES.SUCCESS_CODE) {
                 try {
                     orderSlipConnectionObject.commit();
                     JOptionPane.showMessageDialog(this, "Order has been updated successfully", "success", JOptionPane.INFORMATION_MESSAGE);
                     try {
                         orderSlipConnectionObject.close();
-                    }catch (SQLException ex) {
+                    } catch (SQLException ex) {
                         JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "Could not close connection", "error", JOptionPane.ERROR_MESSAGE);
                         throw new RuntimeException(ex);
                     }
@@ -123,24 +122,22 @@ public class OrderGenerateForm extends JFrame {
                     JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "transaction commit faliur", "error", JOptionPane.ERROR_MESSAGE);
                     throw new RuntimeException(ex);
                 }
-            }
-            else {
+            } else {
                 try {
                     orderSlipConnectionObject.rollback();
-                    } catch (SQLException ex) {
+                } catch (SQLException ex) {
                     JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "roll back failed", "error", JOptionPane.ERROR_MESSAGE);
                     throw new RuntimeException(ex);
                 }
                 try {
                     orderSlipConnectionObject.close();
-                }catch (SQLException ex) {
+                } catch (SQLException ex) {
                     JOptionPane.showMessageDialog(MyClass.orderGenerateForm, "closing connection failed", "error", JOptionPane.ERROR_MESSAGE);
                     throw new RuntimeException(ex);
                 }
 
             }
-            if(MyClass.login.getLoginID().toUpperCase().contentEquals("RAJ"))
-                LogUtils.generateInventorySnapShot("AFTER",uniqueID);
+            LogUtils.generateInventorySnapShot("AFTER", uniqueID);
         });
         inventorySelectButton.addActionListener(e -> {
             if (MyClass.inventorySelect.isVisible()) return;
@@ -160,7 +157,7 @@ public class OrderGenerateForm extends JFrame {
         generateAndAddNames(customerNameComboBox);
         orderSlipTable.getTableHeader().setReorderingAllowed(false);
 
-        model = new DefaultTableModel( columnNames,1) {
+        model = new DefaultTableModel(columnNames, 1) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 for (Integer[] cell : listOfDisabledCells) {
@@ -185,8 +182,8 @@ public class OrderGenerateForm extends JFrame {
                 Integer quantity;
                 try {
                     quantity = parseInt(model.getValueAt(row, QUANTITY_INDEX));
-                }catch (NumberFormatException ex) {
-                    quantity=0;
+                } catch (NumberFormatException ex) {
+                    quantity = 0;
                 }
                 String cellContent;
                 try {
@@ -224,8 +221,8 @@ public class OrderGenerateForm extends JFrame {
                     double rawPrice;
                     try {
                         rawPrice = parseDouble((model.getValueAt(row, RAW_MATERIAL_COST_INDEX)));
-                    }catch (NumberFormatException ex) {
-                        rawPrice=0;
+                    } catch (NumberFormatException ex) {
+                        rawPrice = 0;
                     }
                     model.setValueAt(rawPrice == 0 ? "" : rawPrice, row, RAW_MATERIAL_COST_INDEX);
                 }
@@ -233,8 +230,8 @@ public class OrderGenerateForm extends JFrame {
                     double plating;
                     try {
                         plating = parseDouble((model.getValueAt(row, PLATING_INDEX)));
-                    }catch (NumberFormatException ex){
-                        plating=0;
+                    } catch (NumberFormatException ex) {
+                        plating = 0;
                     }
                     model.setValueAt(plating == 0 ? "" : plating, row, PLATING_INDEX);
                 }
@@ -246,9 +243,9 @@ public class OrderGenerateForm extends JFrame {
                     refreshListOfDisabledCells();
                 }
                 orderSlipTable.repaint();
-                String designID = parseString(model.getValueAt(row, DESIGN_ID_INDEX)).toUpperCase();
-                System.out.println(oldDesignID.contains(designID));
-                if (oldDesignID.contentEquals(designID)) {
+                String designID = parseString(model.getValueAt(row, DESIGN_ID_INDEX));
+                System.out.println();
+                if (oldDesignID.toUpperCase().contentEquals(designID.toUpperCase())) {
                     System.out.println("design id is not changed");
                     quantity = (quantity - oldQuantity);
                     MyClass.inventorySelect.updateTable(quantity, designID);
@@ -273,12 +270,12 @@ public class OrderGenerateForm extends JFrame {
 
 
         //---------------------------------------------order_slip_mmain table data below--------------------------------------------------
-        String insertMainQuery = "INSERT INTO " + ORDER_SLIPS_MAIN_TABLE + " ("+ORDER_SLIPS_MAIN_STATUS+") VALUES (?)";
+        String insertMainQuery = "INSERT INTO " + ORDER_SLIPS_MAIN_TABLE + " (" + ORDER_SLIPS_MAIN_STATUS + ") VALUES (?)";
         orderSlipConnectionObject = null;
         try {
             orderSlipConnectionObject = DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
             orderSlipConnectionObject.setAutoCommit(false);
-            try(PreparedStatement stmt = orderSlipConnectionObject.prepareStatement(insertMainQuery, Statement.RETURN_GENERATED_KEYS);) {
+            try (PreparedStatement stmt = orderSlipConnectionObject.prepareStatement(insertMainQuery, Statement.RETURN_GENERATED_KEYS);) {
                 stmt.setInt(1, CODES.DRAFT_STATUS_CODE);
                 stmt.executeUpdate();
                 // Get the generated slip_id
@@ -293,10 +290,9 @@ public class OrderGenerateForm extends JFrame {
             MyClass.orderScreen.setVisible(true);
             try {
                 orderSlipConnectionObject.close();
-            }
-            catch (SQLException ex) {
+            } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                throw new  RuntimeException(ex);
+                throw new RuntimeException(ex);
             }
             throw new RuntimeException(e);
         }
@@ -306,12 +302,12 @@ public class OrderGenerateForm extends JFrame {
     }
 
     private int updateInventory() {
-        String query="update "+INVENTORY_TABLE+" SET "+INVENTORY_TOTAL_QUANTITY+" ="+INVENTORY_TOTAL_QUANTITY+"- ? WHERE "+INVENTORY_DESIGN_ID+" = ?";
+        String query = "update " + INVENTORY_TABLE + " SET " + INVENTORY_TOTAL_QUANTITY + " =" + INVENTORY_TOTAL_QUANTITY + "- ? WHERE " + INVENTORY_DESIGN_ID + " = ?";
 
-        try(PreparedStatement updateInventoryStatement=orderSlipConnectionObject.prepareStatement(query)){
-            for(int i=0;i<orderSlipTable.getRowCount()-1;i++){
-                updateInventoryStatement.setInt(1,parseInt(orderSlipTable.getValueAt(i,QUANTITY_INDEX)));
-                updateInventoryStatement.setString(2,parseString(orderSlipTable.getValueAt(i,DESIGN_ID_INDEX)));
+        try (PreparedStatement updateInventoryStatement = orderSlipConnectionObject.prepareStatement(query)) {
+            for (int i = 0; i < orderSlipTable.getRowCount() - 1; i++) {
+                updateInventoryStatement.setInt(1, parseInt(orderSlipTable.getValueAt(i, QUANTITY_INDEX)));
+                updateInventoryStatement.setString(2, parseString(orderSlipTable.getValueAt(i, DESIGN_ID_INDEX)));
                 updateInventoryStatement.addBatch();
             }
             updateInventoryStatement.executeBatch();
@@ -326,14 +322,14 @@ public class OrderGenerateForm extends JFrame {
     public int pushSlipData() {
         DefaultTableModel model = (DefaultTableModel) orderSlipTable.getModel();
         int rowCount = model.getRowCount();
-        String updateOrderSlipsMainTableQuery = "update " + ORDER_SLIPS_MAIN_TABLE + " set " + ORDER_SLIPS_CREATED_AT + "=?, "+ORDER_SLIPS_MAIN_SLIP_TYPE+"=? where " + ORDER_SLIPS_MAIN_SLIP_ID + "=?";
+        String updateOrderSlipsMainTableQuery = "update " + ORDER_SLIPS_MAIN_TABLE + " set " + ORDER_SLIPS_CREATED_AT + "=?, " + ORDER_SLIPS_MAIN_SLIP_TYPE + "=? where " + ORDER_SLIPS_MAIN_SLIP_ID + "=?";
         String slipDataInsertQuery = "INSERT INTO " + ORDER_SLIPS_TABLE + " (" + ORDER_SLIPS_SLIP_TYPE + ", " + ORDER_SLIPS_CUSTOMER_NAME + ", " + ORDER_SLIPS_SLIP_ID + ", " + ORDER_SLIPS_DESIGN_ID + ", " + ORDER_SLIPS_ITEM_NAME + ", " + ORDER_SLIPS_QUANTITY + ", " + ORDER_SLIPS_PLATING_GRAMS + ", "
                 + ORDER_SLIPS_RAW_MATERIAL_PRICE + ", " + ORDER_SLIPS_OTHER_DETAILS + ", " + ORDER_SLIPS_SNO + "," + ORDER_SLIPS_CREATED_AT + ") " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement updateOrderSlipsMainTableStatement = orderSlipConnectionObject.prepareStatement(updateOrderSlipsMainTableQuery);
              PreparedStatement slipDataStatement = orderSlipConnectionObject.prepareStatement(slipDataInsertQuery)
         ) {
-            if(!isSlipValid()){
+            if (!isSlipValid()) {
                 JOptionPane.showMessageDialog(this, "Invalid Slip Data!", "Error", JOptionPane.ERROR_MESSAGE);
                 return CODES.FAIL_CODE;
             }
@@ -386,8 +382,8 @@ public class OrderGenerateForm extends JFrame {
 
     private boolean isSlipValid() {
         int numberOfRows = orderSlipTable.getRowCount();
-        for (int i = 0; i < numberOfRows-1; i++) {
-            if(parseString(model.getValueAt(i, ITEM_NAME_INDEX)).trim().contentEquals("") || parseString(model.getValueAt(i, QUANTITY_INDEX)).trim().contentEquals(""))
+        for (int i = 0; i < numberOfRows - 1; i++) {
+            if (parseString(model.getValueAt(i, ITEM_NAME_INDEX)).trim().contentEquals("") || parseString(model.getValueAt(i, QUANTITY_INDEX)).trim().contentEquals(""))
                 return false;
         }
         return true;
@@ -424,7 +420,7 @@ public class OrderGenerateForm extends JFrame {
 
     private boolean isRowEmpty(int row) {
         for (int i = 0; i < model.getColumnCount(); i++) {
-            String value =  parseString(model.getValueAt(row, i));
+            String value = parseString(model.getValueAt(row, i));
             if (!value.isEmpty()) return false;
         }
         return true;

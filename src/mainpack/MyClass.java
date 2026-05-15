@@ -83,7 +83,7 @@ public class MyClass {
         {
             purchaseBill = new PurchaseBill();
             login = new LOGIN();
-            signUp=new SignUp();
+            signUp = new SignUp();
             ledgerWindow = new LedgerWindow();
             login_signup = new LOGIN_SIGNUP();
 
@@ -103,7 +103,7 @@ public class MyClass {
             searchResultWindow = new SearchResultWindow();
             viewOrders = new ViewOrders();
             viewCustomerBill = new ViewCustomerBill();
-            inventorySelect=new InventorySelect();
+            inventorySelect = new InventorySelect();
 
             UtilityMethods.printingThread = new Thread(() -> {
                 while (true) {
@@ -157,24 +157,25 @@ public class MyClass {
 
             System.out.println("❌ Database Connection Failed!");
 //            System.out.println(e.getMessage()+" code "+e.getErrorCode());
-            if(e.getErrorCode()== SQL_INVALID_CREDENTIALS_ERROR){
+            if (e.getErrorCode() == SQL_INVALID_CREDENTIALS_ERROR) {
                 JOptionPane.showMessageDialog(null, "invalid userid/password");
                 e.printStackTrace();
-                return null;
-            } else if (e.getErrorCode()==SQL_INVALID_DATABASE_ERROR) {
+                throw new RuntimeException(e);
+            } else if (e.getErrorCode() == SQL_INVALID_DATABASE_ERROR) {
                 JOptionPane.showMessageDialog(login, "database not found error " + e.getErrorCode());
                 e.printStackTrace();
-
-                return null;
+                throw new RuntimeException(e);
             }
             e.printStackTrace();
-            throw new RuntimeException(e);}
+            throw new RuntimeException(e);
+        }
         return conn;
     }
+
     public static NewBill newBill;
     public static Transactions transactions;
     public static LOGIN login;
-    public   static SignUp signUp;
+    public static SignUp signUp;
 
     public static BillingScreen billingScreen;
     public static ViewCustomerBill viewCustomerBill;
@@ -188,9 +189,9 @@ public class MyClass {
     public static Connection createConnection(String s) {
 
         try {
-            return DriverManager.getConnection("jdbc:mysql://localhost:3306/sample","root","m!n8W74bLc#Iwt");
+            return DriverManager.getConnection("jdbc:mysql://localhost:3306/sample", "root", "m!n8W74bLc#Iwt");
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(null,"error in testing");
+            JOptionPane.showMessageDialog(null, "error in testing");
             return null;
         }
     }

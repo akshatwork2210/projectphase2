@@ -1,5 +1,7 @@
 package loginsignup.login.loggedin.ordermanagement.generateorder;
 
+import mainpack.MyClass;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.*;
@@ -174,7 +176,7 @@ public class InventorySelect extends JFrame {
     Map<String, Integer> rowDesignIdMap;
     public void fetchData(DefaultTableModel model) {
         String query = "Select " + INVENTORY_DESIGN_ID + ", " + INVENTORY_ITEM_NAME + ", " + INVENTORY_TOTAL_QUANTITY + " from " + INVENTORY_TABLE;
-        try (Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/raj", "raj", "akshat"); PreparedStatement preparedStatement = con.prepareStatement(query)) {
+        try (Connection con = MyClass.createConnection(); PreparedStatement preparedStatement = con.prepareStatement(query)) {
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 rowDesignIdMap.clear();
                int row=0;
