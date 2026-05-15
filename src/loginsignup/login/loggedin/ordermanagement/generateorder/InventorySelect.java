@@ -159,6 +159,7 @@ public class InventorySelect extends JFrame {
         int lastRow = orderGenerateForm.model.getRowCount() - 1;
         orderGenerateForm.model.setValueAt(quantity, lastRow, OrderGenerateForm.QUANTITY_INDEX);
         orderGenerateForm.model.setValueAt(designID, lastRow, OrderGenerateForm.DESIGN_ID_INDEX);
+        orderGenerateForm.fireTableRowChange();
         return SUCCESS_CODE;
     }
 

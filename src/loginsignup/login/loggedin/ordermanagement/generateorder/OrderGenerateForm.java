@@ -44,7 +44,10 @@ public class OrderGenerateForm extends JFrame {
 
     Vector<Integer[]> listOfDisabledCells;
     private Vector<Integer> listOfDisabledColumn;
-
+    public void fireTableRowChange(){
+        DefaultTableModel model1 = (DefaultTableModel) orderSlipTable.getModel();
+    model1.fireTableRowsInserted(0,orderSlipTable.getRowCount()-1);
+    }
 
     public OrderGenerateForm() {
 
@@ -325,9 +328,10 @@ public class OrderGenerateForm extends JFrame {
         String updateOrderSlipsMainTableQuery = "update " + ORDER_SLIPS_MAIN_TABLE + " set " + ORDER_SLIPS_CREATED_AT + "=?, " + ORDER_SLIPS_MAIN_SLIP_TYPE + "=? where " + ORDER_SLIPS_MAIN_SLIP_ID + "=?";
         String slipDataInsertQuery = "INSERT INTO " + ORDER_SLIPS_TABLE + " (" + ORDER_SLIPS_SLIP_TYPE + ", " + ORDER_SLIPS_CUSTOMER_NAME + ", " + ORDER_SLIPS_SLIP_ID + ", " + ORDER_SLIPS_DESIGN_ID + ", " + ORDER_SLIPS_ITEM_NAME + ", " + ORDER_SLIPS_QUANTITY + ", " + ORDER_SLIPS_PLATING_GRAMS + ", "
                 + ORDER_SLIPS_RAW_MATERIAL_PRICE + ", " + ORDER_SLIPS_OTHER_DETAILS + ", " + ORDER_SLIPS_SNO + "," + ORDER_SLIPS_CREATED_AT + ") " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
+        String updateSlipStatusQuery = "update " + ORDER_SLIPS_MAIN_TABLE + " SET " + ORDER_SLIPS_MAIN_STATUS + " = ? WHERE " + ORDER_SLIPS_MAIN_SLIP_ID + " = ?";
         try (PreparedStatement updateOrderSlipsMainTableStatement = orderSlipConnectionObject.prepareStatement(updateOrderSlipsMainTableQuery);
-             PreparedStatement slipDataStatement = orderSlipConnectionObject.prepareStatement(slipDataInsertQuery)
+             PreparedStatement slipDataStatement = orderSlipConnectionObject.prepareStatement(slipDataInsertQuery);
+             PreparedStatement updateSlipStatusStatement = orderSlipConnectionObject.prepareStatement(updateSlipStatusQuery)
         ) {
             if (!isSlipValid()) {
                 JOptionPane.showMessageDialog(this, "Invalid Slip Data!", "Error", JOptionPane.ERROR_MESSAGE);
@@ -371,6 +375,10 @@ public class OrderGenerateForm extends JFrame {
                 slipDataStatement.addBatch();
             }
             slipDataStatement.executeBatch();
+            updateSlipStatusStatement.setInt(1,CODES.COMMITED_STATUS_CODE);
+            updateSlipStatusStatement.setInt(2,getSlipID());
+            updateSlipStatusStatement.executeUpdate();
+
             return CODES.SUCCESS_CODE;
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(MyClass.orderGenerateForm, " error " + ex.getMessage());

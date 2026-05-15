@@ -1,6 +1,7 @@
 package loginsignup;
 
 import loginsignup.login.LOGIN;
+import loginsignup.signup.SignUp;
 import mainpack.MyClass;
 
 import javax.swing.*;
@@ -46,6 +47,7 @@ public class LOGIN_SIGNUP extends JFrame{
         SIGNUPButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                MyClass.signUp=new SignUp();
                 MyClass.signUp.init();
                 MyClass.signUp.setVisible(true);
                 setVisible(false);
