@@ -8,8 +8,8 @@ import java.awt.event.*;
 import java.sql.*;
 import java.util.*;
 
-import static testpackage.CODES.*;
-import static testpackage.DBStructure.*;
+import static utils.CODES.*;
+import static utils.DBStructure.*;
 
 public class InventorySelect extends JFrame {
     private static final int COL_DESIGN_ID_INDEX = 0;
@@ -105,7 +105,7 @@ public class InventorySelect extends JFrame {
             return;
         }
         String designID =Objects.toString( inventoryTable.getModel().getValueAt(inventoryTable.getSelectedRow(), COL_DESIGN_ID_INDEX),"");
-        if(pushDataToGenerator(designID, quantity, orderGenerateForm)==SUCCESS_CODE)fetchData((DefaultTableModel) inventoryTable.getModel());
+        pushDataToGenerator(designID, quantity, orderGenerateForm);
 
     }
 
@@ -122,7 +122,7 @@ public class InventorySelect extends JFrame {
     public int updateTable(int inputQuantity, String designID) {
         System.out.println("input q is  " + inputQuantity);
         DefaultTableModel model = (DefaultTableModel) inventoryTable.getModel();
-        Integer rowIndex=rowDesignIdMap.get(designID);
+        Integer rowIndex=rowDesignIdMap.get(designID.toUpperCase());
         if(rowIndex==null)return NOT_FOUND;//TABLE SUCCESFULLY UPDATED(AS NO UPDATION WAS NEEDED... THIS IS A SUCCESS
         String quantityString= Objects.toString(model.getValueAt(rowIndex, COL_TOTAL_QTY_INDEX),"0");
         int quantity = Integer.parseInt(quantityString.trim().isEmpty()?"0":quantityString);
@@ -163,7 +163,7 @@ public class InventorySelect extends JFrame {
     }
 
     private boolean isOutOfStock(int quantity, String designID) {
-        int row=rowDesignIdMap.get(designID);
+        int row=rowDesignIdMap.get(designID.toUpperCase());
         String oldQuantityObject= Objects.toString(inventoryTable.getValueAt(row, COL_TOTAL_QTY_INDEX).toString(),"");
         int oldQuantity= Integer.parseInt(oldQuantityObject.trim().equals("")? "0":oldQuantityObject);
         if(oldQuantity-quantity<0){
@@ -182,7 +182,7 @@ public class InventorySelect extends JFrame {
                int row=0;
                 while (rs.next()) {
                     model.addRow(new String[]{rs.getString(INVENTORY_DESIGN_ID), rs.getString(INVENTORY_ITEM_NAME), rs.getString(INVENTORY_TOTAL_QUANTITY)});
-                    rowDesignIdMap.put(rs.getString(INVENTORY_DESIGN_ID), row++);
+                    rowDesignIdMap.put(rs.getString(INVENTORY_DESIGN_ID).toUpperCase(), row++);
                 }
             }
         } catch (SQLException e) {

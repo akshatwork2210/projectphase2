@@ -1,6 +1,8 @@
 package loginsignup.login.loggedin.billing;
 
 import loginsignup.login.loggedin.billing.newBill.NewBill;
+import loginsignup.login.loggedin.billing.newBill.SearchResultWindow;
+import loginsignup.login.loggedin.billing.purcahseBill.PurchaseBill;
 import loginsignup.login.loggedin.billing.viewbills.ViewBackendBill;
 import loginsignup.login.loggedin.billing.viewbills.ViewCustomerBill;
 
@@ -39,6 +41,7 @@ public class BillingScreen extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 newBill=new NewBill();
+                searchResultWindow=new SearchResultWindow();
                 newBill.init();
                 newBill.setVisible(true);
 
@@ -72,6 +75,7 @@ public class BillingScreen extends JFrame {
         newPurchaseButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+               purchaseBill=new PurchaseBill();
                 purchaseBill.init();
                 purchaseBill.setVisible(true);
                 setVisible(false);

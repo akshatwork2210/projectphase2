@@ -10,6 +10,10 @@ import java.awt.event.ActionListener;
 
 public class LOGIN_SIGNUP extends JFrame{
     private JButton LOGINButton;
+    public void clickLoginButton() {
+        LOGINButton.doClick();
+    }
+
     private JPanel panel;
     private JButton SIGNUPButton;
     private JButton QUITButton;
@@ -32,7 +36,9 @@ public class LOGIN_SIGNUP extends JFrame{
         LOGINButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                login.setVisible(true);
+                MyClass.login=new LOGIN();
+                MyClass.login.init();
+                MyClass.login.setVisible(true);
                 setVisible(false);
             }
         });

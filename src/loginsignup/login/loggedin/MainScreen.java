@@ -222,6 +222,7 @@ public class MainScreen extends JFrame {
     private void generateBillsAndTransaction(int numberOfDays) {
 
         Random random = new Random();
+
         for (int counter = 0; counter < numberOfDays; counter++) {
             boolean choice = random.nextBoolean();//true means generating transaction
             int numberOfTransactions = 1 + random.nextInt(4);
@@ -231,9 +232,10 @@ public class MainScreen extends JFrame {
                     MyClass.newBill.init();
                     int numberOfItems = 1 + random.nextInt(10);
                     int date = numberOfDays - counter;
+
                     MyClass.newBill.insertRandomValues(numberOfItems, date, null);
                     MyClass.newBill.getSubmitButton().doClick();
-                    MyClass.newBill.getBackButton().doClick();
+                    MyClass.newBill.dispose();
                 }
             }
             if (choice) {
@@ -241,7 +243,7 @@ public class MainScreen extends JFrame {
                 MyClass.newTransaction.init();
                 int date = numberOfDays - counter;
                 MyClass.newTransaction.generateTransactions(numberOfTransactions, date);
-                MyClass.newTransaction.getBackButton().doClick();
+                MyClass.newTransaction.dispose();
             }
 
         }
@@ -309,6 +311,13 @@ public class MainScreen extends JFrame {
             }
         }
 
+
+    }
+    public void clickOrderManagementButton(){
+        orderManagementButton.doClick();
+    }
+    public void clickLogoutButton(){
+        logoutButton.doClick();
 
     }
 

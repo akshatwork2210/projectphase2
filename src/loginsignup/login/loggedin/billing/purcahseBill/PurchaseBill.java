@@ -2,7 +2,7 @@ package loginsignup.login.loggedin.billing.purcahseBill;
 
 import mainpack.MyClass;
 import utils.UtilityMethods;
-import static testpackage.DBStructure.*;
+import static utils.DBStructure.*;
 import javax.swing.*;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;

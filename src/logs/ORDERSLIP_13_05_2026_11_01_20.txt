@@ -1,2 +1,0 @@
-E003,Jhumka Heavy,12,null,4200.0,null,
-null,null,null,null,null,null,

@@ -1,6 +1,5 @@
-package testpackage;
+package utils;
 
-import com.mysql.cj.x.protobuf.MysqlxPrepare;
 import mainpack.MyClass;
 
 import javax.swing.*;

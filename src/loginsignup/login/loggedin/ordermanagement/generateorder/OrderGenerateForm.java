@@ -1,8 +1,8 @@
 package loginsignup.login.loggedin.ordermanagement.generateorder;
 
 import mainpack.MyClass;
-import testpackage.DBStructure;
-import testpackage.CODES;
+import utils.DBStructure;
+import utils.CODES;
 import utils.LogUtils;
 
 import javax.swing.*;
@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import static testpackage.DBStructure.*;
+import static utils.DBStructure.*;
 import static utils.UtilityMethods.*;
 
 public class OrderGenerateForm extends JFrame {

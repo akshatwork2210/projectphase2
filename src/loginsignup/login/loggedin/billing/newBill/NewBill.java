@@ -418,7 +418,7 @@ public class NewBill extends JFrame {
             setVisible(false);
             billingScreen.setVisible(true);
             dispose();
-            searchResultWindow.dispose();
+            if(searchResultWindow!=null)searchResultWindow.dispose();
             try {
                 getTransacTemp().close();
             } catch (SQLException ex) {
@@ -488,14 +488,8 @@ public class NewBill extends JFrame {
 //                }
             }
         });
-        resetButton.addActionListener(e -> UtilityMethods.csvOut(tableModel));
+//        resetButton.addActionListener(e -> UtilityMethods.csvOut(tableModel));
         customerComboBox.addActionListener(e -> setCustomerName(customerComboBox.getSelectedItem() == null ? "" : customerComboBox.getSelectedItem().toString()));
-        undoButton.addActionListener(e -> {
-            int date = 1;
-            if (login.getDatabase().toLowerCase().contentEquals("sample"))//testing
-                insertRandomValues(8, date, (customerComboBox != null && customerComboBox.getSelectedIndex() != 0 && customerComboBox.getSelectedItem() != null ? customerComboBox.getSelectedItem().toString() : null));
-            else JOptionPane.showMessageDialog(newBill, "no bro... don't do this");//testing
-        });//testing
         dateComboBox.addActionListener(e -> setCurrentDate(UtilityMethods.parseDate(dateComboBox.getSelectedItem() == null ? "" : dateComboBox.getSelectedItem().toString())));
         resetButton1.addActionListener(new ActionListener() {
             @Override
@@ -622,11 +616,20 @@ public class NewBill extends JFrame {
             if (row == -1 || col == -1) {
                 return;
             }
-            if (customerComboBox.isEnabled()) {
-                customerComboBox.setEnabled(false);
-            }
+
+
             int snoValue = (tableModel.getValueAt(row, SNO_INDEX) != null && !tableModel.getValueAt(row, SNO_INDEX).toString().isEmpty()) ? Integer.parseInt(tableModel.getValueAt(row, SNO_INDEX).toString().contentEquals("") ? "0" : tableModel.getValueAt(row, SNO_INDEX).toString()) : -1;
             TableModelListener[] listeners = UtilityMethods.removeModelListener(tableModel);
+            if(customerComboBox.getSelectedIndex()==0)
+            {
+                JOptionPane.showMessageDialog(NewBill.this,"please select customer");
+                tableModel.setValueAt("",row,col);
+                UtilityMethods.addModelListeners(listeners, tableModel);
+                return;
+            }
+            if (customerComboBox.isEnabled() ) {
+                customerComboBox.setEnabled(false);
+            }
             if (snoValue == -1) {
                 sno++;
 
@@ -876,6 +879,10 @@ public class NewBill extends JFrame {
     public void insertRandomValues(int rows, int date, String customer_name) {
         Random random = new Random();
 
+        if (customer_name == null)
+            customerComboBox.setSelectedIndex(1 + random.nextInt(customerComboBox.getItemCount() - 1));
+        else
+            customerComboBox.setSelectedItem(customer_name);
 
         for (int i = 0; i < rows; i++) {
             String[] JEWELRY_ITEMS = {
@@ -895,10 +902,6 @@ public class NewBill extends JFrame {
             goldRateTextField.setText(goldRate + "");
 
             dateComboBox.setSelectedIndex(date);
-            if (customer_name == null)
-                customerComboBox.setSelectedIndex(1 + random.nextInt(customerComboBox.getItemCount() - 1));
-            else
-                customerComboBox.setSelectedItem(customer_name);
             //            customerComboBox.setSelectedIndex(1);
             // QUANTITY_INDEX
             int quantity = 1 + random.nextInt(30);  // random int from 1 to 30

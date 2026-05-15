@@ -8,8 +8,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import static testpackage.DBStructure.*;
-import static testpackage.CODES.*;
+import static utils.DBStructure.*;
+import static utils.CODES.*;
 
 public class AddInventory extends JFrame {
     public AddInventory() {

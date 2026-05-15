@@ -1,4 +1,4 @@
-package testpackage;
+package utils;
 
 public class CODES {
     public static final int SUCCESS_CODE =0;

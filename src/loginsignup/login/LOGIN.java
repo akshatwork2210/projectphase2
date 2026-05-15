@@ -1,17 +1,32 @@
 package loginsignup.login;
 
 import loginsignup.login.loggedin.MainScreen;
+import loginsignup.login.loggedin.rootAdmin.RootScreen;
 import mainpack.MyClass;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
+import java.sql.SQLException;
 
 public class LOGIN extends JFrame {
-    private JTextField user;
+    private JTextField userTextField;
+    public void setUserText(String userText) {
+        userTextField.setText(userText);
+    }
+
+    public void setPasswordText(String password) {
+        passwordField.setText(password);
+    }
+
     private JTextField passwordField;
+    public JTextField getPasswordField() {
+        return passwordField;
+    }
+
     private JButton LOGINButton;
+
     private JButton QUITButton;
     private JButton BACKButton;
     private JPanel panel;
@@ -46,7 +61,7 @@ public class LOGIN extends JFrame {
     }
 
     public LOGIN() {
-        init();
+//        init();
     }
 
     public void init() {
@@ -75,7 +90,7 @@ public class LOGIN extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                loginID = user.getText();
+                loginID = userTextField.getText();
                 if (!"root".contentEquals(loginID) && !databaseField.getText().isEmpty()) {
                     JOptionPane.showMessageDialog(temp, "please do not enter database name for  a non root user");
                     return;
@@ -87,15 +102,17 @@ public class LOGIN extends JFrame {
                     database = loginID;
                 url = "jdbc:mysql://" + host + ":" + port + "/" + database;
                 password = passwordField.getText();
-                if(database.trim().isEmpty()){
-                    JOptionPane.showMessageDialog(panel,"please enter database name");
-                    return;
-                }
-                Connection con = MyClass.createConnection();
-                if (con == null) {
-                    nullLoginParameters();
-                    return;
-                }
+
+               try( Connection con = MyClass.createConnection();
+                ) {
+                   if (con == null) {
+                       nullLoginParameters();
+                       return;
+                   }
+               } catch (SQLException ex) {
+                   throw new RuntimeException(ex);
+               }
+
                 MyClass.mainScreen = new MainScreen();
                 MyClass.mainScreen.init();
                 MyClass.mainScreen.setVisible(true);
@@ -105,8 +122,8 @@ public class LOGIN extends JFrame {
 
     }
 
-    public JButton getLOGINButton() {
-        return LOGINButton;
+    public void clickLogoutButton() {
+        LOGINButton.doClick();
     }
 
     public void nullLoginParameters() {

@@ -15,7 +15,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-import static testpackage.DBStructure.*;
+import static utils.DBStructure.*;
 
 public class LedgerWindow extends JFrame {
 

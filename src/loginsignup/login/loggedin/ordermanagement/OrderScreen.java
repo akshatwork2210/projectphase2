@@ -1,6 +1,7 @@
 package loginsignup.login.loggedin.ordermanagement;
 
 import loginsignup.login.loggedin.ordermanagement.generateorder.OrderGenerateForm;
+import loginsignup.login.loggedin.ordermanagement.vieworders.ViewOrders;
 import mainpack.MyClass;
 
 import javax.swing.*;
@@ -48,6 +49,7 @@ public class OrderScreen extends JFrame {
         viewOrdersButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                MyClass.viewOrders=new ViewOrders();
                 MyClass.viewOrders.setVisible(true);
                 MyClass.viewOrders.init();
                 setVisible(false);
@@ -56,8 +58,8 @@ public class OrderScreen extends JFrame {
 
     }
 
-    public JButton getGenerateANewOrderButton() {
-        return generateANewOrderButton;
+    public void clickGenerateANewOrderButton() {
+        generateANewOrderButton.doClick();
 
     }
 }

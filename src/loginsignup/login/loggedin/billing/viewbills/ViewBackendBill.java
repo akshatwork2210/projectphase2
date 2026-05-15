@@ -1,7 +1,7 @@
 package loginsignup.login.loggedin.billing.viewbills;
 
 import mainpack.MyClass;
-import testpackage.CODES;
+import utils.CODES;
 import utils.UtilityMethods;
 
 import javax.swing.*;

@@ -18,6 +18,7 @@ import loginsignup.login.loggedin.ordermanagement.OrderScreen;
 import loginsignup.login.loggedin.ordermanagement.generateorder.InventorySelect;
 import loginsignup.login.loggedin.ordermanagement.generateorder.OrderGenerateForm;
 import loginsignup.login.loggedin.ordermanagement.vieworders.ViewOrders;
+import loginsignup.login.loggedin.rootAdmin.RootScreen;
 import loginsignup.login.loggedin.transactionsandaccounts.Transactions;
 import loginsignup.login.loggedin.transactionsandaccounts.newtransaction.NewTransaction;
 import loginsignup.login.loggedin.transactionsandaccounts.viewTransactions.ViewTransactions;
@@ -31,7 +32,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static testpackage.CODES.*;
+import static utils.CODES.*;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
@@ -81,30 +82,6 @@ public class MyClass {
 
         }
         {
-            purchaseBill = new PurchaseBill();
-            login = new LOGIN();
-            signUp = new SignUp();
-            ledgerWindow = new LedgerWindow();
-            login_signup = new LOGIN_SIGNUP();
-
-            billingScreen = new BillingScreen();
-            mainScreen = new MainScreen();
-            newBill = new NewBill();
-            orderScreen = new OrderScreen();
-            orderGenerateForm = new OrderGenerateForm();
-            inventoryScreen = new InventoryScreen();
-            addInventory = new AddInventory();
-            transactions = new Transactions();
-            viewBackendBill = new ViewBackendBill();
-            addParty = new AddParty();
-            aalScreen = new AALScreen();
-            viewTransactions = new ViewTransactions();
-            newTransaction = new NewTransaction();
-            searchResultWindow = new SearchResultWindow();
-            viewOrders = new ViewOrders();
-            viewCustomerBill = new ViewCustomerBill();
-            inventorySelect = new InventorySelect();
-
             UtilityMethods.printingThread = new Thread(() -> {
                 while (true) {
                     try {
@@ -122,6 +99,7 @@ public class MyClass {
         UtilityMethods.printStartUp();
         UtilityMethods.printingThread.setDaemon(true);  // optional: will not block app from closing
         UtilityMethods.printingThread.start();
+        login_signup = new LOGIN_SIGNUP();
         login_signup.init();
         login_signup.setVisible(true);
     }
@@ -136,19 +114,14 @@ public class MyClass {
     public static ViewBackendBill viewBackendBill;
     public static LedgerWindow ledgerWindow;
 
-    public static Connection createConnection() {
+    public static Connection createConnection() throws SQLException {
         Connection conn;
         try {
-            // Construct the full JDBC URL
-            // Load MySQL JDBC Driver
             Class.forName("com.mysql.cj.jdbc.Driver");
-
-            // Establish Connection
             conn = DriverManager.getConnection(login.getUrl(), login.getLoginID(), login.getPassword());
             conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-
             System.out.println("✅ Database Connected Successfully to: ");
-
+            return conn;
         } catch (ClassNotFoundException e) {
             System.out.println("❌ MySQL Driver Not Found!");
             e.printStackTrace();
@@ -156,22 +129,21 @@ public class MyClass {
         } catch (SQLException e) {
 
             System.out.println("❌ Database Connection Failed!");
-//            System.out.println(e.getMessage()+" code "+e.getErrorCode());
             if (e.getErrorCode() == SQL_INVALID_CREDENTIALS_ERROR) {
                 JOptionPane.showMessageDialog(null, "invalid userid/password");
                 e.printStackTrace();
-                throw new RuntimeException(e);
+//                throw new SQLException(e);
             } else if (e.getErrorCode() == SQL_INVALID_DATABASE_ERROR) {
                 JOptionPane.showMessageDialog(login, "database not found error " + e.getErrorCode());
                 e.printStackTrace();
-                throw new RuntimeException(e);
+//                throw new SQLException(e);
             }
-            e.printStackTrace();
-            throw new RuntimeException(e);
+            throw e;
         }
-        return conn;
+
     }
 
+    public static RootScreen rootScreen;
     public static NewBill newBill;
     public static Transactions transactions;
     public static LOGIN login;

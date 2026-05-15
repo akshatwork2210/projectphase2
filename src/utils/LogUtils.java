@@ -1,8 +1,5 @@
 package utils;
 
-import testpackage.CODES;
-import testpackage.DBStructure;
-
 import javax.swing.*;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -12,7 +9,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Vector;
@@ -25,7 +21,7 @@ public class LogUtils {
     public static int generateVectorLog(Vector<Vector> vector, String title)
     {
         String date=LocalDateTime       .now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss"));
-        File file=new File("src/logs/"+title+"_"+date+".txt");
+        File file=new File("src/logs/"+title+"_"+date+".logs");
         try(FileWriter fileWriter=new FileWriter(file);
         BufferedWriter bufferedWriter=new BufferedWriter(fileWriter);
         ){
@@ -48,7 +44,7 @@ public class LogUtils {
         now = date.isEmpty() ? LocalDateTime.now().format(dateTimeFormatter) : date;
         try (Connection con = UtilityMethods.createConnection();
              PreparedStatement preparedStatement = con.prepareStatement("select * from " + DBStructure.INVENTORY_TABLE);) {
-            File file = new File("src/logs/inventory_" + status + "_" + now + ".txt");
+            File file = new File("src/logs/inventory_" + status + "_" + now + ".logs");
             if (!file.exists()) {
                 file.createNewFile();
             }
