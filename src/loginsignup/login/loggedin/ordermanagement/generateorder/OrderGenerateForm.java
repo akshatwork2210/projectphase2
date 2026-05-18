@@ -44,13 +44,18 @@ public class OrderGenerateForm extends JFrame {
 
     Vector<Integer[]> listOfDisabledCells;
     private Vector<Integer> listOfDisabledColumn;
-    public void fireTableRowChange(){
+
+    public void fireTableRowChange() {
         DefaultTableModel model1 = (DefaultTableModel) orderSlipTable.getModel();
-    model1.fireTableRowsInserted(0,orderSlipTable.getRowCount()-1);
+        model1.fireTableRowsInserted(0, orderSlipTable.getRowCount() - 1);
     }
 
     public OrderGenerateForm() {
 
+    }
+
+    public int getCustomerNameComboBoxSize() {
+        return customerNameComboBox.getItemCount();
     }
 
     int oldQuantity;
@@ -375,8 +380,8 @@ public class OrderGenerateForm extends JFrame {
                 slipDataStatement.addBatch();
             }
             slipDataStatement.executeBatch();
-            updateSlipStatusStatement.setInt(1,CODES.COMMITED_STATUS_CODE);
-            updateSlipStatusStatement.setInt(2,getSlipID());
+            updateSlipStatusStatement.setInt(1, CODES.COMMITED_STATUS_CODE);
+            updateSlipStatusStatement.setInt(2, getSlipID());
             updateSlipStatusStatement.executeUpdate();
 
             return CODES.SUCCESS_CODE;
@@ -434,4 +439,29 @@ public class OrderGenerateForm extends JFrame {
         return true;
     }
 
+    public void setDate(String date) {
+        dateComboBox.setSelectedItem(date);
+    }
+
+    public void setCustomer(int i) {
+        customerNameComboBox.setSelectedIndex(i);
+    }
+
+    public int getNumberOfOrderTypes() {
+        return orderSlipTypeComboBox.getItemCount();
+    }
+
+    public void setOrderType(int i) {
+        orderSlipTypeComboBox.setSelectedIndex(i);
+    }
+
+    public void insertData(String designID, String name, Integer quantity, double plating, String jewelleryTasks) {
+        int row = orderSlipTable.getRowCount() - 1;
+        DefaultTableModel model = (DefaultTableModel) orderSlipTable.getModel();
+        if (designID != null) model.setValueAt(designID, row, DESIGN_ID_INDEX);
+        if (name != null) model.setValueAt(name, row, ITEM_NAME_INDEX);
+        if(quantity!=null)model.setValueAt(quantity, row, QUANTITY_INDEX);
+        model.setValueAt(plating, row, PLATING_INDEX);
+       if(jewelleryTasks!=null) model.setValueAt(jewelleryTasks, row, OTHER_DETAILS_INDEX);
+    }
 }

@@ -3,7 +3,10 @@ package utils;
 import mainpack.MyClass;
 
 import javax.swing.*;
+import javax.swing.plaf.nimbus.State;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DBStructure {
 
@@ -187,4 +190,18 @@ public class DBStructure {
 
     }
 
+    public static List<String> getInventoryDesignIDs() {
+        String query = "select " + INVENTORY_DESIGN_ID + " from " + INVENTORY_TABLE;
+        List<String> designIDs = new ArrayList<>();
+        try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
+            try (ResultSet rs = stmt.executeQuery(query)) {
+                while (rs.next()) {
+                    designIDs.add(rs.getString(INVENTORY_DESIGN_ID));
+                }
+            }
+            return designIDs;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

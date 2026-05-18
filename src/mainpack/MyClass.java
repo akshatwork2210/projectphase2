@@ -167,4 +167,8 @@ public class MyClass {
             return null;
         }
     }
+
+    public static void setCustomer(int i) {
+
+    }
 }

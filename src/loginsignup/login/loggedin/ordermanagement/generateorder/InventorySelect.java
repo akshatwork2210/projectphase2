@@ -105,10 +105,13 @@ public class InventorySelect extends JFrame {
             return;
         }
         String designID =Objects.toString( inventoryTable.getModel().getValueAt(inventoryTable.getSelectedRow(), COL_DESIGN_ID_INDEX),"");
-        pushDataToGenerator(designID, quantity, orderGenerateForm);
+        pushDataToGenerator(designID, quantity, orderGenerateForm,true);
 
     }
-
+    private void processSelection(int quantity){
+        String designID =Objects.toString( inventoryTable.getModel().getValueAt(inventoryTable.getSelectedRow(), COL_DESIGN_ID_INDEX),"");
+        pushDataToGenerator(designID, quantity, orderGenerateForm,false);
+    }
     public int getSqlDataToMemory() {
 
         return WRITE_CODE_HERE;
@@ -149,8 +152,8 @@ public class InventorySelect extends JFrame {
 //
 //    }
 
-    private int pushDataToGenerator(String designID, int quantity, OrderGenerateForm orderGenerateForm) {
-        if(isOutOfStock(quantity,designID)){
+    private int pushDataToGenerator(String designID, int quantity, OrderGenerateForm orderGenerateForm,boolean showConfirmDialog) {
+        if(showConfirmDialog && isOutOfStock(quantity,designID)){
             int confirm = JOptionPane.showConfirmDialog(InventorySelect.this, "out of stock press yes to continue anyways", "out of stock:", JOptionPane.YES_NO_OPTION);
             if (confirm != JOptionPane.YES_OPTION) {
                 return OUT_OF_STOCK_ERROR;
@@ -190,5 +193,9 @@ public class InventorySelect extends JFrame {
             e.printStackTrace();
 //            throw new RuntimeException(e);
         }
+    }
+
+    public void pushAnRandomItem() {
+        processSelection(new Random().nextInt(1,16));
     }
 }
