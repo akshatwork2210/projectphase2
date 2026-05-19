@@ -27,6 +27,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Vector;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -34,6 +35,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class UtilityMethods {
     public static final int VERTI_SPLIT = 0;
     public static final int HORIZONTAL_SPLIT = 1;
+    public static final Random RANDOM = new Random();
     public static Thread printingThread;
     public final static int ORDER_SLIP = 0;
     public static final int CUSTOMER_BILL = 1;

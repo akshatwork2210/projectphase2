@@ -1,6 +1,7 @@
 package loginsignup.login.loggedin.ordermanagement.generateorder;
 
 import mainpack.MyClass;
+import utils.UtilityMethods;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -109,7 +110,8 @@ public class InventorySelect extends JFrame {
 
     }
     private void processSelection(int quantity){
-        String designID =Objects.toString( inventoryTable.getModel().getValueAt(inventoryTable.getSelectedRow(), COL_DESIGN_ID_INDEX),"");
+        int randomRow= UtilityMethods.RANDOM.nextInt(inventoryTable.getRowCount());
+        String designID =Objects.toString( inventoryTable.getModel().getValueAt(randomRow, COL_DESIGN_ID_INDEX),"");
         pushDataToGenerator(designID, quantity, orderGenerateForm,false);
     }
     public int getSqlDataToMemory() {
@@ -197,5 +199,6 @@ public class InventorySelect extends JFrame {
 
     public void pushAnRandomItem() {
         processSelection(new Random().nextInt(1,16));
+
     }
 }

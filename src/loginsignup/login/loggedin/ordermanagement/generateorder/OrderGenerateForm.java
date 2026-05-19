@@ -455,13 +455,17 @@ public class OrderGenerateForm extends JFrame {
         orderSlipTypeComboBox.setSelectedIndex(i);
     }
 
-    public void insertData(String designID, String name, Integer quantity, double plating, String jewelleryTasks) {
-        int row = orderSlipTable.getRowCount() - 1;
+    public void insertData(String designID, String name, Integer quantity, double plating, String jewelleryTasks,Integer row) {
+        if(row==null) row = orderSlipTable.getRowCount() - 1;
         DefaultTableModel model = (DefaultTableModel) orderSlipTable.getModel();
         if (designID != null) model.setValueAt(designID, row, DESIGN_ID_INDEX);
         if (name != null) model.setValueAt(name, row, ITEM_NAME_INDEX);
         if(quantity!=null)model.setValueAt(quantity, row, QUANTITY_INDEX);
         model.setValueAt(plating, row, PLATING_INDEX);
-       if(jewelleryTasks!=null) model.setValueAt(jewelleryTasks, row, OTHER_DETAILS_INDEX);
+        if(jewelleryTasks!=null) model.setValueAt(jewelleryTasks, row, OTHER_DETAILS_INDEX);
+    }
+
+    public Integer getNumberOfTableRows() {
+        return orderSlipTable.getRowCount();
     }
 }
