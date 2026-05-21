@@ -33,6 +33,7 @@ public class OrderScreen extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
                 MyClass.mainScreen.setVisible(true);
+                MyClass.mainScreen.setOrderManagementButtonEnabled(true);
             }
         });
         generateANewOrderButton.addActionListener(new ActionListener() {
@@ -57,6 +58,7 @@ public class OrderScreen extends JFrame {
         });
 
     }
+
 
     public void clickGenerateANewOrderButton() {
         generateANewOrderButton.doClick();

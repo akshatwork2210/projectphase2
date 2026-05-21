@@ -32,12 +32,14 @@ public class AddParty extends JFrame {
     public void init() {
 //        ((AbstractDocument) openingBalanceTextField.getDocument()).setDocumentFilter(UtilityMethods.getDocFilter());
         setContentPane(panel1);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                MyClass.mainScreen.setAddPartyButtonEnabled(true);
                 MyClass.mainScreen.setVisible(true);
                 dispose();
+
 
             }
         });

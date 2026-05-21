@@ -14,7 +14,8 @@ public class RootScreen extends JFrame {
 
     }
 
-    public void init(){
+    public void init() {
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -22,5 +23,6 @@ public class RootScreen extends JFrame {
                 MyClass.login.setVisible(true);
             }
         });
+
     }
 }

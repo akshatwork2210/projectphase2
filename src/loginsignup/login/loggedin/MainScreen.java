@@ -128,6 +128,7 @@ public class MainScreen extends JFrame {
                 MyClass.billingScreen = new BillingScreen();
                 MyClass.billingScreen.init();
                 MyClass.billingScreen.setVisible(true);
+                MainScreen.this.billingButton.setEnabled(false);
             }
         });
         logoutButton.addActionListener(new ActionListener() {
@@ -144,14 +145,17 @@ public class MainScreen extends JFrame {
                 MyClass.orderScreen = new OrderScreen();
                 MyClass.orderScreen.init();
                 MyClass.orderScreen.setVisible(true);
+                orderManagementButton.setEnabled(false);
             }
         });
         inventoryManagementButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 MyClass.inventoryScreen = new InventoryScreen();
-                MyClass.inventoryScreen.load();
+                MyClass.inventoryScreen.init();
                 MyClass.inventoryScreen.setVisible(true);
+                inventoryManagementButton.setEnabled(false);
+
             }
         });
         backUpDataButton.addActionListener(new ActionListener() {
@@ -167,6 +171,7 @@ public class MainScreen extends JFrame {
                 MyClass.transactions = new Transactions();
                 MyClass.transactions.init();
                 MyClass.transactions.setVisible(true);
+                MyClass.mainScreen.transactionManagementButton.setEnabled(false);
             }
         });
         addPartyButton.addActionListener(new ActionListener() {
@@ -175,6 +180,7 @@ public class MainScreen extends JFrame {
                 MyClass.addParty = new AddParty();
                 MyClass.addParty.init();
                 MyClass.addParty.setVisible(true);
+                addPartyButton.setEnabled(false);
             }
         });
         accountingAndLedgerButton.addActionListener(new ActionListener() {
@@ -331,4 +337,24 @@ public class MainScreen extends JFrame {
     private JButton inventoryManagementButton;
     private JButton accountingAndLedgerButton;
     private JTextField textField;
+
+    public void setBillingButtonEnabled(boolean b) {
+        billingButton.setEnabled(b);
+    }
+
+    public void setOrderManagementButtonEnabled(boolean enabled) {
+        orderManagementButton.setEnabled(enabled);
+    }
+
+    public void setTrasactionManagementButtonEnabled(boolean enabled) {
+        transactionManagementButton.setEnabled(enabled);
+    }
+
+    public void setAddPartyButtonEnabled(boolean enabled) {
+        addPartyButton.setEnabled(enabled);
+    }
+
+    public void setInventoryManagementButtonEnabled(boolean enabled) {
+        inventoryManagementButton.setEnabled(enabled);
+    }
 }

@@ -26,7 +26,7 @@ public class ViewTransactions extends JFrame {
 
     public void init() {
         setContentPane(panel);
-
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         UtilityMethods.generateAndAddDates(dateComboBox, true);
         UtilityMethods.generateAndAddNames(partyNameComboBox);
         dateComboBox.addActionListener(new ActionListener() {

@@ -39,6 +39,7 @@ public class ViewBackendBill extends JFrame {
     Vector<String> billDetails;
 
     public void init() {
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         searchID.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

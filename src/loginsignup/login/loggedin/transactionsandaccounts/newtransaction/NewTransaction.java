@@ -104,7 +104,7 @@ public class NewTransaction extends JFrame {
     AddedTransactions addedTransactions;
 
     public void init() {
-
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         setContentPane(panel);
 
         pack();

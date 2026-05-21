@@ -554,7 +554,6 @@ public class NewBill extends JFrame {
             throw new RuntimeException();
         }
 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         PromptSupport.setPrompt("Slip Number", slipNumberField);
         PromptSupport.setForeground(Color.GRAY, slipNumberField);
         PromptSupport.setPrompt("gold rate", goldRateTextField);

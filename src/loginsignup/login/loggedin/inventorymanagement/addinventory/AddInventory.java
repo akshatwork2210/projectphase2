@@ -121,7 +121,7 @@ public class AddInventory extends JFrame {
             } else {
                 JOptionPane.showMessageDialog(MyClass.addInventory, "Please fill all fields.", "Error", JOptionPane.ERROR_MESSAGE);
             }
-            MyClass.inventoryScreen.load();
+            MyClass.inventoryScreen.init();
         });
         pack();
         backButton.addActionListener(e -> {
@@ -129,7 +129,6 @@ public class AddInventory extends JFrame {
             MyClass.inventoryScreen.setVisible(true);
         });
 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         UtilityMethods.generateAndAddNames(supplierComboBox);
     }
 

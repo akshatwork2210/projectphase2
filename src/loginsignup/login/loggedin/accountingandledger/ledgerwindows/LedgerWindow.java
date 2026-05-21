@@ -34,6 +34,7 @@ public class LedgerWindow extends JFrame {
     public void init(String customerName, int mode) {
         setContentPane(panel);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

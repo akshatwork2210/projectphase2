@@ -19,6 +19,10 @@ public class InventoryScreen extends JFrame {
     private JButton addInventoryButton;
 
     public InventoryScreen() {
+
+    }
+
+    public void init() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         setContentPane(panel);
@@ -27,8 +31,10 @@ public class InventoryScreen extends JFrame {
         backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setVisible(false);
+                MyClass.mainScreen.setInventoryManagementButtonEnabled(true);
                 MyClass.mainScreen.setVisible(true);
+                dispose();
+
             }
         });
         addInventoryButton.addActionListener(new ActionListener() {
@@ -40,11 +46,6 @@ public class InventoryScreen extends JFrame {
                 MyClass.addInventory.setVisible(true);
             }
         });
-    }
-
-    public void load() {
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
         DefaultTableModel m = new DefaultTableModel(
                 new Object[][]{},
                 new String[]{

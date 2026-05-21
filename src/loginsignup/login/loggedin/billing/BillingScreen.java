@@ -54,6 +54,7 @@ public class BillingScreen extends JFrame {
             public void actionPerformed(ActionEvent e) {
 //                setVisible(false);
                     dispose();
+                    mainScreen.setBillingButtonEnabled(true);
                     mainScreen.setVisible(true);
             }
         });

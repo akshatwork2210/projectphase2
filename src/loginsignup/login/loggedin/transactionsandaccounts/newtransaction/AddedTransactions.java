@@ -15,11 +15,12 @@ public class AddedTransactions extends JFrame {
     private JTable transactionTable;
 
     public AddedTransactions() {
-        setContentPane(panel);
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
 
     public void init() {
+        setContentPane(panel);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
 
     }
 

@@ -27,14 +27,16 @@ public class Transactions extends JFrame {
 }
 
     public void init() {
-
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         setContentPane(panel);
         pack();
         backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setVisible(false);
+//                setVisible(false);
+                dispose();
                 MyClass.mainScreen.setVisible(true);
+                MyClass.mainScreen.setTrasactionManagementButtonEnabled(true);
             }
         });
         newTransactionButton.addActionListener(new ActionListener() {

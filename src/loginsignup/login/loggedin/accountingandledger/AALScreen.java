@@ -29,7 +29,7 @@ public class AALScreen extends JFrame {
     public void init() {
         setContentPane(panel);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
-
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         getListOfCustomers();
         getListOfItem();
         // Assuming you have a JList<String> itemList

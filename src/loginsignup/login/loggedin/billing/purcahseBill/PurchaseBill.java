@@ -221,6 +221,7 @@ public class PurchaseBill extends JFrame {
     public void init() {
         setContentPane(panel);
         pack();
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         headers = new Vector<>();
         headers.add("Sno");
         headers.add("designID");
