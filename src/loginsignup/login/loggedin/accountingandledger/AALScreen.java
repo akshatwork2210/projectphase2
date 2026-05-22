@@ -32,6 +32,7 @@ public class AALScreen extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         getListOfCustomers();
         getListOfItem();
+        setTitle("Accounting");
         // Assuming you have a JList<String> itemList
         itemList.addMouseListener(new MouseAdapter() {
             @Override

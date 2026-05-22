@@ -33,6 +33,7 @@ public class LedgerWindow extends JFrame {
 
     public void init(String customerName, int mode) {
         setContentPane(panel);
+        setTitle("Ledger "+ customerName);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         backButton.addActionListener(new ActionListener() {
@@ -45,7 +46,7 @@ public class LedgerWindow extends JFrame {
         });
         String[] columnNames = null;
         if (mode == ITEM_MODE)
-            columnNames = new String[]{"id", "date", "debit", "credit"};
+            columnNames = new String[]{"id", "date", "debit", "credit","balance"};
         else if (mode == CUSTOMER_MODE) {
             columnNames = new String[]{"id", "date", "debit", "credit", "balance"};
 

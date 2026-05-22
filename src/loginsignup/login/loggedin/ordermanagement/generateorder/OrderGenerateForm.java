@@ -2,7 +2,7 @@ package loginsignup.login.loggedin.ordermanagement.generateorder;
 
 import mainpack.MyClass;
 import utils.DBStructure;
-import utils.CODES;
+import utils.CONSTANTS;
 import utils.LogUtils;
 
 import javax.swing.*;
@@ -111,7 +111,7 @@ public class OrderGenerateForm extends JFrame {
             uniqueID = LogUtils.generateInventorySnapShot("BEFORE", "");
             LogUtils.generateVectorLog(model.getDataVector(), "ORDERSLIP");
 
-            if (pushSlipData() == CODES.SUCCESS_CODE && updateInventory() == CODES.SUCCESS_CODE) {
+            if (pushSlipData() == CONSTANTS.SUCCESS_CODE && updateInventory() == CONSTANTS.SUCCESS_CODE) {
                 try {
                     orderSlipConnectionObject.commit();
                     JOptionPane.showMessageDialog(this, "Order has been updated successfully", "success", JOptionPane.INFORMATION_MESSAGE);
@@ -284,7 +284,7 @@ public class OrderGenerateForm extends JFrame {
             orderSlipConnectionObject = DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
             orderSlipConnectionObject.setAutoCommit(false);
             try (PreparedStatement stmt = orderSlipConnectionObject.prepareStatement(insertMainQuery, Statement.RETURN_GENERATED_KEYS);) {
-                stmt.setInt(1, CODES.DRAFT_STATUS_CODE);
+                stmt.setInt(1, CONSTANTS.DRAFT_STATUS_CODE);
                 stmt.executeUpdate();
                 // Get the generated slip_id
                 try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -319,10 +319,10 @@ public class OrderGenerateForm extends JFrame {
                 updateInventoryStatement.addBatch();
             }
             updateInventoryStatement.executeBatch();
-            return CODES.SUCCESS_CODE;
+            return CONSTANTS.SUCCESS_CODE;
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            return CODES.SQL_ERROR;
+            return CONSTANTS.SQL_ERROR;
         }
 
     }
@@ -340,7 +340,7 @@ public class OrderGenerateForm extends JFrame {
         ) {
             if (!isSlipValid()) {
                 JOptionPane.showMessageDialog(this, "Invalid Slip Data!", "Error", JOptionPane.ERROR_MESSAGE);
-                return CODES.FAIL_CODE;
+                return CONSTANTS.FAIL_CODE;
             }
             java.sql.Timestamp timestamp = java.sql.Timestamp.valueOf(LocalDateTime.parse(parseString(dateComboBox.getSelectedItem()) + " 00:00:00", DateTimeFormatter.ofPattern("dd-MM-yy HH:mm:ss")));
             updateOrderSlipsMainTableStatement.setTimestamp(1, timestamp);
@@ -380,15 +380,15 @@ public class OrderGenerateForm extends JFrame {
                 slipDataStatement.addBatch();
             }
             slipDataStatement.executeBatch();
-            updateSlipStatusStatement.setInt(1, CODES.COMMITED_STATUS_CODE);
+            updateSlipStatusStatement.setInt(1, CONSTANTS.COMMITED_STATUS_CODE);
             updateSlipStatusStatement.setInt(2, getSlipID());
             updateSlipStatusStatement.executeUpdate();
 
-            return CODES.SUCCESS_CODE;
+            return CONSTANTS.SUCCESS_CODE;
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(MyClass.orderGenerateForm, " error " + ex.getMessage());
             ex.printStackTrace();
-            return CODES.SQL_ERROR;
+            return CONSTANTS.SQL_ERROR;
         }
 
     }

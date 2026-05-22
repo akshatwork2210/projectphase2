@@ -9,7 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import static utils.DBStructure.*;
-import static utils.CODES.*;
+import static utils.CONSTANTS.*;
 
 public class AddInventory extends JFrame {
     public AddInventory() {

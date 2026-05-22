@@ -9,7 +9,7 @@ import java.awt.event.*;
 import java.sql.*;
 import java.util.*;
 
-import static utils.CODES.*;
+import static utils.CONSTANTS.*;
 import static utils.DBStructure.*;
 
 public class InventorySelect extends JFrame {

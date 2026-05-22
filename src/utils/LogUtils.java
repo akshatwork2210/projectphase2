@@ -32,10 +32,10 @@ public class LogUtils {
                 bufferedWriter.write("\n");
             }
             System.out.println("orderslip logged succesfully");
-            return CODES.SUCCESS_CODE;
+            return CONSTANTS.SUCCESS_CODE;
         } catch (IOException e) {
             e.printStackTrace();
-            return (CODES.FAIL_CODE);
+            return (CONSTANTS.FAIL_CODE);
         }
     }
     public static String generateInventorySnapShot(String status, String date) {
@@ -63,11 +63,11 @@ public class LogUtils {
             JOptionPane.showMessageDialog(null, "could not create snapshot", "Error", JOptionPane.ERROR_MESSAGE);
 //            throw new RuntimeException(e);
             e.printStackTrace();
-            return String.valueOf(CODES.SQL_ERROR);
+            return String.valueOf(CONSTANTS.SQL_ERROR);
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, "could not create snapshot", "Error", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
-            return String.valueOf(CODES.FAIL_CODE);
+            return String.valueOf(CONSTANTS.FAIL_CODE);
         }
     }
 

@@ -378,7 +378,7 @@ public class NewBill extends JFrame {
 
     public void init() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
+        setTitle("CREATE SELL BILL");
         setContentPane(panel);
 
         pack();

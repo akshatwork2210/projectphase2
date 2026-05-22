@@ -32,7 +32,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static utils.CODES.*;
+import static utils.CONSTANTS.*;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
