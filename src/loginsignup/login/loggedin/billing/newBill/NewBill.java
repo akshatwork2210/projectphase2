@@ -429,17 +429,6 @@ public class NewBill extends JFrame {
         });
         NewBill temp = this;
         slipNumberField.addActionListener(e -> {
-            try {
-                slipNumberField.getText();
-            } catch (NumberFormatException ex) {
-                Thread.dumpStack();
-                slipNumberField.setText("");
-                JOptionPane.showMessageDialog(newBill, "an error occured, invalid input");
-
-                throw new RuntimeException();
-
-            }
-
             String query;
             if (customerComboBox.isEnabled()) {
                 query = "SELECT slip_id FROM order_slips WHERE slip_id=" + slipNumberField.getText();
@@ -471,7 +460,6 @@ public class NewBill extends JFrame {
             submitButton.setEnabled(false);
             backButton.setEnabled(false);
             UtilityMethods.splitFrame(temp, searchResultWindow, UtilityMethods.HORIZONTAL_SPLIT);
-
         });
         submitButton.addActionListener(e -> {
             if (insertData()) {
@@ -480,16 +468,18 @@ public class NewBill extends JFrame {
                 newBill = new NewBill();
                 newBill.init();
                 newBill.setVisible(true);
-//                if(NewBill.randomFlag && NewBill.modular%50!=0){
-//                Random random=new Random();
-//                    newBill.insertRandomValues(8);
-//                    NewBill.modular++;
-//                    newBill.submitButton.doClick();
-//                }
             }
         });
-//        resetButton.addActionListener(e -> UtilityMethods.csvOut(tableModel));
-        customerComboBox.addActionListener(e -> setCustomerName(customerComboBox.getSelectedItem() == null ? "" : customerComboBox.getSelectedItem().toString()));
+        customerComboBox.addActionListener(e -> {
+            setCustomerName(customerComboBox.getSelectedItem() == null ? "" : customerComboBox.getSelectedItem().toString());
+            searchResultWindow = new SearchResultWindow(Integer.parseInt(slipNumberField.getText()));
+            searchResultWindow.generateSlipListModel(getCustomerName());
+            searchResultWindow.setVisible(true);
+            submitButton.setEnabled(false);
+            backButton.setEnabled(false);
+            UtilityMethods.splitFrame(temp, searchResultWindow, UtilityMethods.HORIZONTAL_SPLIT);
+
+        });
         dateComboBox.addActionListener(e -> setCurrentDate(UtilityMethods.parseDate(dateComboBox.getSelectedItem() == null ? "" : dateComboBox.getSelectedItem().toString())));
         resetButton1.addActionListener(new ActionListener() {
             @Override

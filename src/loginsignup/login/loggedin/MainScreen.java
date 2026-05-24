@@ -357,4 +357,8 @@ public class MainScreen extends JFrame {
     public void setInventoryManagementButtonEnabled(boolean enabled) {
         inventoryManagementButton.setEnabled(enabled);
     }
+
+    public void clickBillingButton() {
+        billingButton.doClick();
+    }
 }

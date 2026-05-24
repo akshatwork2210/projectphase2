@@ -1,2 +1,2 @@
 @echo off
-mysqldump -u raj -pakshat raj > "D:\gurukripa\src\resources\15_05_26___15_49_51_raj_backup.sql"
+mysqldump -u shiv -pshiv shiv > "D:\gurukripa\src\resources\24_05_26___20_29_59_shiv_backup.sql"

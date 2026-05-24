@@ -1,7 +1,6 @@
 package loginsignup.login;
 
 import loginsignup.login.loggedin.MainScreen;
-import loginsignup.login.loggedin.rootAdmin.RootScreen;
 import mainpack.MyClass;
 
 import javax.swing.*;
@@ -122,7 +121,7 @@ public class LOGIN extends JFrame {
 
     }
 
-    public void clickLogoutButton() {
+    public void clickLoginButton() {
         LOGINButton.doClick();
     }
 

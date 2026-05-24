@@ -1,6 +1,7 @@
 package loginsignup.login.loggedin.billing.newBill;
 
 import mainpack.MyClass;
+import utils.DBStructure;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -29,9 +30,10 @@ public class SearchResultWindow extends JFrame {
     private JButton backButton;
     private JButton button2;
     private JTable orderSlipTable;
-    private JLabel slipID;
+//    private JLabel slipID;
     private JLabel cutomerName;
     private JLabel panaTypeLabel;
+    private JComboBox<String> slipIDComboBox;
     int ID;
 
     public DefaultTableModel getTableModel() {
@@ -60,7 +62,7 @@ public class SearchResultWindow extends JFrame {
       }
 public void init(){
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
+    setTitle("CREATE BILL");
     setContentPane(panel1);
 
     backButton.addActionListener(e -> {
@@ -151,9 +153,12 @@ public void init(){
     }
 
     public SearchResultWindow(int bID) {
-       init();
+         init();
         this.ID = bID;
-        slipID.setText("order slip id: " + ID);
+        String customerName="";
+
+        slipIDComboBox.setModel(generateSlipListModel(customerName));
+//        slipIDComboBox.setText("order slip id: " + ID);
         cutomerName.setText(getCutomerName());
         panaTypeLabel.setText(getPanaType());
 
@@ -183,6 +188,22 @@ public void init(){
 
     }
 
+    public DefaultComboBoxModel<String> generateSlipListModel(String customerName) {
+        DefaultComboBoxModel<String> comboBoxModel=new DefaultComboBoxModel<>();
+        String query="select "+DBStructure.ORDER_SLIPS_MAIN_SLIP_ID+ " from "+ DBStructure.ORDER_SLIPS_MAIN_TABLE+" where "+DBStructure.ORDER_SLIPS_MAIN_CUSTOMER_NAME+"=?";
+        try(Connection con=MyClass.createConnection();PreparedStatement pstmt=con.prepareStatement(query)){
+            pstmt.setString(1, customerName);
+            try (ResultSet rs=pstmt.executeQuery()){
+                while (rs.next()){
+                    comboBoxModel.addElement(rs.getString(DBStructure.ORDER_SLIPS_MAIN_SLIP_ID));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return comboBoxModel;
+    }
+
     private void pushDetails(Vector<Integer> detailsToPush) {//detailstopush-> item id at index 0 and quantity at index 1
         if(detailsToPush==null)return;
         if ( detailsToPush.size() < 2) {
@@ -197,8 +218,15 @@ public void init(){
         JTable billTable = MyClass.newBill.getBillTable();
         DefaultTableModel model = (DefaultTableModel) billTable.getModel();
 
-        String query = "SELECT  quantity,billed_quantity,slip_id,item_name, design_id, raw_material_price FROM order_slips WHERE item_id = ?";
-
+        String query = "SELECT "
+                + DBStructure.ORDER_SLIPS_QUANTITY + ", "
+                + DBStructure.ORDER_SLIPS_BILLED_QUANTITY + ", "
+                + DBStructure.ORDER_SLIPS_SLIP_ID + ", "
+                + DBStructure.ORDER_SLIPS_ITEM_NAME + ", "
+                + DBStructure.ORDER_SLIPS_DESIGN_ID + ", "
+                + DBStructure.ORDER_SLIPS_RAW_MATERIAL_PRICE
+                + " FROM " + DBStructure.ORDER_SLIPS_TABLE
+                + " WHERE " + DBStructure.ORDER_SLIPS_ITEM_ID + " = ?";
         try (PreparedStatement pstmt = con.prepareStatement(query)) {
             pstmt.setInt(1, itemId);
             ResultSet rs = pstmt.executeQuery();
@@ -230,8 +258,6 @@ public void init(){
 
     private void setUpdateThroughSlip(boolean b) {
         MyClass.newBill.updateThroughSlip = b;
-
-
     }
 
 
@@ -239,8 +265,21 @@ public void init(){
 
     public void fetchData(DefaultTableModel model) {
         model.setRowCount(0);
-        String query = "SELECT customer_name ,slip_id,item_id,sno,design_id, item_name, quantity, plating_grams, raw_material_price, other_details, billed_quantity " + "FROM order_slips WHERE slip_id = ? Order by item_id";
-
+        String query = "SELECT "
+                + DBStructure.ORDER_SLIPS_CUSTOMER_NAME + ", "
+                + DBStructure.ORDER_SLIPS_SLIP_ID + ", "
+                + DBStructure.ORDER_SLIPS_ITEM_ID + ", "
+                + DBStructure.ORDER_SLIPS_SNO + ", "
+                + DBStructure.ORDER_SLIPS_DESIGN_ID + ", "
+                + DBStructure.ORDER_SLIPS_ITEM_NAME + ", "
+                + DBStructure.ORDER_SLIPS_QUANTITY + ", "
+                + DBStructure.ORDER_SLIPS_PLATING_GRAMS + ", "
+                + DBStructure.ORDER_SLIPS_RAW_MATERIAL_PRICE + ", "
+                + DBStructure.ORDER_SLIPS_OTHER_DETAILS + ", "
+                + DBStructure.ORDER_SLIPS_BILLED_QUANTITY
+                + " FROM " + DBStructure.ORDER_SLIPS_TABLE
+                + " WHERE " + DBStructure.ORDER_SLIPS_SLIP_ID + " = ? "
+                + " ORDER BY " + DBStructure.ORDER_SLIPS_ITEM_ID;
         try {
             PreparedStatement pstmt = MyClass.newBill.getTransacTemp().prepareStatement(query);
             pstmt.setInt(1, ID);

@@ -278,7 +278,7 @@ public class OrderGenerateForm extends JFrame {
 
 
         //---------------------------------------------order_slip_mmain table data below--------------------------------------------------
-        String insertMainQuery = "INSERT INTO " + ORDER_SLIPS_MAIN_TABLE + " (" + ORDER_SLIPS_MAIN_STATUS + ") VALUES (?)";
+        String insertMainQuery = "INSERT INTO " + ORDER_SLIPS_MAIN_TABLE + " (" + ORDER_SLIPS_MAIN_STATUS +") VALUES (?)";
         orderSlipConnectionObject = null;
         try {
             orderSlipConnectionObject = DriverManager.getConnection(MyClass.login.getUrl(), MyClass.login.getLoginID(), MyClass.login.getPassword());
@@ -330,7 +330,7 @@ public class OrderGenerateForm extends JFrame {
     public int pushSlipData() {
         DefaultTableModel model = (DefaultTableModel) orderSlipTable.getModel();
         int rowCount = model.getRowCount();
-        String updateOrderSlipsMainTableQuery = "update " + ORDER_SLIPS_MAIN_TABLE + " set " + ORDER_SLIPS_CREATED_AT + "=?, " + ORDER_SLIPS_MAIN_SLIP_TYPE + "=? where " + ORDER_SLIPS_MAIN_SLIP_ID + "=?";
+        String updateOrderSlipsMainTableQuery = "update " + ORDER_SLIPS_MAIN_TABLE + " set " + ORDER_SLIPS_CREATED_AT + "=?, " + ORDER_SLIPS_MAIN_SLIP_TYPE + "=?,"+ORDER_SLIPS_MAIN_CUSTOMER_NAME+"=? where " + ORDER_SLIPS_MAIN_SLIP_ID + "=?";
         String slipDataInsertQuery = "INSERT INTO " + ORDER_SLIPS_TABLE + " (" + ORDER_SLIPS_SLIP_TYPE + ", " + ORDER_SLIPS_CUSTOMER_NAME + ", " + ORDER_SLIPS_SLIP_ID + ", " + ORDER_SLIPS_DESIGN_ID + ", " + ORDER_SLIPS_ITEM_NAME + ", " + ORDER_SLIPS_QUANTITY + ", " + ORDER_SLIPS_PLATING_GRAMS + ", "
                 + ORDER_SLIPS_RAW_MATERIAL_PRICE + ", " + ORDER_SLIPS_OTHER_DETAILS + ", " + ORDER_SLIPS_SNO + "," + ORDER_SLIPS_CREATED_AT + ") " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         String updateSlipStatusQuery = "update " + ORDER_SLIPS_MAIN_TABLE + " SET " + ORDER_SLIPS_MAIN_STATUS + " = ? WHERE " + ORDER_SLIPS_MAIN_SLIP_ID + " = ?";
@@ -345,7 +345,8 @@ public class OrderGenerateForm extends JFrame {
             java.sql.Timestamp timestamp = java.sql.Timestamp.valueOf(LocalDateTime.parse(parseString(dateComboBox.getSelectedItem()) + " 00:00:00", DateTimeFormatter.ofPattern("dd-MM-yy HH:mm:ss")));
             updateOrderSlipsMainTableStatement.setTimestamp(1, timestamp);
             updateOrderSlipsMainTableStatement.setString(2, parseString(orderSlipTypeComboBox.getSelectedItem()));
-            updateOrderSlipsMainTableStatement.setInt(3, getSlipID());
+            updateOrderSlipsMainTableStatement.setString(3, parseString(customerNameComboBox.getSelectedItem()));
+            updateOrderSlipsMainTableStatement.setInt(4, getSlipID());
             updateOrderSlipsMainTableStatement.executeUpdate();
 
             for (int i = 0; i < rowCount - 1; i++) {
@@ -467,5 +468,9 @@ public class OrderGenerateForm extends JFrame {
 
     public Integer getNumberOfTableRows() {
         return orderSlipTable.getRowCount();
+    }
+
+    public void clickSubmitButton() {
+        submitButton.doClick();
     }
 }

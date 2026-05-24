@@ -12,24 +12,58 @@ import java.util.Random;
 
 public class MainTestClass {
     public static void main(String[] args) {
-        randomTest();
+        String query1 = "SELECT customer_name, slip_id, item_id, sno, design_id, item_name, quantity, plating_grams, raw_material_price, other_details, billed_quantity " + "FROM order_slips WHERE slip_id = ? Order by item_id";
+        String query = "SELECT "
+                + DBStructure.ORDER_SLIPS_CUSTOMER_NAME + ", "
+                + DBStructure.ORDER_SLIPS_SLIP_ID + ", "
+                + DBStructure.ORDER_SLIPS_ITEM_ID + ", "
+                + DBStructure.ORDER_SLIPS_SNO + ", "
+                + DBStructure.ORDER_SLIPS_DESIGN_ID + ", "
+                + DBStructure.ORDER_SLIPS_ITEM_NAME + ", "
+                + DBStructure.ORDER_SLIPS_QUANTITY + ", "
+                + DBStructure.ORDER_SLIPS_PLATING_GRAMS + ", "
+                + DBStructure.ORDER_SLIPS_RAW_MATERIAL_PRICE + ", "
+                + DBStructure.ORDER_SLIPS_OTHER_DETAILS + ", "
+                + DBStructure.ORDER_SLIPS_BILLED_QUANTITY
+                + " FROM " + DBStructure.ORDER_SLIPS_TABLE
+                + " WHERE " + DBStructure.ORDER_SLIPS_SLIP_ID + " = ?"
+                + " ORDER BY " + DBStructure.ORDER_SLIPS_ITEM_ID;
+        System.out.println(query1);
+        System.out.println(query);
+        System.out.println(query.equalsIgnoreCase(query1.toUpperCase()));
+//        randomTest();
     }
 
     private static void randomTest() {
-    orderSlip();
+          billGenerate(20);
     }
 
 
-    static void orderSlip() {
+    static void orderSlip(int noOfSlips) {
         MyClass.main(null);
         MyClass.login_signup.clickLoginButton();
         MyClass.login.setUserText("shiv");
         MyClass.login.setPasswordText("shiv");
-        MyClass.login.clickLogoutButton();
+        MyClass.login.clickLoginButton();
         MyClass.mainScreen.clickOrderManagementButton();
         MyClass.orderScreen.clickGenerateANewOrderButton();
-        generateARandomSlip("random");
+       for(int i=0;i<noOfSlips;i++) {
+            generateARandomSlip("random");
+            MyClass.orderGenerateForm.clickSubmitButton();
+        }
+    }
+    static void billGenerate(int noOfBills){
+        MyClass.main(null);
+        MyClass.login_signup.clickLoginButton();
+        MyClass.login.setUserText("shiv");
+        MyClass.login.setPasswordText("shiv");
+        MyClass.login.clickLoginButton();
+        MyClass.mainScreen.clickBillingButton();
+        generateARandomBill();
 
+    }
+
+    private static void generateARandomBill() {
 
     }
 
@@ -47,7 +81,7 @@ public class MainTestClass {
         }
         MyClass.orderGenerateForm.setDate(date);
         int noOfCustomer = MyClass.orderGenerateForm.getCustomerNameComboBoxSize();
-        MyClass.orderGenerateForm.setCustomer(random.nextInt(1, noOfCustomer + 1));
+        MyClass.orderGenerateForm.setCustomer(random.nextInt(1, noOfCustomer));
         int noOfOrderTypes = MyClass.orderGenerateForm.getNumberOfOrderTypes();
 
         MyClass.orderGenerateForm.setOrderType(random.nextInt(noOfOrderTypes));
