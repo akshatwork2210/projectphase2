@@ -87,4 +87,8 @@ public class BillingScreen extends JFrame {
     public JButton getPurchaseBillButton() {
     return newPurchaseButton;
     }
+
+    public void clickNewBillButton() {
+        newBillButton.doClick();
+    }
 }

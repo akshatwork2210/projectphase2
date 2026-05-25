@@ -28,10 +28,7 @@ public class MainTestClass {
                 + " FROM " + DBStructure.ORDER_SLIPS_TABLE
                 + " WHERE " + DBStructure.ORDER_SLIPS_SLIP_ID + " = ?"
                 + " ORDER BY " + DBStructure.ORDER_SLIPS_ITEM_ID;
-        System.out.println(query1);
-        System.out.println(query);
-        System.out.println(query.equalsIgnoreCase(query1.toUpperCase()));
-//        randomTest();
+        billGenerate(1);
     }
 
     private static void randomTest() {
@@ -59,6 +56,7 @@ public class MainTestClass {
         MyClass.login.setPasswordText("shiv");
         MyClass.login.clickLoginButton();
         MyClass.mainScreen.clickBillingButton();
+        MyClass.billingScreen.clickNewBillButton();
         generateARandomBill();
 
     }

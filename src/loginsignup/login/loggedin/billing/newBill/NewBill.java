@@ -2,6 +2,7 @@ package loginsignup.login.loggedin.billing.newBill;
 
 import mainpack.MyClass;
 import org.jdesktop.swingx.prompt.PromptSupport;
+import utils.DBStructure;
 import utils.UtilityMethods;
 
 import javax.swing.*;
@@ -65,7 +66,7 @@ public class NewBill extends JFrame {
     private int curBillID;
     private JTable billTable;
     private JButton backButton;
-    private JComboBox<String> slipDetailComboBox;
+    private JComboBox<String> slipTypeComboBox;
     private JButton submitButton;
     private HashMap<Integer, Integer> snoToItemIdMap;
     private JButton resetButton;
@@ -173,7 +174,7 @@ public class NewBill extends JFrame {
 
 
                 String designID = getStringValue(model, i, DESIGN_ID_INDEX, "NoID");
-                String orderType = slipDetailComboBox.getSelectedItem() == null ? "" : slipDetailComboBox.getSelectedItem().toString();
+                String orderType = slipTypeComboBox.getSelectedItem() == null ? "" : slipTypeComboBox.getSelectedItem().toString();
 
 
                 if (snoToItemIdMap.containsKey(serialNo)) {
@@ -185,7 +186,7 @@ public class NewBill extends JFrame {
                     pstmt.setInt(1, itemId);
                     ResultSet rs = pstmt.executeQuery();
 
-                    orderType = slipDetailComboBox.getSelectedItem().toString();
+                    orderType = slipTypeComboBox.getSelectedItem().toString();
                     if (rs.next()) {
                         orderType = rs.getString("slip_type"); // Override with DB value
                     }
@@ -418,7 +419,7 @@ public class NewBill extends JFrame {
             setVisible(false);
             billingScreen.setVisible(true);
             dispose();
-            if(searchResultWindow!=null)searchResultWindow.dispose();
+            if (searchResultWindow != null) searchResultWindow.dispose();
             try {
                 getTransacTemp().close();
             } catch (SQLException ex) {
@@ -470,16 +471,6 @@ public class NewBill extends JFrame {
                 newBill.setVisible(true);
             }
         });
-        customerComboBox.addActionListener(e -> {
-            setCustomerName(customerComboBox.getSelectedItem() == null ? "" : customerComboBox.getSelectedItem().toString());
-            searchResultWindow = new SearchResultWindow(Integer.parseInt(slipNumberField.getText()));
-            searchResultWindow.generateSlipListModel(getCustomerName());
-            searchResultWindow.setVisible(true);
-            submitButton.setEnabled(false);
-            backButton.setEnabled(false);
-            UtilityMethods.splitFrame(temp, searchResultWindow, UtilityMethods.HORIZONTAL_SPLIT);
-
-        });
         dateComboBox.addActionListener(e -> setCurrentDate(UtilityMethods.parseDate(dateComboBox.getSelectedItem() == null ? "" : dateComboBox.getSelectedItem().toString())));
         resetButton1.addActionListener(new ActionListener() {
             @Override
@@ -491,8 +482,6 @@ public class NewBill extends JFrame {
                 newBill.setVisible(true);
             }
         });
-
-
         if (!customerComboBox.isEnabled()) customerComboBox.setEnabled(true);
         billTable.getInputMap(JTable.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("DELETE"), "deleteRow");
         billTable.getActionMap().put("deleteRow", new AbstractAction() {
@@ -511,6 +500,7 @@ public class NewBill extends JFrame {
                 }
 
                 UtilityMethods.addModelListeners(listeners, tableModel);
+
                 billTable.getActionMap().put("deleteRow", oldAction);
                 int selectedrow = billTable.getSelectedRow();
                 tableModel.fireTableDataChanged();
@@ -532,14 +522,13 @@ public class NewBill extends JFrame {
         String sql1 = "INSERT INTO bills () VALUES ()";
         try (PreparedStatement pstmt = conn.prepareStatement(sql1, Statement.RETURN_GENERATED_KEYS)) {
             conn.setAutoCommit(false); // Start transaction
-            int affectedRows = pstmt.executeUpdate();
+            pstmt.executeUpdate();
             ResultSet rs = pstmt.getGeneratedKeys();
             if (rs.next()) setCurBillID((rs.getInt(1)));
             idLabel.setText("bill id: " + getCurBillID());
 
         } catch (SQLException exception) {
             JOptionPane.showMessageDialog(newBill, "error");
-//            Thread.dumpStack();
             exception.printStackTrace();
             throw new RuntimeException();
         }
@@ -609,14 +598,13 @@ public class NewBill extends JFrame {
 
             int snoValue = (tableModel.getValueAt(row, SNO_INDEX) != null && !tableModel.getValueAt(row, SNO_INDEX).toString().isEmpty()) ? Integer.parseInt(tableModel.getValueAt(row, SNO_INDEX).toString().contentEquals("") ? "0" : tableModel.getValueAt(row, SNO_INDEX).toString()) : -1;
             TableModelListener[] listeners = UtilityMethods.removeModelListener(tableModel);
-            if(customerComboBox.getSelectedIndex()==0)
-            {
-                JOptionPane.showMessageDialog(NewBill.this,"please select customer");
-                tableModel.setValueAt("",row,col);
+            if (customerComboBox.getSelectedIndex() == 0) {
+                JOptionPane.showMessageDialog(NewBill.this, "please select customer");
+                tableModel.setValueAt("", row, col);
                 UtilityMethods.addModelListeners(listeners, tableModel);
                 return;
             }
-            if (customerComboBox.isEnabled() ) {
+            if (customerComboBox.isEnabled()) {
                 customerComboBox.setEnabled(false);
             }
             if (snoValue == -1) {
@@ -705,11 +693,12 @@ public class NewBill extends JFrame {
 
             if ((col == quantityIndex)) {
 
-                Object designID = tableModel.getValueAt(row, designIdIndex);
+                String designID = UtilityMethods.parseString(tableModel.getValueAt(row, designIdIndex));
                 if (notThroughOrderSlip && designID != null && !designID.toString().contentEquals("")) {
-                    try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
-                        String query = "select totalquantity from inventory where designid='" + designID + "';";
-                        try (ResultSet resultSet = stmt.executeQuery(query);) {
+                    String query = "select "+DBStructure.INVENTORY_TOTAL_QUANTITY+" from "+DBStructure.INVENTORY_TABLE+" where "+DBStructure.INVENTORY_DESIGN_ID+"=?;";
+                    try (Connection con = MyClass.createConnection(); PreparedStatement preparedStatement = con.prepareStatement(query)) {
+                        preparedStatement.setString(1,designID);
+                        try (ResultSet resultSet = preparedStatement.executeQuery(query);) {
                             if (resultSet.next()) if (resultSet.getInt("totalquantity") < quantity)
                                 JOptionPane.showMessageDialog(newBill, "warning stock not remaining");
                         }
@@ -721,7 +710,7 @@ public class NewBill extends JFrame {
                 }
                 if (snoToItemIdMap.containsKey(snoValue)) {
                     try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
-                        String query = "select * from order_slips where item_id=" + snoToItemIdMap.get(snoValue);
+                        String query = "select * from "+DBStructure.ORDER_SLIPS_TABLE+" where "+DBStructure.ORDER_SLIPS_ITEM_ID+"=" + snoToItemIdMap.get(snoValue);
                         int item_id = snoToItemIdMap.get(snoValue);
                         int netQuantity = 0;
                         for (int key : snoToItemIdMap.keySet()) {
@@ -803,7 +792,7 @@ public class NewBill extends JFrame {
         try (Connection con = MyClass.createConnection(); Statement stmt = con.createStatement()) {
             try (ResultSet rs = stmt.executeQuery("select type_name from ordertype;")) {
                 while (rs.next()) {
-                    slipDetailComboBox.addItem(rs.getString(1));
+                    slipTypeComboBox.addItem(rs.getString(1));
                 }
             }
             pack();
@@ -815,6 +804,51 @@ public class NewBill extends JFrame {
         }
         UtilityMethods.generateAndAddNames(customerComboBox);
         UtilityMethods.generateAndAddDates(dateComboBox, false);
+        customerComboBox.addActionListener(e -> {
+            setCustomerName(customerComboBox.getSelectedItem() == null ? "" : customerComboBox.getSelectedItem().toString());
+            String query = "SELECT MIN(" + DBStructure.ORDER_SLIPS_MAIN_SLIP_ID + ") FROM " + DBStructure.ORDER_SLIPS_MAIN_TABLE + " WHERE " + DBStructure.ORDER_SLIPS_MAIN_CUSTOMER_NAME + " = ?";
+            int slipID = -1;
+            try (Connection con = MyClass.createConnection(); PreparedStatement preparedStatement = con.prepareStatement(query)) {
+
+                if (customerComboBox.getSelectedIndex() != 0) {
+                    preparedStatement.setString(1, getCustomerName());
+                    System.out.println("debug mode customer name is " + getCustomerName());
+
+                } else {
+                    preparedStatement.setString(1, UtilityMethods.parseString(customerComboBox.getItemAt(1)));
+                    System.out.println("debug mode customer name is " + UtilityMethods.parseString(customerComboBox.getItemAt(1)));
+
+                }
+                try (ResultSet rs = preparedStatement.executeQuery()) {
+                    if (rs.next() && !rs.wasNull()) {
+                        rs.getInt(1);
+                        if (!rs.wasNull()) {
+                            slipID = rs.getInt(1);
+                        }
+                        System.out.println("yes " + slipID);
+                    }
+                }
+                if (slipID == -1) {
+                    System.out.println("slip not found");
+                    setExtendedState(JFrame.MAXIMIZED_BOTH);
+                    if (searchResultWindow != null && !searchResultWindow.isVisible())
+                        searchResultWindow.dispose();
+                    return;
+                }
+
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(newBill, ex.getMessage());
+                throw new RuntimeException(ex);
+            }
+            System.out.println("slip id in debug mode is " + slipID);
+            if (searchResultWindow.isVisible()) searchResultWindow.dispose();
+            searchResultWindow = new SearchResultWindow(slipID);
+            searchResultWindow.setTableModel(searchResultWindow.generateSlipListModel(getCustomerName()));
+            searchResultWindow.setFocusableWindowState(false);
+            searchResultWindow.setVisible(true);
+            searchResultWindow.setFocusableWindowState(true);
+            UtilityMethods.splitFrame(temp, searchResultWindow, UtilityMethods.HORIZONTAL_SPLIT);
+        });
 
     }
 //    private void insertRandomValues(int rows) {
